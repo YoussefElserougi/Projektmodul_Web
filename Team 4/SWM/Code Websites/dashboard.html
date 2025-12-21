@@ -1,0 +1,762 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SWM Change Management - Master Dashboard</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        header {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+        }
+
+        h1 {
+            color: #333;
+            font-size: 2rem;
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            color: #666;
+            font-size: 1rem;
+        }
+
+        .config-section {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+        }
+
+        .config-section h2 {
+            color: #333;
+            font-size: 1.3rem;
+            margin-bottom: 15px;
+        }
+
+        .input-group {
+            margin-bottom: 15px;
+        }
+
+        .input-group label {
+            display: block;
+            color: #555;
+            font-weight: 500;
+            margin-bottom: 5px;
+            font-size: 0.9rem;
+        }
+
+        .input-group input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: border-color 0.3s;
+        }
+
+        .input-group input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .sessions-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .session-card {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.08);
+            transition: transform 0.2s, box-shadow 0.2s;
+            cursor: pointer;
+            border: 2px solid transparent;
+        }
+
+        .session-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+        }
+
+        .session-card.selected {
+            border-color: #667eea;
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.05) 0%, rgba(118, 75, 162, 0.05) 100%);
+        }
+
+        .session-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .session-id {
+            font-weight: 700;
+            color: #667eea;
+            font-size: 1.1rem;
+        }
+
+        .status-badge {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .status-confirmed {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .status-open {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .session-info {
+            color: #555;
+            font-size: 0.9rem;
+            line-height: 1.6;
+        }
+
+        .session-info strong {
+            color: #333;
+        }
+
+        .session-description {
+            margin-top: 10px;
+            padding-top: 10px;
+            border-top: 1px solid #eee;
+            color: #666;
+            font-size: 0.85rem;
+            max-height: 60px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .action-panel {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            margin-top: 30px;
+            display: none;
+        }
+
+        .action-panel.active {
+            display: block;
+        }
+
+        .action-panel h2 {
+            color: #333;
+            margin-bottom: 20px;
+        }
+
+        .selected-info {
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%);
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+
+        .btn-communication {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        .btn-partner {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        }
+
+        .btn-both {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .result-panel {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            margin-top: 20px;
+        }
+
+        .result-success {
+            border-left: 4px solid #28a745;
+        }
+
+        .result-error {
+            border-left: 4px solid #dc3545;
+        }
+
+        .result-content {
+            margin-top: 15px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        pre {
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+
+        .optional-fields {
+            margin-top: 20px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+
+        .optional-fields h3 {
+            color: #555;
+            font-size: 1rem;
+            margin-bottom: 15px;
+        }
+
+        .error-message {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 20px;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #999;
+        }
+
+        .empty-state svg {
+            width: 80px;
+            height: 80px;
+            margin-bottom: 20px;
+            opacity: 0.3;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🚀 SWM Change Management Dashboard</h1>
+            <p class="subtitle">Master-Übersicht für Workflow-Steuerung</p>
+        </header>
+
+        <div class="config-section">
+            <h2>⚙️ n8n Konfiguration</h2>
+            <div class="input-group">
+                <label for="n8n-base-url">n8n Base URL</label>
+                <input type="text" id="n8n-base-url" placeholder="https://n8n.swm.de" value="http://localhost:5678">
+            </div>
+            <div class="input-group">
+                <label for="datatable-id">DataTable ID (agent_sessions)</label>
+                <input type="text" id="datatable-id" placeholder="cQJ0PWxEInNEL92O" value="cQJ0PWxEInNEL92O">
+            </div>
+            <button class="btn" onclick="loadSessions()">📥 Sessions laden</button>
+        </div>
+
+        <div class="config-section">
+            <h2>📋 Change-Sessions aus Workflow 1</h2>
+            <div id="sessions-container">
+                <div class="empty-state">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <path d="M12 6v6l4 2"></path>
+                    </svg>
+                    <p>Klicke auf "Sessions laden" um zu starten</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="action-panel" id="action-panel">
+            <h2>🎯 Aktionen für ausgewählte Session</h2>
+            <div class="selected-info" id="selected-info"></div>
+            
+            <div class="optional-fields">
+                <h3>📝 Optional: Zusatzinformationen für UC4 (Partner-Auswahl)</h3>
+                <div class="input-group">
+                    <label for="budget-range">Budget Range</label>
+                    <input type="text" id="budget-range" placeholder="z.B. 50.000 - 100.000 EUR">
+                </div>
+                <div class="input-group">
+                    <label for="partner-type">Präferierter Partner-Typ</label>
+                    <input type="text" id="partner-type" placeholder="z.B. Change Beratung & Training">
+                </div>
+            </div>
+
+            <div class="action-buttons">
+                <button class="btn btn-communication" onclick="generateCommunication()">
+                    📢 UC3: Changekommunikation generieren
+                </button>
+                <button class="btn btn-partner" onclick="generatePartnerSelection()">
+                    🤝 UC4: Partner-Auswahl generieren
+                </button>
+                <button class="btn btn-both" onclick="generateBoth()">
+                    ⚡ Beide gleichzeitig generieren
+                </button>
+            </div>
+
+            <div id="results-container"></div>
+        </div>
+    </div>
+
+    <script>
+        let selectedSession = null;
+        let allSessions = [];
+
+        function getN8nBaseUrl() {
+            return document.getElementById('n8n-base-url').value.trim();
+        }
+
+        function getDataTableId() {
+            return document.getElementById('datatable-id').value.trim();
+        }
+
+        async function loadSessions() {
+            const container = document.getElementById('sessions-container');
+            container.innerHTML = `
+                <div class="loading">
+                    <div class="spinner"></div>
+                    <p>Lade Sessions aus DataTable...</p>
+                </div>
+            `;
+
+            try {
+                const baseUrl = getN8nBaseUrl();
+                const tableId = getDataTableId();
+
+                const response = await fetch(`${baseUrl}/webhook/list-sessions`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ datatable_id: tableId })
+                });
+
+                // Check if response is ok
+                if (!response.ok) {
+                    throw new Error(`HTTP Error ${response.status}: ${response.statusText}`);
+                }
+
+                // Check if response has content
+                const contentType = response.headers.get('content-type');
+                if (!contentType || !contentType.includes('application/json')) {
+                    throw new Error(`Ungültiger Content-Type: ${contentType}. Ist der Workflow aktiviert?`);
+                }
+
+                const text = await response.text();
+                if (!text || text.trim() === '') {
+                    throw new Error('Leere Antwort vom Server. Prüfe ob der Workflow aktiviert ist.');
+                }
+
+                const data = JSON.parse(text);
+                
+                if (!data.success) {
+                    throw new Error(data.error || 'Unbekannter Fehler');
+                }
+
+                allSessions = data.sessions || [];
+                displaySessions(allSessions);
+
+            } catch (error) {
+                console.error('Load Sessions Error:', error);
+                container.innerHTML = `
+                    <div class="error-message">
+                        <strong>❌ Fehler beim Laden:</strong><br>
+                        ${error.message}<br><br>
+                        <strong>Checkliste:</strong><br>
+                        ✓ Ist n8n erreichbar? <code>${getN8nBaseUrl()}</code><br>
+                        ✓ Ist der Workflow "SWM-Change-List-Sessions" importiert?<br>
+                        ✓ Ist der Workflow aktiviert? (Toggle oben rechts in n8n)<br>
+                        ✓ Webhook-URL: <code>${getN8nBaseUrl()}/webhook/list-sessions</code><br><br>
+                        <button class="btn" onclick="testWebhook()">🔍 Webhook testen</button>
+                    </div>
+                `;
+            }
+        }
+
+        async function testWebhook() {
+            const baseUrl = getN8nBaseUrl();
+            const container = document.getElementById('sessions-container');
+            
+            container.innerHTML = `
+                <div class="loading">
+                    <div class="spinner"></div>
+                    <p>Teste Webhook-Verbindung...</p>
+                </div>
+            `;
+
+            try {
+                const testUrl = `${baseUrl}/webhook/list-sessions`;
+                console.log('Testing webhook:', testUrl);
+
+                const response = await fetch(testUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ test: true })
+                });
+
+                const status = response.status;
+                const statusText = response.statusText;
+                const headers = {};
+                response.headers.forEach((value, key) => {
+                    headers[key] = value;
+                });
+                const text = await response.text();
+
+                container.innerHTML = `
+                    <div class="result-panel ${response.ok ? 'result-success' : 'result-error'}">
+                        <h3>🔍 Webhook Test Ergebnis</h3>
+                        <div class="result-content">
+                            <strong>Status:</strong> ${status} ${statusText}<br>
+                            <strong>Headers:</strong><br>
+                            <pre>${JSON.stringify(headers, null, 2)}</pre>
+                            <strong>Response Body:</strong><br>
+                            <pre>${text || '(leer)'}</pre>
+                        </div>
+                        <button class="btn" onclick="loadSessions()">🔄 Nochmal Sessions laden</button>
+                    </div>
+                `;
+            } catch (error) {
+                container.innerHTML = `
+                    <div class="error-message">
+                        <strong>❌ Verbindungsfehler:</strong><br>
+                        ${error.message}<br><br>
+                        Der n8n Server ist nicht erreichbar oder der Workflow existiert nicht.
+                    </div>
+                `;
+            }
+        }
+
+        function displaySessions(sessions) {
+            const container = document.getElementById('sessions-container');
+            
+            if (sessions.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <p>Keine Sessions gefunden</p>
+                    </div>
+                `;
+                return;
+            }
+
+            const html = `
+                <div class="sessions-grid">
+                    ${sessions.map(session => `
+                        <div class="session-card ${selectedSession?.session_id === session.session_id ? 'selected' : ''}" 
+                             onclick="selectSession('${session.session_id}')">
+                            <div class="session-header">
+                                <span class="session-id">${session.session_id}</span>
+                                <span class="status-badge status-${session.status}">${session.status}</span>
+                            </div>
+                            <div class="session-info">
+                                <strong>📧 Email:</strong> ${session.requester_email}<br>
+                                <strong>📅 Erstellt:</strong> ${new Date(session.created_at || Date.now()).toLocaleDateString('de-DE')}<br>
+                                <strong>🔄 Runden:</strong> ${session.round_counter || 0}/${session.max_rounds || 50}
+                            </div>
+                            ${session.answers?.beschreibung_vorhaben ? `
+                                <div class="session-description">
+                                    ${session.answers.beschreibung_vorhaben.substring(0, 100)}...
+                                </div>
+                            ` : ''}
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+
+            container.innerHTML = html;
+        }
+
+        function selectSession(sessionId) {
+            selectedSession = allSessions.find(s => s.session_id === sessionId);
+            displaySessions(allSessions);
+            
+            const actionPanel = document.getElementById('action-panel');
+            const selectedInfo = document.getElementById('selected-info');
+            
+            actionPanel.classList.add('active');
+            
+            selectedInfo.innerHTML = `
+                <strong>Ausgewählte Session:</strong> ${selectedSession.session_id}<br>
+                <strong>Email:</strong> ${selectedSession.requester_email}<br>
+                <strong>Status:</strong> ${selectedSession.status}<br>
+                ${selectedSession.answers?.zielsetzung ? 
+                    `<strong>Zielsetzung:</strong> ${selectedSession.answers.zielsetzung.substring(0, 150)}...` : ''}
+            `;
+
+            // Scroll zum Action Panel
+            actionPanel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+
+        async function generateCommunication() {
+            if (!selectedSession) return;
+
+            const resultsContainer = document.getElementById('results-container');
+            resultsContainer.innerHTML = `
+                <div class="result-panel">
+                    <div class="loading">
+                        <div class="spinner"></div>
+                        <p>Generiere Changekommunikation...</p>
+                    </div>
+                </div>
+            `;
+
+            try {
+                const baseUrl = getN8nBaseUrl();
+                const url = `${baseUrl}/webhook/change-communication`;
+                console.log('UC3 Request:', url, selectedSession);
+                
+                const response = await fetch(url, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        session_id: selectedSession.session_id,
+                        email: selectedSession.requester_email
+                    })
+                });
+
+                console.log('UC3 Response status:', response.status);
+                const responseText = await response.text();
+                console.log('UC3 Response text:', responseText);
+                
+                if (!responseText) {
+                    throw new Error('Workflow hat keine Antwort zurückgegeben. Ist der Workflow aktiv?');
+                }
+                
+                const data = JSON.parse(responseText);
+
+                if (data.success) {
+                    resultsContainer.innerHTML = `
+                        <div class="result-panel result-success">
+                            <h3>✅ UC3: Changekommunikation erfolgreich generiert!</h3>
+                            <div class="result-content">
+                                <strong>Session ID:</strong> ${data.session_id}<br><br>
+                                <strong>📄 Dokument:</strong> ${data.filename}<br><br>
+                                <details>
+                                    <summary><strong>Change Story anzeigen</strong></summary>
+                                    <pre>${data.change_story}</pre>
+                                </details>
+                                <details>
+                                    <summary><strong>Kommunikationsplan anzeigen</strong></summary>
+                                    <pre>${data.communication_plan}</pre>
+                                </details>
+                            </div>
+                        </div>
+                    `;
+                } else {
+                    throw new Error(data.error || 'Unbekannter Fehler');
+                }
+            } catch (error) {
+                resultsContainer.innerHTML = `
+                    <div class="result-panel result-error">
+                        <h3>❌ Fehler bei UC3</h3>
+                        <p>${error.message}</p>
+                        <details style="margin-top: 10px;">
+                            <summary>Debug-Info</summary>
+                            <pre>URL: ${getN8nBaseUrl()}/webhook/change-communication
+Session: ${JSON.stringify(selectedSession, null, 2)}</pre>
+                        </details>
+                    </div>
+                `;
+            }
+        }
+
+        async function generatePartnerSelection() {
+            if (!selectedSession) return;
+
+            const budgetRange = document.getElementById('budget-range').value;
+            const partnerType = document.getElementById('partner-type').value;
+
+            const resultsContainer = document.getElementById('results-container');
+            resultsContainer.innerHTML = `
+                <div class="result-panel">
+                    <div class="loading">
+                        <div class="spinner"></div>
+                        <p>Generiere Partner-Auswahlunterlagen...</p>
+                    </div>
+                </div>
+            `;
+
+            try {
+                const baseUrl = getN8nBaseUrl();
+                const url = `${baseUrl}/webhook/change-partner-selection`;
+                console.log('UC4 Request:', url, selectedSession);
+                
+                const response = await fetch(url, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        session_id: selectedSession.session_id,
+                        email: selectedSession.requester_email,
+                        budget_range: budgetRange,
+                        preferred_partner_type: partnerType
+                    })
+                });
+
+                console.log('UC4 Response status:', response.status);
+                const responseText = await response.text();
+                console.log('UC4 Response text:', responseText);
+                
+                if (!responseText) {
+                    throw new Error('Workflow hat keine Antwort zurückgegeben. Ist der Workflow aktiv?');
+                }
+                
+                const data = JSON.parse(responseText);
+
+                if (data.success) {
+                    resultsContainer.innerHTML = `
+                        <div class="result-panel result-success">
+                            <h3>✅ UC4: Partner-Auswahl erfolgreich generiert!</h3>
+                            <div class="result-content">
+                                <strong>Session ID:</strong> ${data.session_id}<br><br>
+                                <strong>📄 Dokument:</strong> ${data.filename}<br><br>
+                                <details>
+                                    <summary><strong>Anforderungsprofil anzeigen</strong></summary>
+                                    <pre>${data.separate_documents.requirements_profile}</pre>
+                                </details>
+                                <details>
+                                    <summary><strong>RFP-Dokument anzeigen</strong></summary>
+                                    <pre>${data.separate_documents.rfp_document}</pre>
+                                </details>
+                            </div>
+                        </div>
+                    `;
+                } else {
+                    throw new Error(data.error || 'Unbekannter Fehler');
+                }
+            } catch (error) {
+                resultsContainer.innerHTML = `
+                    <div class="result-panel result-error">
+                        <h3>❌ Fehler bei UC4</h3>
+                        <p>${error.message}</p>
+                        <details style="margin-top: 10px;">
+                            <summary>Debug-Info</summary>
+                            <pre>URL: ${getN8nBaseUrl()}/webhook/change-partner-selection
+Session: ${JSON.stringify(selectedSession, null, 2)}
+Budget: ${budgetRange}
+Partner Type: ${partnerType}</pre>
+                        </details>
+                    </div>
+                `;
+            }
+        }
+
+        async function generateBoth() {
+            const resultsContainer = document.getElementById('results-container');
+            resultsContainer.innerHTML = `
+                <div class="result-panel">
+                    <div class="loading">
+                        <div class="spinner"></div>
+                        <p>Generiere beide Dokumente parallel...</p>
+                    </div>
+                </div>
+            `;
+
+            try {
+                await Promise.all([
+                    generateCommunication(),
+                    generatePartnerSelection()
+                ]);
+
+                resultsContainer.innerHTML = `
+                    <div class="result-panel result-success">
+                        <h3>✅ Beide Workflows erfolgreich ausgeführt!</h3>
+                        <p>Siehe Ergebnisse oben ↑</p>
+                    </div>
+                `;
+            } catch (error) {
+                resultsContainer.innerHTML = `
+                    <div class="result-panel result-error">
+                        <h3>❌ Fehler bei der parallelen Ausführung</h3>
+                        <p>${error.message}</p>
+                    </div>
+                `;
+            }
+        }
+    </script>
+</body>
+</html>
