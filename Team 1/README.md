@@ -34,7 +34,7 @@
 ### 1.1 PROBLEM STATEMENT:
 
 ##### WE NEED:
-“... an internal knowledge base in form of an AI Chatbot
+ “... an internal knowledge base in form of an AI Chatbot
 
 A Dashboard with an Chatbot based on their intranet including a preview function and the possibility to download the PDF, if needed”
 
@@ -79,8 +79,8 @@ On top each page features a direct comparison with Celonis based on some of this
 ### 2.1 PROBLEM STATEMENT:
 
 ##### WE NEED:
-"... an internal knowledge base in form of an AI Chatbot"
-"... a Dashboard with an Chatbot based on their intranet including a preview function and the possibility to download the PDF, if needed”
+- "... an internal knowledge base in form of an AI Chatbot"
+- "... a Dashboard with an Chatbot based on their intranet including a preview function and the possibility to download the PDF, if needed”
 
 
 ### 2.2 SOLUTION:
