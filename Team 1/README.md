@@ -18,7 +18,7 @@
     - [1.2 Solution](#12-solution)
         - [1.2.1 Links](#121-links)
         - [1.2.2 Tech Stack](#122-tech-stack)
-        - [1.2.3 Workflow](#123-workflow)
+        - [1.2.3 Product Overview (User Views)](#123-workflow)
 - [2. Use Case 2: Siteco Internal Knowledge Chatbot](#2-use-case-2-siteco-internal-knowledge-chatbot)
     - [2.1 Problem Statement](#21-problem-statement)
     - [2.2 Solution](#22-solution)
