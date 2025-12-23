@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SITECO</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&family=Playfair+Display:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <!-- PDF.js Library -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+</head>
+<body>
+    <img src="/SITECO_Logo.jpg" alt="SITECO Logo" class="fixed-logo">
+    
+    <!-- Menubar -->
+    <nav class="menubar">
+        <button class="menu-btn active" data-page="chatbot">Chatbot</button>
+        <button class="menu-btn" data-page="about">Über Uns</button>
+        <button class="menu-btn" data-page="sustainability">Nachhaltigkeit</button>
+        <div class="menu-dropdown">
+            <button class="menu-btn" data-page="career">Karriere</button>
+            <div class="dropdown-content">
+                <button class="menu-btn" data-page="career-training">Ausbildung</button>
+                <button class="menu-btn" data-page="career-studies">Studium</button>
+                <button class="menu-btn" data-page="career-jobs">Stellenausschreibungen</button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Info Text -->
+    <div class="menubar-info-text">
+        "Der Siteco-Wissensassistent hilft dir bei Fragen zu verschiedenen Themen, wie Produktanleitungen, Fragen zur Überstundenregelung, etc. — Frag einfach nach!"
+    </div>
+
+    <!-- Main Content Area -->
+    <div id="content">
+        <!-- Chatbot Page -->
+        <div id="chatbot-page" class="page active">
+            <div class="chatbot-title">CHATBOT</div>
+            <div class="chat-container">
+                <div class="chat-header">
+                    <div class="header-left">
+                        <span class="logo">siteco</span>
+                        <span class="header-divider"></span>
+                        <span class="header-title">Chatbot</span>
+                    </div>
+                    <span class="status-indicator" id="status"></span>
+                </div>
+                
+                <div class="chat-messages" id="chatMessages">
+                    <div class="message bot-message">
+                        <div class="bot-icon">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <rect x="3" y="11" width="18" height="10" rx="2"/>
+                                <circle cx="12" cy="5" r="2"/>
+                                <path d="M12 7v4"/>
+                                <line x1="8" y1="16" x2="8" y2="16"/>
+                                <line x1="16" y1="16" x2="16" y2="16"/>
+                            </svg>
+                        </div>
+                        <div class="message-content">
+                            Hallo! Ich bin dein SITECO Wissensassistent. Ich kann dir helfen, Informationen aus deinen internen Dokumenten zu finden. Frag mich alles über Arbeitsanweisungen, Prozesse oder Unternehmensrichtlinien.
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="chat-input-container">
+                    <div class="input-wrapper">
+                        <textarea 
+                            id="messageInput" 
+                            placeholder="Ask a question about your documents..."
+                            rows="1"
+                        ></textarea>
+                        <button id="sendButton">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                                <path d="M22 2L11 13M22 2L15 22L11 13M22 2L2 8L11 13" 
+                                      stroke="currentColor" 
+                                      stroke-width="2" 
+                                      stroke-linecap="round" 
+                                      stroke-linejoin="round"/>
+                            </svg>
+                        </button>
+                    </div>
+                    <div class="input-hint">Press Enter to send, Shift+Enter for new line</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- About Page -->
+        <div id="about-page" class="page">
+            <div class="page-title">ÜBER UNS</div>
+            <div class="page-content">
+                <div class="page-text">
+                    <p><strong>Innovation.<br>Nachhaltigkeit.<br>Made in Traunreut.</strong></p>
+                    <p>Seit über 160 Jahren entwickeln und fertigen wir zukunftsweisende Lichtlösungen, die neue Maßstäbe in Effizienz und Nachhaltigkeit setzen.</p>
+                    <p>Innovation ist unsere DNA: Bei uns trifft eine einzigartige, technologiegetriebene Wertschöpfungstiefe auf ein unvergleichbares Serviceangebot für unsere Kunden - alles aus einer Hand, Made in Traunreut, Deutschland.</p>
+                    <p>Wir gestalten wahrhaftig die Zukunft des Lichts. SITECO — Quantensprung Lichtlösung.</p>
+                    <p><strong>Wir gestalten die Zukunft des Lichts.</strong></p>
+                    <p>Unser Anspruch sind nicht nur die innovativsten und nachhaltigsten Leuchten der Welt zu schaffen, sondern ganzheitliche Lichtlösungen: Beleuchtung, Steuerung, Projekt und Betrieb - aus einer Hand. SITECO ist Komplettanbieter, wenn es um Beleuchtung geht, die modernste Technologie Made in Germany mit einem einzigartigen Serviceangebot nahtlos vereint.</p>
+                </div>
+                <button class="page-button">JETZT UNSERE FIRMENSTRATEGIE UND IDEOLOGIE ANSEHEN</button>
+            </div>
+        </div>
+
+        <!-- Sustainability Page -->
+        <div id="sustainability-page" class="page">
+            <div class="page-title" style="font-size: 100px;">NACHHALTIGKEIT</div>
+            <div class="page-content">
+                <div class="page-text">
+                    <p><strong>Nachhaltigkeit ist das Ergebnis einer ganzheitlichen Betrachtung ökonomischer, ökologischer und sozialer Aspekte - nur wer dies versteht und die notwendigen Schritte unternimmt, wird die Herausforderungen der Zukunft erfolgreich meistern.</strong><br>
+                        Unsere Unternehmensstrategie baut auf den wesentlichen Aspekten des nachhaltigen Wirtschaftens auf. Durch zertifizierte Umwelt- und Qualitätsmanagementsysteme setzen wir unsere nachhaltige Strategie Tag für Tag um.</p> 
+                    <p> 
+                        Jedes Jahr sparen unsere Beleuchtungslösungen weltweit etwa 3 Millionen Tonnen CO2 ein.</p>
+                    <p>
+                        Unser gesamter Produktentwicklungsprozess basiert auf der Prämisse, so wenig Ressourcen wie möglich zu verbrauchen: sowohl in der Produktion als auch im täglichen Betrieb unserer Produkte, 
+                        um so "Win-Win"-Vorteile zu schaffen - für unsere Kunden und die Gesellschaft sowie für die Natur und die Tierwelt.</p>
+                </div>
+                <button class="page-button">JETZT UNSERE NACHHALTIGKEITSSTRATEGIE ANSEHEN</button>
+            </div>
+        </div>
+
+        <!-- Career Training Page -->
+        <div id="career-training-page" class="page">
+            <div class="page-title">AUSBILDUNG</div>
+            <div class="page-content">
+                <div class="page-text">
+                    <p><strong>Du möchtest doch nochmal eine andere Ausbildung bei uns beginnen um dich persönlich und beruflich weiterzuentwickeln?</strong></p>
+                    <p>
+                    Eine Ausbildung bietet dir die ideale Möglichkeit, praktische Erfahrungen zu sammeln,
+                   neue Fähigkeiten zu erlernen und den Grundstein für deine berufliche Zukunft zu legen.
+                   Bei uns erwarten dich abwechslungsreiche Aufgaben, persönliche Betreuung
+                   und echte Entwicklungschancen.
+                   </p>
+                   <p>
+                   Informiere dich auf unserer Website über unsere aktuellen Ausbildungsangebote
+                   und finde heraus, welcher Weg am besten zu dir passt.
+                   </p>
+                </div>
+                <button class="page-button">Jetzt Ausbildung anzeigen</button>
+            </div>
+        </div>
+
+        <!-- Career Studies Page -->
+        <div id="career-studies-page" class="page">
+            <div class="page-title">STUDIUM</div>
+            <div class="page-content">
+                <div class="page-text">
+                    <p><strong>Du möchtest Theorie und Praxis verbinden und dein Wissen gezielt vertiefen?</strong></p>
+                    <p>
+                    Ein Studium oder duales Studium eröffnet dir vielfältige Möglichkeiten, dich fachlich
+                    und persönlich weiterzuentwickeln. Bei uns kannst du dein theoretisches Wissen
+                    direkt in der Praxis anwenden und wertvolle Einblicke in den Berufsalltag gewinnen.
+                    </p>
+                    <p>
+                    Entdecke auf unserer Website unsere Studienangebote und erfahre,
+                    wie du gemeinsam mit uns deine Zukunft gestalten kannst.
+                    </p>
+                </div>
+                <button class="page-button">Jetzt Studium anzeigen</button>
+            </div>
+        </div>
+
+        <!-- Career Jobs Page -->
+        <div id="career-jobs-page" class="page">
+            <div class="page-content">
+                <div class="page-text">
+                    <p><strong>Du spielst mit dem Gedanken, dich auch außerhalb deiner aktuellen Stelle umzusehen?</strong></p>
+                    <p>Wir möchten dich dabei unterstützen, deinen ganz eigenen Karriereweg zu gestalten. Auf unserer Website findest du alle aktuell ausgeschriebenen Positionen — übersichtlich, transparent und mit vielen spannenden Aufgaben.
+                    </p>
+                    <p>Lass dich inspirieren, informiere dich in Ruhe und finde heraus, wo deine nächsten beruflichen Schritte hinführen könnten.
+                    </p>
+                </div>
+                <button class="page-button">Jetzt Stellenausschreibungen anzeigen</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- PDF Modal -->
+    <div id="pdfModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="modalTitle">PDF Viewer</h3>
+                <div class="modal-controls">
+                    <a id="downloadBtn" href="#" download class="modal-btn" title="Download">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                            <polyline points="7 10 12 15 17 10"/>
+                            <line x1="12" y1="15" x2="12" y2="3"/>
+                        </svg>
+                    </a>
+                    <button id="closeModal" class="modal-btn modal-close" title="Schließen">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <line x1="18" y1="6" x2="6" y2="18"/>
+                            <line x1="6" y1="6" x2="18" y2="18"/>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+            <div class="modal-body">
+                <div class="modal-sidebar">
+                    <h4>🔍 Verwendete Textpassagen:</h4>
+                    <div id="chunksList" class="chunks-list"></div>
+                </div>
+                <div class="modal-pdf">
+                    <div class="pdf-controls">
+                        <button id="prevPage" class="pdf-nav-btn">← Zurück</button>
+                        <span id="pageInfo">Seite 1 / 1</span>
+                        <button id="nextPage" class="pdf-nav-btn">Weiter →</button>
+                    </div>
+                    <div id="pdfContainer" class="pdf-container">
+                        <canvas id="pdfCanvas"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
