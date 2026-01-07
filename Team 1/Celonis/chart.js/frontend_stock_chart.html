@@ -1,0 +1,91 @@
+<div class="chart-container" style="position: relative; width: 100%; height: 300px;">
+    <canvas id="chart-{{wf {&quot;path&quot;:&quot;slug&quot;,&quot;type&quot;:&quot;PlainText&quot;\} }}"></canvas>
+</div>
+
+<textarea id="data-{{wf {&quot;path&quot;:&quot;slug&quot;,&quot;type&quot;:&quot;PlainText&quot;\} }}" style="display:none;">{{wf {&quot;path&quot;:&quot;history&quot;,&quot;type&quot;:&quot;PlainText&quot;\} }}</textarea>
+
+<script>
+  (function() {
+    const slug = "{{wf {&quot;path&quot;:&quot;slug&quot;,&quot;type&quot;:&quot;PlainText&quot;\} }}"; 
+    const canvasId = "chart-" + slug;
+    const dataId = "data-" + slug;
+
+    const initChart = () => {
+        if (typeof Chart === 'undefined') {
+            setTimeout(initChart, 100); 
+            return;
+        }
+
+        const rawData = document.getElementById(dataId).value;
+        const ctx = document.getElementById(canvasId);
+
+        if (!rawData || !rawData.trim() || rawData.includes("null") || !ctx) {
+            return; 
+        }
+
+        try {
+            const chartData = JSON.parse(rawData);
+
+            new Chart(ctx.getContext('2d'), {
+                type: 'line',
+                data: chartData,
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false }, 
+                        tooltip: { 
+                            mode: 'index', 
+                            intersect: false,
+                            callbacks: {
+                                // Tooltip mit Währung
+                                label: function(c) { return ' $' + c.raw.toFixed(2); }
+                            }
+                        }
+                    },
+                    // HIER IST DIE ÄNDERUNG FÜR ACHSEN:
+                    scales: {
+                        x: { 
+                            display: true, // X-Achse (Datum) anzeigen
+                            grid: {
+                                display: false // Keine vertikalen Linien (cleaner)
+                            },
+                            ticks: {
+                                maxTicksLimit: 6, // Zeige maximal 6 Datum-Werte (gegen Überlappung)
+                                maxRotation: 0,
+                                autoSkip: true,
+                                font: {
+                                    size: 10 // Schrift etwas kleiner
+                                }
+                            }
+                        },
+                        y: { 
+                            display: true, // Y-Achse (Preis) anzeigen
+                            position: 'left', // Preis rechts anzeigen (wie bei TradingView oft üblich) - oder 'left'
+                            grid: { 
+                                color: '#f0f0f0', // Ganz helles Gitter
+                                drawBorder: false 
+                            },
+                            ticks: {
+                                callback: function(value) { return '$' + value; }, // $ Zeichen davor
+                                font: {
+                                    size: 10
+                                }
+                            }
+                        }
+                    },
+                    elements: {
+                        point: { radius: 0, hitRadius: 10 }, 
+                        line: { tension: 0.2, borderWidth: 2 } 
+                    }
+                }
+            });
+
+        } catch (e) {
+            console.error("Chart Error bei " + slug, e);
+        }
+    };
+
+    initChart();
+  })();
+</script>

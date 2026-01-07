@@ -1,0 +1,23 @@
+services:
+  n8n:
+    image: docker.n8n.io/n8nio/n8n
+    container_name: n8n
+    ports:
+      - "5678:5678"
+    environment:
+      - GENERIC_TIMEZONE=Europe/Berlin
+      - TZ=Europe/Berlin
+      - N8N_ENFORCE_SETTINGS_FILE_PERMISSIONS=true
+      - N8N_RUNNERS_ENABLED=true
+      # NEU: Erlaube crypto und fs Module
+      - NODE_FUNCTION_ALLOW_BUILTIN=crypto,fs,path
+    volumes:
+      - n8n_data:/home/node/.n8n
+      # PDF-Upload Ordner
+      - ./pdf-uploads:/data/pdfs:rw
+      #   Lokaler Ordner   Im Container Rechte (read-write)
+    restart: unless-stopped
+
+volumes:
+  n8n_data:
+

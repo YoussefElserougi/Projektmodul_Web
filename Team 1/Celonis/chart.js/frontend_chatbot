@@ -1,0 +1,289 @@
+<style>
+  /* --- 1. CSS & DESIGN (Celonis Enterprise Style) --- */
+  :root {
+    --chat-primary: #000000; /* Celonis Schwarz */
+    --chat-bg: #ffffff;
+    --chat-grey: #F5F5F7;
+    --chat-text: #111111;
+    --chat-border: #E5E5E5;
+    --font-family: 'Graphik', 'Inter', -apple-system, sans-serif;
+  }
+
+  /* Container für das gesamte Widget (unten rechts fixiert) */
+  #celonis-chat-wrapper {
+    position: fixed;
+    bottom: 30px;
+    right: 30px;
+    z-index: 9999;
+    font-family: var(--font-family);
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+  }
+
+  /* Der Runde Button (Launcher) */
+  #chat-launcher {
+    width: 60px;
+    height: 60px;
+    background-color: var(--chat-primary);
+    border-radius: 50%;
+    cursor: pointer;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    transition: transform 0.2s ease;
+  }
+  #chat-launcher:hover { transform: scale(1.05); }
+  #chat-launcher svg { width: 28px; height: 28px; fill: white; }
+
+  /* Das eigentliche Fenster */
+  #chat-window {
+    width: 400px;
+    height: 600px;
+    background: var(--chat-bg);
+    border-radius: 12px;
+    box-shadow: 0 12px 40px rgba(0,0,0,0.12);
+    border: 1px solid var(--chat-border);
+    display: none; /* Standardmäßig versteckt */
+    flex-direction: column;
+    margin-bottom: 20px;
+    overflow: hidden;
+  }
+
+  /* Header */
+  .chat-header {
+    background: var(--chat-primary);
+    color: white;
+    padding: 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .chat-header h3 { margin: 0; font-size: 16px; font-weight: 600; }
+  .chat-header span { font-size: 12px; opacity: 0.8; display: block; margin-top: 4px;}
+  .close-btn { cursor: pointer; font-size: 24px; line-height: 1; }
+
+  /* Nachrichten Bereich */
+  #chat-messages {
+    flex: 1;
+    padding: 20px;
+    overflow-y: auto;
+    background: #FAFAFA;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+  }
+
+  /* Sprechblasen */
+  .message {
+    max-width: 80%;
+    padding: 12px 16px;
+    border-radius: 8px;
+    font-size: 14px;
+    line-height: 1.5;
+    position: relative;
+  }
+  
+  /* User Nachricht (Rechts, Schwarz) */
+  .message.user {
+    align-self: flex-end;
+    background-color: var(--chat-primary);
+    color: white;
+    border-bottom-right-radius: 2px;
+  }
+
+  /* Bot Nachricht (Links, Grau) */
+  .message.bot {
+    align-self: flex-start;
+    background-color: white;
+    border: 1px solid var(--chat-border);
+    color: var(--chat-text);
+    border-bottom-left-radius: 2px;
+  }
+
+  /* Loading Animation (Punkte) */
+  .typing-indicator {
+    display: none;
+    align-self: flex-start;
+    background: white;
+    padding: 10px 15px;
+    border-radius: 8px;
+    border: 1px solid var(--chat-border);
+    margin-bottom: 10px;
+  }
+  .dot {
+    height: 8px; width: 8px; background-color: #bbb; border-radius: 50%;
+    display: inline-block; animation: blink 1.4s infinite both; margin: 0 2px;
+  }
+  .dot:nth-child(2) { animation-delay: 0.2s; }
+  .dot:nth-child(3) { animation-delay: 0.4s; }
+  @keyframes blink { 0% { opacity: .2; } 20% { opacity: 1; } 100% { opacity: .2; } }
+
+  /* Input Bereich */
+  .chat-input-area {
+    padding: 15px;
+    border-top: 1px solid var(--chat-border);
+    background: white;
+    display: flex;
+    gap: 10px;
+  }
+  #user-input {
+    flex: 1;
+    padding: 12px;
+    border: 1px solid var(--chat-border);
+    border-radius: 6px;
+    outline: none;
+    font-family: inherit;
+  }
+  #send-btn {
+    background: var(--chat-primary);
+    color: white;
+    border: none;
+    padding: 0 20px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 600;
+  }
+  #send-btn:hover { opacity: 0.9; }
+
+</style>
+
+<div id="celonis-chat-wrapper">
+  
+  <div id="chat-window">
+    <div class="chat-header">
+      <div>
+        <h3>Brand Intelligence Analyst</h3>
+        <span>Powered by MUC:DAI x Celonis</span>
+      </div>
+      <div class="close-btn" onclick="toggleChat()">×</div>
+    </div>
+    
+    <div id="chat-messages">
+      <div class="message bot">
+        Hello. I am your Agentic Employee.<br>I am monitoring Tier 1 & Tier 2 competitors including SAP and Palantir. What would you like to analyze?
+      </div>
+    </div>
+
+    <div id="loading-dots" class="typing-indicator">
+      <span class="dot"></span><span class="dot"></span><span class="dot"></span>
+    </div>
+
+    <div class="chat-input-area">
+      <input type="text" id="user-input" placeholder="Ask about strategy, market signals..." onkeypress="handleEnter(event)">
+      <button id="send-btn" onclick="sendMessage()">Send</button>
+    </div>
+  </div>
+
+  <div id="chat-launcher" onclick="toggleChat()">
+    <svg viewBox="0 0 24 24"><path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"/></svg>
+  </div>
+
+</div>
+
+<script>
+// --- KONFIGURATION ---
+  // 👇 HIER DEINE URL REIN 👇
+  const WEBHOOK_URL = 'http://localhost:5678/webhook/bf4dd093-bb02-472c-9454-7ab9af97bd1d'; 
+
+  // --- LOGIK (Lädt erst, wenn die Seite fertig ist) ---
+  document.addEventListener('DOMContentLoaded', function() {
+    
+    // Elemente holen
+    const chatWindow = document.getElementById('chat-window');
+    const launcher = document.getElementById('chat-launcher');
+    const closeBtn = document.querySelector('.close-btn');
+    const sendBtn = document.getElementById('send-btn');
+    const userInput = document.getElementById('user-input');
+    const messagesContainer = document.getElementById('chat-messages');
+    const loadingDots = document.getElementById('loading-dots');
+
+    // Session ID initialisieren
+    let sessionId = localStorage.getItem('chat_session_id');
+    if (!sessionId) {
+      sessionId = Math.random().toString(36).substring(7);
+      localStorage.setItem('chat_session_id', sessionId);
+    }
+
+    // --- EVENT LISTENERS (Die Verbindung) ---
+    
+    // 1. Chat öffnen/schließen
+    function toggleChat() {
+      if (chatWindow.style.display === 'flex') {
+        chatWindow.style.display = 'none';
+      } else {
+        chatWindow.style.display = 'flex';
+      }
+    }
+    launcher.addEventListener('click', toggleChat);
+    closeBtn.addEventListener('click', toggleChat);
+
+    // 2. Senden beim Klicken
+    sendBtn.addEventListener('click', function(e) {
+      e.preventDefault(); // Verhindert Neuladen der Seite
+      sendMessage();
+    });
+
+    // 3. Senden bei Enter-Taste
+    userInput.addEventListener('keypress', function(e) {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        sendMessage();
+      }
+    });
+
+    // --- SENDE-LOGIK ---
+    async function sendMessage() {
+      const text = userInput.value.trim();
+      if (!text) return;
+
+      console.log("Sende Nachricht:", text); // Debugging im Browser
+
+      // User Nachricht anzeigen
+      addMessage(text, 'user');
+      userInput.value = '';
+
+      // Loading anzeigen
+      loadingDots.style.display = 'block';
+      messagesContainer.scrollTop = messagesContainer.scrollHeight;
+
+      try {
+        const response = await fetch(WEBHOOK_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ 
+            chatInput: text, 
+            sessionId: sessionId 
+          })
+        });
+
+        const data = await response.json();
+        console.log("Antwort erhalten:", data); // Debugging
+
+        // Loading weg
+        loadingDots.style.display = 'none';
+
+        // Bot Antwort anzeigen
+        // Fallback, falls n8n anders antwortet
+        const botText = data.output || data.text || data.message || JSON.stringify(data);
+        addMessage(botText, 'bot');
+
+      } catch (error) {
+        console.error("Fehler:", error);
+        loadingDots.style.display = 'none';
+        addMessage("Error: Could not reach the Analyst Agent.", 'bot');
+      }
+    }
+
+    // Helfer: Nachricht ins DOM hängen
+    function addMessage(text, sender) {
+      const msgDiv = document.createElement('div');
+      msgDiv.classList.add('message', sender);
+      msgDiv.innerHTML = text; // Erlaubt HTML vom Bot (Listen, Fettgedrucktes)
+      messagesContainer.appendChild(msgDiv);
+      messagesContainer.scrollTop = messagesContainer.scrollHeight;
+    }
+
+  }); // Ende DOMContentLoaded
+</script>

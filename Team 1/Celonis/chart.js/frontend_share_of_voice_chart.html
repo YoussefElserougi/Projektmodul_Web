@@ -1,0 +1,98 @@
+<div style="position: relative; height: 400px; width: 100%;">
+  <canvas id="hypeChart"></canvas>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script>
+// Wir warten, bis Webflow die ganze Seite fertig gemalt hat
+document.addEventListener("DOMContentLoaded", function() {
+  
+  // Debugging: Mal schauen, ob wir starten
+  console.log("🚀 Chart Script gestartet...");
+
+  // 1. Daten suchen
+  const items = document.querySelectorAll('.company-data-item');
+  console.log("🔍 Gefundene CMS-Items:", items.length);
+
+  // FALLS 0 Items gefunden wurden -> Abbruch verhindern
+  if (items.length === 0) {
+      console.error("❌ Keine Daten gefunden! Ist die Collection List auf der Seite?");
+      return;
+  }
+
+  const labels = [];
+  const dataValues = [];
+  const tooltips = [];
+  const backgroundColors = [];
+
+  // Farbschema (Celonis Teal, SAP Gold, etc.)
+  const colors = [
+      '#00D6E8', // Cyan (Celonis)
+      '#F0AB00', // Gold (SAP)
+      '#FA4616', // Orange (UiPath)
+      '#0530AD', // Blue (IBM)
+      '#737373', // Grey
+      '#000000'  // Black
+  ];
+
+  items.forEach((item, index) => {
+    // Sicherstellen, dass wir Text haben, sonst Fallback
+    const name = item.dataset.company || "Unbekannt";
+    
+    // WICHTIG: Strings in echte Zahlen umwandeln!
+    const hype = parseInt(item.dataset.hype || "0", 10);
+    const buzz = parseInt(item.dataset.buzz || "0", 10);
+
+    labels.push(name);
+    dataValues.push(hype);
+    tooltips.push(buzz);
+    
+    // Farben rotieren, falls wir mehr Items als Farben haben
+    backgroundColors.push(colors[index % colors.length]);
+  });
+
+  // 2. Chart initialisieren
+  const ctx = document.getElementById('hypeChart');
+  
+  if (ctx) {
+      new Chart(ctx.getContext('2d'), {
+        type: 'doughnut',
+        data: {
+          labels: labels,
+          datasets: [{
+            data: dataValues,
+            backgroundColor: backgroundColors,
+            borderWidth: 1,
+            borderColor: '#ffffff'
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false, // Wichtig für Webflow Container
+          plugins: {
+            legend: {
+                position: 'right', // Legende rechts sieht oft besser aus
+                labels: {
+                    font: { family: 'Arial, sans-serif', size: 12 }
+                }
+            },
+            tooltip: {
+                callbacks: {
+                    label: function(context) {
+                        let label = context.label || '';
+                        let value = context.raw || 0;
+                        let buzzVal = tooltips[context.dataIndex]; 
+                        return ` ${value}% Share of Voice (${buzzVal} Signale)`;
+                    }
+                }
+            }
+          }
+        }
+      });
+      console.log("✅ Chart erfolgreich gezeichnet!");
+  } else {
+      console.error("❌ Canvas Element nicht gefunden!");
+  }
+});
+</script>
