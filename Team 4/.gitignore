@@ -1,0 +1,17 @@
+# Data folder with sensitive information
+Team 4/data/**
+
+# Environment variables with credentials
+.env
+
+# Next.js build output and cache
+.next/
+node_modules/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE files
+.vscode/
+.idea/

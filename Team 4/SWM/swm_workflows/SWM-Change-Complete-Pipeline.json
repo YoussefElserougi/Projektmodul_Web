@@ -1,0 +1,244 @@
+{
+  "name": "SWM Change - Complete Pipeline",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "change-complete-pipeline",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [-400, 0],
+      "id": "webhook-trigger",
+      "name": "Webhook Trigger"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Input extrahieren\nconst input = $input.first().json;\nconst data = input.body || input;\n\nreturn {\n  json: {\n    session_id: data.session_id || \"\",\n    email: data.email || \"anonymous@pipeline.local\",\n    generate_communication: data.generate_communication !== false,\n    generate_rfp: data.generate_rfp !== false,\n    budget_range: data.budget_range || \"\",\n    preferred_partner_type: data.preferred_partner_type || \"\"\n  }\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [-200, 0],
+      "id": "normalize-input",
+      "name": "Normalize Input"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "boolean": [
+            {
+              "value1": "={{$json.generate_communication}}",
+              "value2": true
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [0, 0],
+      "id": "should-generate-comm",
+      "name": "Generate Communication?"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{$env.N8N_HOST}}/webhook/change-communication",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "session_id",
+              "value": "={{$json.session_id}}"
+            },
+            {
+              "name": "email",
+              "value": "={{$json.email}}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [200, -100],
+      "id": "call-uc3",
+      "name": "Call UC3: Communication"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "boolean": [
+            {
+              "value1": "={{$('Normalize Input').item.json.generate_rfp}}",
+              "value2": true
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [400, 0],
+      "id": "should-generate-rfp",
+      "name": "Generate RFP?"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{$env.N8N_HOST}}/webhook/change-partner-selection",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "session_id",
+              "value": "={{$('Normalize Input').item.json.session_id}}"
+            },
+            {
+              "name": "email",
+              "value": "={{$('Normalize Input').item.json.email}}"
+            },
+            {
+              "name": "budget_range",
+              "value": "={{$('Normalize Input').item.json.budget_range}}"
+            },
+            {
+              "name": "preferred_partner_type",
+              "value": "={{$('Normalize Input').item.json.preferred_partner_type}}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [600, -100],
+      "id": "call-uc4",
+      "name": "Call UC4: Partner Selection"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Sammle alle Ergebnisse\nconst input = $('Normalize Input').item.json;\nconst uc3Result = $('Call UC3: Communication').item?.json || null;\nconst uc4Result = $('Call UC4: Partner Selection').item?.json || null;\n\nreturn {\n  json: {\n    success: true,\n    session_id: input.session_id,\n    results: {\n      communication: uc3Result,\n      partner_selection: uc4Result\n    },\n    message: \"Complete pipeline executed successfully\"\n  }\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [800, 0],
+      "id": "combine-results",
+      "name": "Combine Results"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{$json}}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [1000, 0],
+      "id": "success-response",
+      "name": "Success Response"
+    }
+  ],
+  "connections": {
+    "Webhook Trigger": {
+      "main": [
+        [
+          {
+            "node": "Normalize Input",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalize Input": {
+      "main": [
+        [
+          {
+            "node": "Generate Communication?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generate Communication?": {
+      "main": [
+        [
+          {
+            "node": "Call UC3: Communication",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Generate RFP?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call UC3: Communication": {
+      "main": [
+        [
+          {
+            "node": "Generate RFP?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generate RFP?": {
+      "main": [
+        [
+          {
+            "node": "Call UC4: Partner Selection",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Combine Results",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call UC4: Partner Selection": {
+      "main": [
+        [
+          {
+            "node": "Combine Results",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Combine Results": {
+      "main": [
+        [
+          {
+            "node": "Success Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "tags": [],
+  "triggerCount": 1,
+  "updatedAt": "2025-12-10T00:00:00.000Z",
+  "versionId": "1"
+}

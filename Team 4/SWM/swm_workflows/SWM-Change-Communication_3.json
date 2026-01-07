@@ -1,0 +1,493 @@
+{
+  "name": "SWM Change - Communication Generator",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "change-communication",
+        "responseMode": "responseNode",
+        "options": {
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Access-Control-Allow-Origin",
+                "value": "*"
+              }
+            ]
+          }
+        }
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [-1200, 0],
+      "id": "webhook-trigger",
+      "name": "Webhook Trigger",
+      "webhookId": "change-communication-webhook"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Input normalisieren\nconst input = $input.first().json;\nconst data = input.body || input;\n\nreturn {\n  json: {\n    session_id: data.session_id || \"\",\n    requester_email: data.email || \"anonymous@chat.local\",\n    action: data.action || \"generate_all\"\n  }\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [-1000, 0],
+      "id": "normalize-input",
+      "name": "Normalize Input"
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "dataTableId": {
+          "__rl": true,
+          "value": "cQJ0PWxEInNEL92O",
+          "mode": "list",
+          "cachedResultName": "agent_sessions"
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "session_id",
+              "keyValue": "={{$json.session_id}}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1,
+      "position": [-800, 0],
+      "id": "get-session",
+      "name": "Get Session Data",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "session-exists",
+              "leftValue": "={{$json.id}}",
+              "rightValue": "",
+              "operator": {
+                "type": "number",
+                "operation": "exists",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [-600, 0],
+      "id": "check-session-exists",
+      "name": "IF: Session Exists?"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Parse Session Daten\nconst row = $json;\n\nreturn {\n  json: {\n    session_id: row.session_id,\n    requester_email: row.requester_email,\n    answers: JSON.parse(row.answers || \"{}\"),\n    metadata: JSON.parse(row.metadata || \"{}\"),\n    status: row.status\n  }\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [-400, -100],
+      "id": "parse-session",
+      "name": "Parse Session Data"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "error-message",
+              "name": "error",
+              "value": "Session nicht gefunden oder nicht abgeschlossen",
+              "type": "string"
+            },
+            {
+              "id": "status-code",
+              "name": "statusCode",
+              "value": "404",
+              "type": "number"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [-400, 100],
+      "id": "error-response",
+      "name": "Error: Session Not Found"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Extrahiere relevante Daten für Change Story\nconst answers = $json.answers;\nconst metadata = $json.metadata;\n\nconst changeStoryData = {\n  session_id: $json.session_id,\n  requester_email: $json.requester_email,\n  \n  // Kern der Change Story\n  project_description: answers.beschreibung_vorhaben || \"\",\n  key_points: answers.stichpunkte || \"\",\n  objective: answers.zielsetzung || \"\",\n  \n  // Strategischer Kontext\n  strategic_contribution: answers.beitrag_konzernstrategie || \"\",\n  strategic_goals: answers.strategische_ziele || \"\",\n  \n  // Von-Zu Beschreibung\n  from_state: answers.ziel_change_begleitung_von || \"\",\n  to_state: answers.ziel_change_begleitung_zu || \"\",\n  \n  // Risiken und Erfolgsfaktoren\n  risk_if_not_successful: answers.was_passiert_wenn_nicht_erfolgreich || \"\",\n  success_blockers: answers.erfolg_verhindern || \"\",\n  success_enablers: answers.erfolg_beitragen || \"\",\n  \n  // Stakeholder-Informationen\n  affected_areas: answers.betroffene_bereiche_personen || \"\",\n  number_of_people: answers.anzahl_mitarbeitende_fuehrungskraefte || \"\",\n  \n  // Zeitrahmen\n  timeline: answers.zeithorizont || \"\",\n  start_date: answers.startdatum || \"\",\n  hot_phases: answers.dauer_heisse_phasen || \"\",\n  \n  // Weitere Infos\n  contact_person: answers.ansprechpartner_name || \"\",\n  change_support_expectations: answers.erwartungen_change_begleitung || \"\",\n  pag_need: answers.changebedarf_pag || \"\",\n  other_notes: answers.sonstiges || \"\"\n};\n\nreturn { json: changeStoryData };"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [-200, -100],
+      "id": "extract-change-story-data",
+      "name": "Extract Change Story Data"
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "gpt-4o-mini",
+          "mode": "list",
+          "cachedResultName": "GPT-4O-MINI"
+        },
+        "responses": {
+          "values": [
+            {
+              "content": "=Du bist ein Experte für Change Management und Changekommunikation.\n\nDeine Aufgabe ist es, basierend auf den folgenden Projektinformationen eine überzeugende Change Story zu erstellen.\n\nEine Change Story sollte:\n1. Den aktuellen Zustand und das Problem beschreiben\n2. Die Vision des zukünftigen Zustands aufzeigen\n3. Erklären, warum die Veränderung wichtig ist\n4. Die strategische Bedeutung hervorheben\n5. Risiken bei Nicht-Handeln aufzeigen\n6. Erfolgsfaktoren und Enabler benennen\n7. Emotional ansprechend und motivierend sein\n\n## PROJEKTINFORMATIONEN:\n\n**Projektbeschreibung:**\n{{ $json.project_description }}\n\n**Schlüsselpunkte:**\n{{ $json.key_points }}\n\n**Zielsetzung:**\n{{ $json.objective }}\n\n**Strategischer Beitrag:**\n{{ $json.strategic_contribution }}\n\n**Strategische Ziele:**\n{{ $json.strategic_goals }}\n\n**Von-Zustand:**\n{{ $json.from_state }}\n\n**Zu-Zustand:**\n{{ $json.to_state }}\n\n**Risiko bei Nicht-Erfolg:**\n{{ $json.risk_if_not_successful }}\n\n**Erfolgshindernisse:**\n{{ $json.success_blockers }}\n\n**Erfolgsfaktoren:**\n{{ $json.success_enablers }}\n\n**Betroffene Bereiche/Personen:**\n{{ $json.affected_areas }}\n\n**Anzahl Mitarbeitende:**\n{{ $json.number_of_people }}\n\n**Zeitrahmen:**\n{{ $json.timeline }}\n\n---\n\nErstelle eine professionelle Change Story mit folgender Struktur:\n\n1. **Warum jetzt?** - Die Dringlichkeit und der Kontext\n2. **Wo stehen wir heute?** - Der aktuelle Zustand\n3. **Wohin wollen wir?** - Die Vision\n4. **Was bedeutet das strategisch?** - Die Bedeutung für die Organisation\n5. **Was passiert, wenn wir es nicht tun?** - Die Risiken\n6. **Was bringt uns zum Erfolg?** - Die Erfolgsfaktoren\n7. **Wie geht es weiter?** - Die nächsten Schritte\n\nSchreibe die Change Story professionell, motivierend und überzeugend. Nutze eine klare, verständliche Sprache."
+            }
+          ]
+        },
+        "options": {
+          "temperature": 0.7
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 2,
+      "position": [0, -100],
+      "id": "generate-change-story",
+      "name": "AI: Generate Change Story",
+      "credentials": {
+        "openAiApi": {
+          "id": "p8BKivVF2bBo98Lz",
+          "name": "OpenAi account Muc.dai"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Extrahiere Change Story aus AI Output\nconst aiOutput = $input.all()[0].json;\nconst sessionId = $('Extract Change Story Data').item.json.session_id;\n\n// AI Output Struktur: output[0].content[0].text ODER output[0].text\nlet changeStory = '';\nif (aiOutput.output && Array.isArray(aiOutput.output) && aiOutput.output[0]) {\n  const firstOutput = aiOutput.output[0];\n  if (firstOutput.content && Array.isArray(firstOutput.content) && firstOutput.content[0]) {\n    changeStory = firstOutput.content[0].text || '';\n  } else if (firstOutput.text) {\n    changeStory = firstOutput.text;\n  }\n}\n\nreturn {\n  json: {\n    change_story: changeStory,\n    session_id: sessionId\n  }\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [200, -100],
+      "id": "store-change-story",
+      "name": "Store Change Story"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Extrahiere Stakeholder-Informationen für Kommunikationsplan\nconst changeStoryData = $items('Extract Change Story Data')[0].json;\nconst changeStory = $json.change_story;\n\nconst stakeholderData = {\n  session_id: changeStoryData.session_id,\n  change_story: changeStory,\n  affected_areas: changeStoryData.affected_areas,\n  number_of_people: changeStoryData.number_of_people,\n  timeline: changeStoryData.timeline,\n  hot_phases: changeStoryData.hot_phases,\n  expectations: changeStoryData.change_support_expectations\n};\n\nreturn { json: stakeholderData };"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [400, -100],
+      "id": "prepare-stakeholder-data",
+      "name": "Prepare Stakeholder Data"
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "gpt-4o-mini",
+          "mode": "list",
+          "cachedResultName": "GPT-4O-MINI"
+        },
+        "responses": {
+          "values": [
+            {
+              "content": "=Du bist ein Experte für Changekommunikation und Stakeholder-Management.\n\nBasierend auf der Change Story und den Stakeholder-Informationen erstelle einen detaillierten Kommunikationsplan.\n\n## CHANGE STORY:\n{{ $json.change_story }}\n\n## STAKEHOLDER-INFORMATIONEN:\n\n**Betroffene Bereiche/Personen:**\n{{ $json.affected_areas }}\n\n**Anzahl Mitarbeitende:**\n{{ $json.number_of_people }}\n\n**Zeitrahmen:**\n{{ $json.timeline }}\n\n**Heiße Phasen:**\n{{ $json.hot_phases }}\n\n**Erwartungen an Change-Begleitung:**\n{{ $json.expectations }}\n\n---\n\nErstelle einen Kommunikationsplan mit folgenden Elementen:\n\n1. **Stakeholder-Segmentierung**\n   - Identifiziere die Hauptzielgruppen (z.B. Führungskräfte, Mitarbeitende, HR, Betriebsrat)\n   - Beschreibe ihre Rolle und Betroffenheit\n\n2. **Kommunikationsziele pro Stakeholder-Gruppe**\n   - Was soll jede Gruppe verstehen/wissen?\n   - Welche Einstellung soll erreicht werden?\n\n3. **Kommunikationsformate und -kanäle**\n   - Welche Formate eignen sich (z.B. Town Hall, E-Mail, Workshop, 1:1)?\n   - Welche Kanäle werden genutzt?\n\n4. **Timing und Frequenz**\n   - Wann kommunizieren (bezogen auf Projektphasen)?\n   - Wie oft?\n\n5. **Kernbotschaften pro Stakeholder-Gruppe**\n   - Was sind die wichtigsten 3-5 Botschaften?\n\n6. **Feedback-Kanäle**\n   - Wie können Stakeholder Rückmeldung geben?\n\nErstelle den Plan strukturiert, praxisnah und umsetzbar."
+            }
+          ]
+        },
+        "options": {
+          "temperature": 0.7
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 2,
+      "position": [600, -100],
+      "id": "generate-communication-plan",
+      "name": "AI: Generate Communication Plan",
+      "credentials": {
+        "openAiApi": {
+          "id": "p8BKivVF2bBo98Lz",
+          "name": "OpenAi account Muc.dai"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Extrahiere Communication Plan aus AI Output\nconst aiOutput = $input.all()[0].json;\nconst prevData = $('Store Change Story').item.json;\n\n// AI Output Struktur: output[0].content[0].text ODER output[0].text\nlet communicationPlan = '';\nif (aiOutput.output && Array.isArray(aiOutput.output) && aiOutput.output[0]) {\n  const firstOutput = aiOutput.output[0];\n  if (firstOutput.content && Array.isArray(firstOutput.content) && firstOutput.content[0]) {\n    communicationPlan = firstOutput.content[0].text || '';\n  } else if (firstOutput.text) {\n    communicationPlan = firstOutput.text;\n  }\n}\n\nreturn {\n  json: {\n    communication_plan: communicationPlan,\n    session_id: prevData.session_id,\n    change_story: prevData.change_story\n  }\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [800, -100],
+      "id": "store-communication-plan",
+      "name": "Store Communication Plan"
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "gpt-4o-mini",
+          "mode": "list",
+          "cachedResultName": "GPT-4O-MINI"
+        },
+        "responses": {
+          "values": [
+            {
+              "content": "=Du bist ein Experte für Changekommunikation.\n\nBasierend auf dem Kommunikationsplan erstelle konkrete Kommunikations-Entwürfe für verschiedene Formate und Stakeholder-Gruppen.\n\n## CHANGE STORY:\n{{ $json.change_story }}\n\n## KOMMUNIKATIONSPLAN:\n{{ $json.communication_plan }}\n\n---\n\nErstelle folgende konkrete Kommunikations-Entwürfe:\n\n1. **Kick-off E-Mail an alle Mitarbeitenden**\n   - Betreff\n   - Vollständiger E-Mail-Text\n   - Länge: ca. 300-400 Wörter\n\n2. **Präsentations-Outline für Führungskräfte (Town Hall)**\n   - Titel\n   - Agenda mit Kernbotschaften pro Folie (10-12 Folien)\n   - Sprechnotizen für kritische Folien\n\n3. **FAQ-Dokument (Top 10 Fragen)**\n   - Häufig erwartete Fragen mit Antworten\n\n4. **Intranet-Artikel**\n   - Überschrift\n   - Lead (Teaser)\n   - Vollständiger Artikel (ca. 400-500 Wörter)\n\n5. **Manager-Briefing (1-Pager)**\n   - Zusammenfassung für Führungskräfte zur Vorbereitung von Team-Gesprächen\n\nAlle Texte sollen professionell, klar und motivierend sein. Nutze eine Sprache, die zur Unternehmenskultur passt."
+            }
+          ]
+        },
+        "options": {
+          "temperature": 0.8
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 2,
+      "position": [1000, -100],
+      "id": "generate-communication-drafts",
+      "name": "AI: Generate Communication Drafts",
+      "credentials": {
+        "openAiApi": {
+          "id": "p8BKivVF2bBo98Lz",
+          "name": "OpenAi account Muc.dai"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Extrahiere Communication Drafts aus AI Output und kombiniere alles\nconst aiOutput = $input.all()[0].json;\nconst prevData = $('Store Communication Plan').item.json;\n\n// AI Output Struktur: output[0].content[0].text ODER output[0].text\nlet allContent = '';\nif (aiOutput.output && Array.isArray(aiOutput.output) && aiOutput.output[0]) {\n  const firstOutput = aiOutput.output[0];\n  if (firstOutput.content && Array.isArray(firstOutput.content) && firstOutput.content[0]) {\n    allContent = firstOutput.content[0].text || '';\n  } else if (firstOutput.text) {\n    allContent = firstOutput.text;\n  }\n}\n\nreturn {\n  json: {\n    all_content: allContent,\n    session_id: prevData.session_id,\n    change_story: prevData.change_story,\n    communication_plan: prevData.communication_plan\n  }\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1200, -100],
+      "id": "combine-all-content",
+      "name": "Combine All Content"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Erstelle strukturiertes Dokument für Word-Export\nconst sessionId = $json.session_id;\nconst changeStory = $json.change_story;\nconst communicationPlan = $json.communication_plan;\nconst communicationDrafts = $json.all_content;\n\nconst documentContent = `\n# CHANGEKOMMUNIKATION\n## Session: ${sessionId}\n\n---\n\n# 1. CHANGE STORY\n\n${changeStory}\n\n---\n\n# 2. KOMMUNIKATIONSPLAN\n\n${communicationPlan}\n\n---\n\n# 3. KOMMUNIKATIONS-ENTWÜRFE\n\n${communicationDrafts}\n\n---\n\nErstellt am: ${new Date().toLocaleString('de-DE')}\n`;\n\nreturn {\n  json: {\n    session_id: sessionId,\n    document_content: documentContent,\n    filename: `Changekommunikation_${sessionId}_${new Date().toISOString().split('T')[0]}.md`\n  }\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1400, -100],
+      "id": "create-document",
+      "name": "Create Document"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ { \n  \"success\": true,\n  \"session_id\": $json.session_id,\n  \"change_story\": $('Store Change Story').item.json.change_story,\n  \"communication_plan\": $('Store Communication Plan').item.json.communication_plan,\n  \"communication_drafts\": $('Combine All Content').item.json.all_content,\n  \"document\": $json.document_content,\n  \"filename\": $json.filename\n} }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [1600, -100],
+      "id": "success-response",
+      "name": "Success Response"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ { \"success\": false, \"error\": $json.error } }}",
+        "options": {
+          "responseCode": "={{ $json.statusCode || 500 }}"
+        }
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [-200, 100],
+      "id": "error-response-webhook",
+      "name": "Error Response"
+    }
+  ],
+  "connections": {
+    "Webhook Trigger": {
+      "main": [
+        [
+          {
+            "node": "Normalize Input",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalize Input": {
+      "main": [
+        [
+          {
+            "node": "Get Session Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Session Data": {
+      "main": [
+        [
+          {
+            "node": "IF: Session Exists?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF: Session Exists?": {
+      "main": [
+        [
+          {
+            "node": "Parse Session Data",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Error: Session Not Found",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Session Data": {
+      "main": [
+        [
+          {
+            "node": "Extract Change Story Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Error: Session Not Found": {
+      "main": [
+        [
+          {
+            "node": "Error Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract Change Story Data": {
+      "main": [
+        [
+          {
+            "node": "AI: Generate Change Story",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI: Generate Change Story": {
+      "main": [
+        [
+          {
+            "node": "Store Change Story",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Store Change Story": {
+      "main": [
+        [
+          {
+            "node": "Prepare Stakeholder Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Stakeholder Data": {
+      "main": [
+        [
+          {
+            "node": "AI: Generate Communication Plan",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI: Generate Communication Plan": {
+      "main": [
+        [
+          {
+            "node": "Store Communication Plan",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Store Communication Plan": {
+      "main": [
+        [
+          {
+            "node": "AI: Generate Communication Drafts",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI: Generate Communication Drafts": {
+      "main": [
+        [
+          {
+            "node": "Combine All Content",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Combine All Content": {
+      "main": [
+        [
+          {
+            "node": "Create Document",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create Document": {
+      "main": [
+        [
+          {
+            "node": "Success Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "tags": [],
+  "triggerCount": 1,
+  "updatedAt": "2025-12-09T00:00:00.000Z",
+  "versionId": "1"
+}

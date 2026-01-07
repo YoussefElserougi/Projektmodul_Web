@@ -1,0 +1,514 @@
+{
+  "name": "SWM Change - Partner Selection & RFP Generator (FIXED)",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "change-partner-selection",
+        "responseMode": "responseNode",
+        "options": {
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Access-Control-Allow-Origin",
+                "value": "*"
+              }
+            ]
+          }
+        }
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [-1200, 0],
+      "id": "webhook-trigger",
+      "name": "Webhook Trigger",
+      "webhookId": "change-partner-selection-webhook"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Input normalisieren\nconst input = $input.first().json;\nconst data = input.body || input;\n\nreturn {\n  json: {\n    session_id: data.session_id || \"\",\n    requester_email: data.email || \"anonymous@chat.local\",\n    budget_range: data.budget_range || \"\",\n    preferred_partner_type: data.preferred_partner_type || \"\"\n  }\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [-1000, 0],
+      "id": "normalize-input",
+      "name": "Normalize Input"
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "dataTableId": {
+          "__rl": true,
+          "value": "cQJ0PWxEInNEL92O",
+          "mode": "list",
+          "cachedResultName": "agent_sessions"
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "session_id",
+              "keyValue": "={{$json.session_id}}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1,
+      "position": [-800, 0],
+      "id": "get-session",
+      "name": "Get Session Data",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "session-exists",
+              "leftValue": "={{$json.id}}",
+              "rightValue": "",
+              "operator": {
+                "type": "number",
+                "operation": "exists",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [-600, 0],
+      "id": "check-session-exists",
+      "name": "IF: Session Exists?"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Parse Session Daten\nconst row = $json;\nconst inputData = $items('Normalize Input')[0].json;\n\nreturn {\n  json: {\n    session_id: row.session_id,\n    requester_email: row.requester_email,\n    answers: JSON.parse(row.answers || \"{}\"),\n    metadata: JSON.parse(row.metadata || \"{}\"),\n    status: row.status,\n    budget_range: inputData.budget_range,\n    preferred_partner_type: inputData.preferred_partner_type\n  }\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [-400, -100],
+      "id": "parse-session",
+      "name": "Parse Session Data"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "error-message",
+              "name": "error",
+              "value": "Session nicht gefunden oder nicht abgeschlossen",
+              "type": "string"
+            },
+            {
+              "id": "status-code",
+              "name": "statusCode",
+              "value": "404",
+              "type": "number"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [-400, 100],
+      "id": "error-response",
+      "name": "Error: Session Not Found"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Extrahiere relevante Daten für Partner-Auswahl\nconst answers = $json.answers;\nconst metadata = $json.metadata;\n\nconst projectData = {\n  session_id: $json.session_id,\n  requester_email: $json.requester_email,\n  budget_range: $json.budget_range,\n  preferred_partner_type: $json.preferred_partner_type,\n  \n  // Projektbeschreibung\n  project_description: answers.beschreibung_vorhaben || \"\",\n  key_points: answers.stichpunkte || \"\",\n  objective: answers.zielsetzung || \"\",\n  \n  // Umfang und Komplexität\n  affected_areas: answers.betroffene_bereiche_personen || \"\",\n  number_of_people: answers.anzahl_mitarbeitende_fuehrungskraefte || \"\",\n  \n  // Zeitrahmen\n  timeline: answers.zeithorizont || \"\",\n  start_date: answers.startdatum || \"\",\n  hot_phases: answers.dauer_heisse_phasen || \"\",\n  \n  // Erwartungen und Anforderungen\n  change_expectations: answers.erwartungen_change_begleitung || \"\",\n  pag_need: answers.changebedarf_pag || \"\",\n  \n  // Strategischer Kontext\n  strategic_contribution: answers.beitrag_konzernstrategie || \"\",\n  strategic_goals: answers.strategische_ziele || \"\",\n  \n  // Change-Ziele\n  from_state: answers.ziel_change_begleitung_von || \"\",\n  to_state: answers.ziel_change_begleitung_zu || \"\",\n  \n  // Risiken und Erfolgsfaktoren\n  success_blockers: answers.erfolg_verhindern || \"\",\n  success_enablers: answers.erfolg_beitragen || \"\",\n  \n  // Kontakt\n  contact_person: answers.ansprechpartner_name || \"\",\n  other_notes: answers.sonstiges || \"\"\n};\n\nreturn { json: projectData };"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [-200, -100],
+      "id": "extract-project-data",
+      "name": "Extract Project Data"
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "gpt-4o-mini",
+          "mode": "list",
+          "cachedResultName": "GPT-4O-MINI"
+        },
+        "messages": {
+          "values": [
+            {
+              "content": "=Du bist ein Experte für Change Management und Beschaffung von Change-Beratungsleistungen.\n\nDeine Aufgabe ist es, ein detailliertes **Anforderungsprofil** für externe Change-Partner zu erstellen.\n\n## PROJEKTINFORMATIONEN:\n\n**Projektbeschreibung:**\n{{ $json.project_description }}\n\n**Schlüsselpunkte:**\n{{ $json.key_points }}\n\n**Zielsetzung:**\n{{ $json.objective }}\n\n**Betroffene Bereiche:**\n{{ $json.affected_areas }}\n\n**Anzahl Mitarbeitende:**\n{{ $json.number_of_people }}\n\n**Zeitrahmen:**\n{{ $json.timeline }}\n\n**Startdatum:**\n{{ $json.start_date }}\n\n**Heiße Phasen:**\n{{ $json.hot_phases }}\n\n**Erwartungen an Change-Begleitung:**\n{{ $json.change_expectations }}\n\n**Strategischer Beitrag:**\n{{ $json.strategic_contribution }}\n\n**Von-Zustand:**\n{{ $json.from_state }}\n\n**Zu-Zustand:**\n{{ $json.to_state }}\n\n**Budget-Range (falls angegeben):**\n{{ $json.budget_range }}\n\n**Präferierte Partner-Art (falls angegeben):**\n{{ $json.preferred_partner_type }}\n\n---\n\nErstelle ein professionelles **Anforderungsprofil** mit folgenden Abschnitten:\n\n1. **Projektübersicht**\n2. **Anforderungen an den externen Partner**\n3. **Erwartete Leistungen**\n4. **Qualifikationen und Nachweise**\n5. **Projektorganisation**\n\nSchreibe präzise, professionell und praxisorientiert."
+            }
+          ]
+        },
+        "options": {
+          "temperature": 0.7
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 1.8,
+      "position": [0, -100],
+      "id": "generate-requirements",
+      "name": "AI: Generate Requirements Profile",
+      "credentials": {
+        "openAiApi": {
+          "id": "p8BKivVF2bBo98Lz",
+          "name": "OpenAi account Muc.dai"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Speichere Requirements und gib Projektdaten weiter\nconst projectData = $items('Extract Project Data')[0].json;\nconst aiOutput = $input.first().json;\n\n// Text aus AI-Output extrahieren\nlet requirementsText = '';\nif (aiOutput.message && aiOutput.message.content) {\n  requirementsText = aiOutput.message.content;\n} else if (aiOutput.text) {\n  requirementsText = aiOutput.text;\n} else if (typeof aiOutput === 'string') {\n  requirementsText = aiOutput;\n}\n\nreturn {\n  json: {\n    ...projectData,\n    requirements_profile: requirementsText\n  }\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [200, -100],
+      "id": "store-requirements",
+      "name": "Store Requirements"
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "gpt-4o-mini",
+          "mode": "list",
+          "cachedResultName": "GPT-4O-MINI"
+        },
+        "messages": {
+          "values": [
+            {
+              "content": "=Du bist ein Experte für Ausschreibungen und Change Management.\n\nErstelle eine professionelle **Request for Proposal (RFP) / Ausschreibungsunterlage** für externe Change-Partner.\n\n## PROJEKTINFORMATIONEN:\n\n**Projektbeschreibung:**\n{{ $json.project_description }}\n\n**Zielsetzung:**\n{{ $json.objective }}\n\n**Betroffene Bereiche:**\n{{ $json.affected_areas }}\n\n**Anzahl Mitarbeitende:**\n{{ $json.number_of_people }}\n\n**Zeitrahmen:**\n{{ $json.timeline }}\n\n**Startdatum:**\n{{ $json.start_date }}\n\n**Erwartungen:**\n{{ $json.change_expectations }}\n\n**Budget (falls vorhanden):**\n{{ $json.budget_range }}\n\n---\n\nErstelle eine vollständige **RFP/Ausschreibungsunterlage** mit:\n\n1. **Hintergrund und Kontext**\n2. **Projektziele und Scope**\n3. **Leistungsbeschreibung**\n4. **Anforderungen an Bieter**\n5. **Zeitplan**\n6. **Bewerbungsprozess**\n7. **Formale Anforderungen**\n\nSchreibe präzise, strukturiert und professionell."
+            }
+          ]
+        },
+        "options": {
+          "temperature": 0.7
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 1.8,
+      "position": [400, -100],
+      "id": "generate-rfp",
+      "name": "AI: Generate RFP Document",
+      "credentials": {
+        "openAiApi": {
+          "id": "p8BKivVF2bBo98Lz",
+          "name": "OpenAi account Muc.dai"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Speichere RFP und gib alles weiter\nconst prevData = $items('Store Requirements')[0].json;\nconst aiOutput = $input.first().json;\n\nlet rfpText = '';\nif (aiOutput.message && aiOutput.message.content) {\n  rfpText = aiOutput.message.content;\n} else if (aiOutput.text) {\n  rfpText = aiOutput.text;\n} else if (typeof aiOutput === 'string') {\n  rfpText = aiOutput;\n}\n\nreturn {\n  json: {\n    ...prevData,\n    rfp_document: rfpText\n  }\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [600, -100],
+      "id": "store-rfp",
+      "name": "Store RFP"
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "gpt-4o-mini",
+          "mode": "list",
+          "cachedResultName": "GPT-4O-MINI"
+        },
+        "messages": {
+          "values": [
+            {
+              "content": "=Du bist ein Experte für die Bewertung von Change-Beratern.\n\nErstelle ein strukturiertes **Bewertungsraster** zur Evaluation von Angeboten externer Partner.\n\n## PROJEKTKONTEXT:\n\n**Projektbeschreibung:**\n{{ $json.project_description }}\n\n**Zielsetzung:**\n{{ $json.objective }}\n\n**Erwartungen:**\n{{ $json.change_expectations }}\n\n**Erfolgsfaktoren:**\n{{ $json.success_enablers }}\n\n**Risiken:**\n{{ $json.success_blockers }}\n\n---\n\nErstelle ein **Bewertungsraster** mit:\n\n1. **Bewertungskriterien** (mit Gewichtung)\n2. **Bewertungsskala** (1-5 Punkte)\n3. **Bewertungsmatrix (Vorlage)**\n4. **Entscheidungsprozess**\n5. **Interview-Leitfaden** (Top 10 Fragen)\n6. **Checkliste für Referenzprüfung**\n\nErstelle das Raster praxisnah und objektiv."
+            }
+          ]
+        },
+        "options": {
+          "temperature": 0.7
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 1.8,
+      "position": [800, -100],
+      "id": "generate-evaluation-criteria",
+      "name": "AI: Generate Evaluation Criteria",
+      "credentials": {
+        "openAiApi": {
+          "id": "p8BKivVF2bBo98Lz",
+          "name": "OpenAi account Muc.dai"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Speichere Evaluation und gib alles weiter\nconst prevData = $items('Store RFP')[0].json;\nconst aiOutput = $input.first().json;\n\nlet evaluationText = '';\nif (aiOutput.message && aiOutput.message.content) {\n  evaluationText = aiOutput.message.content;\n} else if (aiOutput.text) {\n  evaluationText = aiOutput.text;\n} else if (typeof aiOutput === 'string') {\n  evaluationText = aiOutput;\n}\n\nreturn {\n  json: {\n    ...prevData,\n    evaluation_criteria: evaluationText\n  }\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1000, -100],
+      "id": "store-evaluation",
+      "name": "Store Evaluation"
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "gpt-4o-mini",
+          "mode": "list",
+          "cachedResultName": "GPT-4O-MINI"
+        },
+        "messages": {
+          "values": [
+            {
+              "content": "=Du bist ein Experte für Beschaffungsprozesse und Change Management.\n\nErstelle einen **Prozess-Leitfaden** für die Auswahl und das Onboarding externer Change-Partner.\n\n## PROJEKTKONTEXT:\n\n**Zeitrahmen:**\n{{ $json.timeline }}\n\n**Startdatum:**\n{{ $json.start_date }}\n\n**Erwartungen:**\n{{ $json.change_expectations }}\n\n**Kontaktperson:**\n{{ $json.contact_person }}\n\n---\n\nErstelle einen **Prozess-Leitfaden** mit:\n\n1. **Auswahlprozess (Timeline)**\n2. **Rollen und Verantwortlichkeiten**\n3. **Kommunikationsplan**\n4. **Beschaffungsrichtlinien**\n5. **Onboarding des ausgewählten Partners**\n6. **Erfolgs-Monitoring**\n\nSchreibe praktisch, umsetzbar und vollständig."
+            }
+          ]
+        },
+        "options": {
+          "temperature": 0.6
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 1.8,
+      "position": [1200, -100],
+      "id": "generate-process-guide",
+      "name": "AI: Generate Process Guide",
+      "credentials": {
+        "openAiApi": {
+          "id": "p8BKivVF2bBo98Lz",
+          "name": "OpenAi account Muc.dai"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Speichere Process Guide und erstelle finales Dokument\nconst prevData = $items('Store Evaluation')[0].json;\nconst aiOutput = $input.first().json;\n\nlet processGuideText = '';\nif (aiOutput.message && aiOutput.message.content) {\n  processGuideText = aiOutput.message.content;\n} else if (aiOutput.text) {\n  processGuideText = aiOutput.text;\n} else if (typeof aiOutput === 'string') {\n  processGuideText = aiOutput;\n}\n\nconst sessionId = prevData.session_id;\n\nconst documentContent = `\n# EXTERNE PARTNER-AUSWAHL\n## Change Management Unterstützung\n### Session: ${sessionId}\n\n---\n\n# 1. ANFORDERUNGSPROFIL\n\n${prevData.requirements_profile}\n\n---\n\n# 2. REQUEST FOR PROPOSAL (RFP)\n## Ausschreibungsunterlage\n\n${prevData.rfp_document}\n\n---\n\n# 3. BEWERTUNGSKRITERIEN\n## Evaluationsraster für Angebote\n\n${prevData.evaluation_criteria}\n\n---\n\n# 4. PROZESS-LEITFADEN\n## Auswahl und Onboarding\n\n${processGuideText}\n\n---\n\n**Erstellt am:** ${new Date().toLocaleString('de-DE')}\n**Basis:** Change-Projekt Session ${sessionId}\n\n---\n\n## NÄCHSTE SCHRITTE:\n\n1. ☐ Dokumente finalisieren und intern abstimmen\n2. ☐ Budget und Freigaben sicherstellen\n3. ☐ Ausschreibung veröffentlichen\n4. ☐ Bewertungsteam zusammenstellen\n5. ☐ Timeline für Auswahl festlegen\n`;\n\nreturn {\n  json: {\n    session_id: sessionId,\n    document_content: documentContent,\n    filename: `Partner-Auswahl_RFP_${sessionId}_${new Date().toISOString().split('T')[0]}.md`,\n    requirements_profile: prevData.requirements_profile,\n    rfp_document: prevData.rfp_document,\n    evaluation_criteria: prevData.evaluation_criteria,\n    process_guide: processGuideText\n  }\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1400, -100],
+      "id": "create-final-document",
+      "name": "Create Final Document"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ { \n  \"success\": true,\n  \"session_id\": $json.session_id,\n  \"filename\": $json.filename,\n  \"document\": $json.document_content,\n  \"separate_documents\": {\n    \"requirements_profile\": $json.requirements_profile,\n    \"rfp_document\": $json.rfp_document,\n    \"evaluation_criteria\": $json.evaluation_criteria,\n    \"process_guide\": $json.process_guide\n  }\n} }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [1600, -100],
+      "id": "success-response",
+      "name": "Success Response"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ { \"success\": false, \"error\": $json.error } }}",
+        "options": {
+          "responseCode": "={{ $json.statusCode || 500 }}"
+        }
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [-200, 100],
+      "id": "error-response-webhook",
+      "name": "Error Response"
+    }
+  ],
+  "connections": {
+    "Webhook Trigger": {
+      "main": [
+        [
+          {
+            "node": "Normalize Input",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalize Input": {
+      "main": [
+        [
+          {
+            "node": "Get Session Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Session Data": {
+      "main": [
+        [
+          {
+            "node": "IF: Session Exists?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF: Session Exists?": {
+      "main": [
+        [
+          {
+            "node": "Parse Session Data",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Error: Session Not Found",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Session Data": {
+      "main": [
+        [
+          {
+            "node": "Extract Project Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Error: Session Not Found": {
+      "main": [
+        [
+          {
+            "node": "Error Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract Project Data": {
+      "main": [
+        [
+          {
+            "node": "AI: Generate Requirements Profile",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI: Generate Requirements Profile": {
+      "main": [
+        [
+          {
+            "node": "Store Requirements",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Store Requirements": {
+      "main": [
+        [
+          {
+            "node": "AI: Generate RFP Document",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI: Generate RFP Document": {
+      "main": [
+        [
+          {
+            "node": "Store RFP",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Store RFP": {
+      "main": [
+        [
+          {
+            "node": "AI: Generate Evaluation Criteria",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI: Generate Evaluation Criteria": {
+      "main": [
+        [
+          {
+            "node": "Store Evaluation",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Store Evaluation": {
+      "main": [
+        [
+          {
+            "node": "AI: Generate Process Guide",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI: Generate Process Guide": {
+      "main": [
+        [
+          {
+            "node": "Create Final Document",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create Final Document": {
+      "main": [
+        [
+          {
+            "node": "Success Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "tags": [],
+  "triggerCount": 1,
+  "updatedAt": "2025-12-17T00:00:00.000Z",
+  "versionId": "2"
+}

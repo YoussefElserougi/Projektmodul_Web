@@ -1,0 +1,1891 @@
+{
+  "nodes": [
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.emailReadImap",
+      "typeVersion": 2.1,
+      "position": [
+        -3216,
+        304
+      ],
+      "id": "0ff4837c-b8b2-4289-a842-3f7471a0a234",
+      "name": "Email Trigger (IMAP)",
+      "credentials": {
+        "imap": {
+          "id": "jrs0ISaXDOuW4ssa",
+          "name": "IMAP account (Liveley)"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Input: E-Mail-Item vom IMAP-Trigger\nreturn $input.all().map(item => {\n  const json = item.json;\n  const subject = json.subject || \"\";\n  const bodyText = (json.textPlain || \"\").trim();\n  const fromRaw = json.from || \"\";\n  const messageId = (json.metadata && json.metadata[\"message-id\"]) || json.messageId || \"\";\n\n  // E-Mail-Adresse aus dem From-Header ziehen\n  const match = fromRaw.match(/<([^>]+)>/);\n  const fromEmail = match ? match[1].toLowerCase().trim() : fromRaw.toLowerCase().trim();\n  const fromName = match ? fromRaw.replace(match[0], \"\").trim() : \"\";\n\n  return {\n    json: {\n      subject,\n      bodyText,\n      fromRaw,\n      fromEmail,\n      fromName,\n      messageId,\n    },\n  };\n});"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -2992,
+        304
+      ],
+      "id": "64e5a2eb-b7e8-4e9c-a65c-94dd272ad096",
+      "name": "Normalize Email"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "not-from-system",
+              "leftValue": "={{ $json.fromEmail }}",
+              "rightValue": "liveley.workflows@gmail.com",
+              "operator": {
+                "type": "string",
+                "operation": "notEquals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -2768,
+        304
+      ],
+      "id": "acf04759-0dc8-4a51-8ee1-4e9f823e532e",
+      "name": "IF: Not From System"
+    },
+    {
+      "parameters": {
+        "jsCode": "const email = $json;\n\nfunction generateSessionId() {\n  return Math.random().toString(36).slice(2, 10);\n}\n\nconst requiredKeys = [\n  \"beschreibung_vorhaben\",\n  \"stichpunkte\",\n  \"ansprechpartner_name\",\n  \"zielsetzung\",\n  \"zeithorizont\",\n  \"startdatum\",\n  \"dauer_heisse_phasen\",\n  \"beitrag_konzernstrategie\",\n  \"strategische_ziele\",\n  \"was_passiert_wenn_nicht_erfolgreich\",\n  \"betroffene_bereiche_personen\",\n  \"anzahl_mitarbeitende_fuehrungskraefte\",\n  \"erwartungen_change_begleitung\",\n  \"changebedarf_pag\",\n  \"ziel_change_begleitung_von\",\n  \"ziel_change_begleitung_zu\",\n  \"erfolg_verhindern\",\n  \"erfolg_beitragen\",\n  \"sonstiges\",\n  \"vereinbarungen\",\n];\n\nconst session_id = generateSessionId();\n\n// kleine Robustheit: falls email.fromEmail mal undefined wäre\nconst safeFromEmail = email.fromEmail || \"\";\nconst requesterName =\n  email.fromName || safeFromEmail.split(\"@\")[0] || \"Unbekannt\";\n\nconst session = {\n  session_id: session_id,\n  requester_email: safeFromEmail,\n  requester_name: requesterName,\n  status: \"open\",\n  round_counter: 0,\n  max_rounds: 50,\n  // wenn du hier lieber einen String brauchst, kannst du das unten umstellen\n  required_keys: requiredKeys,\n  answers: {},\n  metadata: {\n    first_message: email.bodyText,\n    subject: email.subject,\n    fromRaw: email.fromRaw,\n    messageId: email.messageId,\n    first_message_date: new Date().toISOString(),\n    source: \"email\",\n  },\n  last_question: null,\n  missing_fields: requiredKeys,\n};\n\nreturn { json: session };"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -2544,
+        304
+      ],
+      "id": "d5046546-81bc-48a6-954d-92984148157b",
+      "name": "Init Session from Email"
+    },
+    {
+      "parameters": {
+        "dataTableId": {
+          "__rl": true,
+          "value": "JUREjsduC6ISYo6f",
+          "mode": "list",
+          "cachedResultName": "agent_sessions_swm",
+          "cachedResultUrl": "/projects/u4AB9CJNbwvqj8lM/datatables/JUREjsduC6ISYo6f"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "status": "={{ $json.status }}",
+            "session_id": "={{ $json.session_id }}",
+            "requester_email": "={{ $json.requester_email }}",
+            "round_counter": "={{ $json.round_counter }}",
+            "max_rounds": "={{ $json.max_rounds }}",
+            "answers": "={{ JSON.stringify($json.answers || {}) }}",
+            "required_keys": "={{ JSON.stringify($json.required_keys || []) }}",
+            "metadata": "={{ JSON.stringify($json.metadata || {}) }}",
+            "last_question": "={{$json.last_question || \"\"}}",
+            "missing_fields": "={{ JSON.stringify($json.missing_fields || []) }}",
+            "project_classification": "={{ JSON.stringify($json.project_classification || {}) }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "session_id",
+              "displayName": "session_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "requester_email",
+              "displayName": "requester_email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "status",
+              "displayName": "status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "required_keys",
+              "displayName": "required_keys",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "answers",
+              "displayName": "answers",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "metadata",
+              "displayName": "metadata",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "last_question",
+              "displayName": "last_question",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "round_counter",
+              "displayName": "round_counter",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "max_rounds",
+              "displayName": "max_rounds",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "missing_fields",
+              "displayName": "missing_fields",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1,
+      "position": [
+        -2320,
+        304
+      ],
+      "id": "0c1c02fb-d965-4cef-9474-7ef7c7172802",
+      "name": "Data Table: Insert Session"
+    },
+    {
+      "parameters": {
+        "fromEmail": "liveley.workflows@gmail.com",
+        "toEmail": "={{ $json.requester_email }}",
+        "subject": "=Re: {{ $('Init Session from Email').item.json.metadata?.subject || 'Change-Anfrage' }} - Dein Change-Anfrage Portal",
+        "html": "=<!DOCTYPE html>\n<html>\n<head>\n  <style>\n    body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }\n    .container { max-width: 600px; margin: 0 auto; padding: 20px; }\n    .header { background-color: #0066cc; color: white; padding: 20px; text-align: center; border-radius: 8px 8px 0 0; }\n    .content { background-color: #f9f9f9; padding: 20px; border-radius: 0 0 8px 8px; }\n    .button { display: inline-block; background-color: #0066cc; color: white !important; padding: 15px 30px; text-decoration: none; border-radius: 5px; margin: 20px 0; font-weight: bold; }\n    .button:hover { background-color: #0052a3; }\n    .footer { margin-top: 20px; font-size: 12px; color: #666; }\n  </style>\n</head>\n<body>\n  <div class=\"container\">\n    <div class=\"header\">\n      <h1>🔄 Change-Anfrage Portal</h1>\n      <p>Stadtwerke München</p>\n    </div>\n    <div class=\"content\">\n      <p>Hallo {{ $json.requester_name || 'dort' }},</p>\n      \n      <p>vielen Dank für deine Anfrage! Wir haben deine E-Mail erhalten und eine neue Change-Anfrage für dich erstellt.</p>\n      \n      <p>Um alle benötigten Informationen für deinen Change-Antrag zu erfassen, nutze bitte unser interaktives Chat-Portal:</p>\n      \n      <p style=\"text-align: center;\">\n        <a href=\"http://localhost:3000/chat?session={{ $json.session_id }}\" class=\"button\">\n          📝 Zum Chat-Portal\n        </a>\n      </p>\n      \n      <p><strong>Deine Session-ID:</strong> <code>{{ $json.session_id }}</code></p>\n      \n      <p>Im Chat-Portal wirst du Schritt für Schritt durch alle Fragen geführt. Nach Abschluss erhältst du eine Zusammenfassung zur Bestätigung.</p>\n      \n      <p>Bei Fragen kannst du jederzeit auf diese E-Mail antworten.</p>\n      \n      <p>Viele Grüße,<br>Dein Change Management Team</p>\n    </div>\n    <div class=\"footer\">\n      <p>Diese E-Mail wurde automatisch generiert. Bitte antworte nicht direkt auf diese E-Mail, sondern nutze das Chat-Portal.</p>\n    </div>\n  </div>\n</body>\n</html>",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        -2096,
+        304
+      ],
+      "id": "e0e0bc69-d839-411f-be73-8e87c51c41fa",
+      "name": "Send Chat Link Email",
+      "webhookId": "101e8c88-1cd2-4a7c-b072-f27c8eb8d530",
+      "credentials": {
+        "smtp": {
+          "id": "Q7rmCb8nQSdip4NA",
+          "name": "SMTP account (Liveley)"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "change-chat",
+        "responseMode": "responseNode",
+        "options": {
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Access-Control-Allow-Origin",
+                "value": "*"
+              }
+            ]
+          }
+        }
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -3216,
+        1264
+      ],
+      "id": "8682a524-ab06-4232-9704-61cb4594013c",
+      "name": "Webhook Trigger",
+      "webhookId": "change-chat-webhook"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Webhook Input normalisieren - ROBUST VERSION\nconst rawInput = $input.first().json;\n\n// ---------- Hilfsfunktion: robustes Unwrapping ----------\nfunction unwrapPayload(input) {\n  // Falls input null/undefined\n  if (input == null) return {};\n  \n  // Falls Array: erstes Element nehmen\n  if (Array.isArray(input)) {\n    return unwrapPayload(input[0]);\n  }\n  \n  // Falls String: könnte JSON sein\n  if (typeof input === 'string') {\n    try {\n      return unwrapPayload(JSON.parse(input));\n    } catch (e) {\n      return {};\n    }\n  }\n  \n  // Falls Objekt mit body-Wrapper\n  if (typeof input === 'object' && input.body != null) {\n    return unwrapPayload(input.body);\n  }\n  \n  return input;\n}\n\nconst data = unwrapPayload(rawInput);\n\n// Log für Debugging\nconsole.log('[Normalize Webhook] Raw input type:', typeof rawInput);\nconsole.log('[Normalize Webhook] Unwrapped data:', JSON.stringify(data, null, 2));\n\n// field_update robust extrahieren (könnte auch stringified sein)\nlet fieldUpdate = data.field_update || null;\nif (typeof fieldUpdate === 'string') {\n  try { fieldUpdate = JSON.parse(fieldUpdate); } catch (e) { fieldUpdate = null; }\n}\n\n// classification robust extrahieren\nlet classification = data.classification || null;\nif (typeof classification === 'string') {\n  try { classification = JSON.parse(classification); } catch (e) { classification = null; }\n}\n\nconsole.log('[Normalize Webhook] field_update:', JSON.stringify(fieldUpdate));\nconsole.log('[Normalize Webhook] classification:', JSON.stringify(classification));\n\nreturn {\n  json: {\n    session_id: data.session_id || \"\",\n    message: data.message || \"\",\n    email: data.email || \"anonymous@chat.local\",\n    bodyText: data.message || \"\",\n    fromEmail: data.email || \"anonymous@chat.local\",\n    subject: \"Chat Request\",\n    source: data.source || \"chat\",\n    formData: data.formData || null,\n    projectClass: data.projectClass || null,\n    classification: classification,\n    field_update: fieldUpdate,\n  }\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -2992,
+        1264
+      ],
+      "id": "d9bb5c13-6f83-4388-9262-d04198718ec2",
+      "name": "Normalize Webhook Input"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "check-source-form",
+              "leftValue": "={{ $json.source }}",
+              "rightValue": "form",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -2768,
+        1168
+      ],
+      "id": "6a6b2c2b-607a-4f9d-85f7-91388ac0bb8d",
+      "name": "IF: Check Source (Form?)"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "check-source-autosave",
+              "leftValue": "={{ $json.source }}",
+              "rightValue": "form_autosave",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -2544,
+        1248
+      ],
+      "id": "88b9cd73-cd5d-4d86-8bb5-b7391166c23d",
+      "name": "IF: Check Source (Autosave?)"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Process complete form submission\nconst input = $input.first().json;\n\nconst requiredKeys = [\n  \"beschreibung_vorhaben\",\n  \"stichpunkte\",\n  \"ansprechpartner_name\",\n  \"zielsetzung\",\n  \"zeithorizont\",\n  \"startdatum\",\n  \"dauer_heisse_phasen\",\n  \"beitrag_konzernstrategie\",\n  \"strategische_ziele\",\n  \"was_passiert_wenn_nicht_erfolgreich\",\n  \"betroffene_bereiche_personen\",\n  \"anzahl_mitarbeitende_fuehrungskraefte\",\n  \"erwartungen_change_begleitung\",\n  \"changebedarf_pag\",\n  \"ziel_change_begleitung_von\",\n  \"ziel_change_begleitung_zu\",\n  \"erfolg_verhindern\",\n  \"erfolg_beitragen\",\n  \"sonstiges\",\n  \"vereinbarungen\"\n];\n\nconst formData = input.formData || {};\nconst updatedAnswers = {\n  ...formData,\n  projektklasse: input.projectClass,\n  klassifizierung: JSON.stringify(input.classification || {}),\n};\n\nreturn {\n  json: {\n    session_id: input.session_id,\n    requester_email: input.email,\n    status: \"confirmed\",\n    round_counter: 0,\n    max_rounds: 50,\n    required_keys: JSON.stringify(requiredKeys),\n    answers: JSON.stringify(updatedAnswers),\n    metadata: JSON.stringify({\n      source: \"form\",\n      submitted_at: new Date().toISOString(),\n      projectClass: input.projectClass,\n      classification: input.classification || {}\n    }),\n    last_question: null,\n    missing_fields: JSON.stringify([]),\n    project_classification: JSON.stringify(input.classification || {}),\n    email_intent: true,\n    reply_text: \"✅ Deine Change-Anfrage wurde erfolgreich eingereicht und wird bearbeitet!\",\n  }\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1072,
+        720
+      ],
+      "id": "be0357a7-5109-4a78-bd09-d2cf42b5cebe",
+      "name": "Process Form Submit"
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "dataTableId": {
+          "__rl": true,
+          "value": "JUREjsduC6ISYo6f",
+          "mode": "list",
+          "cachedResultName": "agent_sessions_swm",
+          "cachedResultUrl": "/projects/u4AB9CJNbwvqj8lM/datatables/JUREjsduC6ISYo6f"
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "session_id",
+              "keyValue": "={{$json.session_id}}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1,
+      "position": [
+        -2320,
+        1360
+      ],
+      "id": "6b406707-8fd4-47e0-abe9-30086d83b555",
+      "name": "Get Session (Autosave)",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "jsCode": "// Process field update for auto-save\n\n// Session-Datensatz aus DB holen\nconst getData = $('Get Session (Autosave)').first();\nconst row = getData ? getData.json : null;\n\n// Request-Input vom Normalize Webhook Input Node (bereits normalisiert!)\nconst normalizedInput = $('Normalize Webhook Input').first().json || {};\n\nconsole.log('[Process Field Update] Normalized input:', JSON.stringify(normalizedInput, null, 2));\nconsole.log('[Process Field Update] Row from DB:', row ? JSON.stringify(row, null, 2) : 'null');\n\nif (!row || !row.id) {\n  // Session nicht gefunden – stilles Fail\n  return [\n    {\n      json: {\n        success: false,\n        message: 'Session not found for autosave',\n      },\n    },\n  ];\n}\n\n// ---------- Required Keys basierend auf Projektklasse ----------\n// ALLE möglichen Felder (ohne ziel_change_begleitung_zu - ist jetzt Teil von _von)\nconst allRequiredKeys = [\n  \"beschreibung_vorhaben\",\n  \"stichpunkte\",\n  \"ansprechpartner_name\",\n  \"zielsetzung\",\n  \"zeithorizont\",\n  \"startdatum\",\n  \"dauer_heisse_phasen\",\n  \"beitrag_konzernstrategie\",\n  \"strategische_ziele\",\n  \"was_passiert_wenn_nicht_erfolgreich\",\n  \"betroffene_bereiche_personen\",\n  \"anzahl_mitarbeitende_fuehrungskraefte\",\n  \"erwartungen_change_begleitung\",\n  \"changebedarf_pag\",\n  \"ziel_change_begleitung_von\",\n  \"erfolg_verhindern\",\n  \"erfolg_beitragen\",\n  \"sonstiges\",\n  \"vereinbarungen\"\n];\n\n// Projektklassen-spezifische Felder (welche bei mini NICHT erforderlich sind)\nconst strategicOnlyKeys = [\n  \"dauer_heisse_phasen\",\n  \"beitrag_konzernstrategie\",\n  \"strategische_ziele\"\n];\n\n// ---------- Hilfsfunktion: robustes JSON-Parsing ----------\nfunction safeParseJson(value, fallback = {}) {\n  if (value == null || value === '') return fallback;\n\n  try {\n    let result = value;\n\n    // Wenn es ein String ist: einmal parsen\n    if (typeof result === 'string') {\n      result = JSON.parse(result);\n\n      // Manche alten Daten sind doppelt serialisiert → noch einmal versuchen\n      if (typeof result === 'string') {\n        result = JSON.parse(result);\n      }\n    }\n\n    // Am Ende brauchen wir ein Objekt\n    if (typeof result === 'object' && result !== null) {\n      return result;\n    }\n  } catch (e) {\n    console.log('[Autosave] JSON parse error:', e, 'value snippet:', String(value).slice(0, 200));\n  }\n\n  return fallback;\n}\n\n// ---------- Bestehende answers & metadata als Objekte holen ----------\nlet answers = safeParseJson(row.answers, {});\nconsole.log('[Process Field Update] Parsed existing answers:', answers);\n\nlet metadata = safeParseJson(row.metadata, {});\nconsole.log('[Process Field Update] Parsed existing metadata:', metadata);\n\n// ---------- field_update aus normalizedInput mergen ----------\nconst fieldUpdate = normalizedInput.field_update || {};\nconsole.log('[Process Field Update] Field update to merge:', JSON.stringify(fieldUpdate));\n\nconst updatedAnswers = {\n  ...answers,\n  ...fieldUpdate, // überschreibt nur die gerade autosaveten Felder\n};\n\nconsole.log('[Process Field Update] Updated answers after merge:', updatedAnswers);\n\n// ---------- Projektklasse ermitteln ----------\nconst classification = normalizedInput.classification;\nlet projectClass = normalizedInput.projectClass || updatedAnswers.projektklasse || metadata.projectClass || 'standard';\nconsole.log('[Process Field Update] Project class:', projectClass);\n\n// ---------- Required Keys für diese Projektklasse bestimmen ----------\nlet requiredKeys;\nif (projectClass === 'mini') {\n  // Mini: Strategische Felder ausblenden\n  requiredKeys = allRequiredKeys.filter(key => !strategicOnlyKeys.includes(key));\n  console.log('[Process Field Update] Using MINI required keys (without strategic fields)');\n} else {\n  // Standard oder Strategic: Alle Felder\n  requiredKeys = allRequiredKeys;\n  console.log('[Process Field Update] Using FULL required keys');\n}\nconsole.log('[Process Field Update] Required keys for project class:', requiredKeys);\n\n// ---------- missing_fields berechnen ----------\n// Entferne alle Keys die einen nicht-leeren Wert haben\nconst missingFields = requiredKeys.filter(key => {\n  const value = updatedAnswers[key];\n  return !value || (typeof value === 'string' && value.trim() === '');\n});\nconsole.log('[Process Field Update] Calculated missing_fields:', missingFields);\n\n// ---------- optionale Klassifizierung ----------\nif (classification && typeof classification === 'object' && Object.keys(classification).length > 0) {\n  metadata.classification = classification;\n  metadata.projectClass = normalizedInput.projectClass || classification.projectClass || 'unknown';\n}\nmetadata.last_autosave = new Date().toISOString();\n\n// ---------- Strings für deine DB vorbereiten ----------\n// Dein Datatable speichert sowieso Strings → wir geben hier bewusst JSON-Strings zurück\nconst answersString = JSON.stringify(updatedAnswers);\nconst metadataString = JSON.stringify(metadata);\nconst missingFieldsString = JSON.stringify(missingFields);\n\n// project_classification genauso behandeln:\nlet projectClassificationString;\nif (classification) {\n  projectClassificationString = JSON.stringify(classification);\n} else {\n  // vorhandenen Wert übernehmen oder leeres Objekt\n  if (row.project_classification == null || row.project_classification === '') {\n    projectClassificationString = '{}';\n  } else {\n    // falls der schon doppelt serialisiert ist, einmal „entwirren\"\n    const parsedPC = safeParseJson(row.project_classification, {});\n    projectClassificationString = JSON.stringify(parsedPC);\n  }\n}\n\n// ---------- Rückgabe (als ein Item) ----------\nreturn [\n  {\n    json: {\n      session_id: row.session_id,\n      requester_email: row.requester_email,\n      status: row.status || 'editing',\n      round_counter: parseInt(row.round_counter, 10) || 0,\n      max_rounds: parseInt(row.max_rounds, 10) || 50,\n\n      // jetzt als saubere JSON-Strings, wie in deinem Beispiel\n      answers: answersString,\n      metadata: metadataString,\n      project_classification: projectClassificationString,\n      missing_fields: missingFieldsString,\n\n      reply_text: 'Auto-saved',\n      success: true,\n    },\n  },\n];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -2096,
+        1360
+      ],
+      "id": "be4a3dee-4976-48a5-bd93-f1565615b97e",
+      "name": "Process Field Update"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "dataTableId": {
+          "__rl": true,
+          "value": "JUREjsduC6ISYo6f",
+          "mode": "list",
+          "cachedResultName": "agent_sessions_swm",
+          "cachedResultUrl": "/projects/u4AB9CJNbwvqj8lM/datatables/JUREjsduC6ISYo6f"
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "session_id",
+              "keyValue": "={{$json.session_id}}"
+            }
+          ]
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "answers": "={{ $json.answers }}",
+            "metadata": "={{ $json.metadata }}",
+            "status": "={{ $json.status || 'editing' }}",
+            "project_classification": "={{ $json.project_classification || '{}' }}",
+            "missing_fields": "={{ $json.missing_fields || '[]' }}",
+            "round_counter": "={{ $json.round_counter || 0 }}",
+            "max_rounds": "={{ $json.max_rounds || 50 }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "session_id",
+              "displayName": "session_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "requester_email",
+              "displayName": "requester_email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "status",
+              "displayName": "status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "required_keys",
+              "displayName": "required_keys",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "answers",
+              "displayName": "answers",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "metadata",
+              "displayName": "metadata",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "last_question",
+              "displayName": "last_question",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "round_counter",
+              "displayName": "round_counter",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "max_rounds",
+              "displayName": "max_rounds",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "missing_fields",
+              "displayName": "missing_fields",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "project_classification",
+              "displayName": "project_classification",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1,
+      "position": [
+        -1872,
+        1360
+      ],
+      "id": "5fb77310-c6fd-4726-a894-9b38cc0c6031",
+      "name": "Update Session (Autosave)"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n  \"reply_text\": \"{{ $json.reply_text }}\",\n  \"status\": \"ok\",\n  \"session_id\": \"{{ $json.session_id }}\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        -1648,
+        1360
+      ],
+      "id": "a03cc840-6ece-4857-8f23-4f7934a09df8",
+      "name": "Respond: Autosave OK"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "session-exists-form",
+              "leftValue": "={{$json.id}}",
+              "rightValue": "",
+              "operator": {
+                "type": "number",
+                "operation": "exists",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -624,
+        720
+      ],
+      "id": "df598067-90fb-44cb-9562-3d13d3903b42",
+      "name": "IF: Session Exists (Form)?"
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "dataTableId": {
+          "__rl": true,
+          "value": "JUREjsduC6ISYo6f",
+          "mode": "list",
+          "cachedResultName": "agent_sessions_swm",
+          "cachedResultUrl": "/projects/u4AB9CJNbwvqj8lM/datatables/JUREjsduC6ISYo6f"
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "session_id",
+              "keyValue": "={{$json.session_id}}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1,
+      "position": [
+        -848,
+        720
+      ],
+      "id": "d26bb7f1-7362-457a-b521-2ad3a89126a0",
+      "name": "Get Session (Form)",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "dataTableId": {
+          "__rl": true,
+          "value": "JUREjsduC6ISYo6f",
+          "mode": "list",
+          "cachedResultName": "agent_sessions_swm",
+          "cachedResultUrl": "/projects/u4AB9CJNbwvqj8lM/datatables/JUREjsduC6ISYo6f"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "status": "={{ $json.status }}",
+            "session_id": "={{ $json.session_id }}",
+            "requester_email": "={{ $json.requester_email }}",
+            "round_counter": "={{ $json.round_counter }}",
+            "max_rounds": "={{ $json.max_rounds }}",
+            "answers": "={{ JSON.stringify($json.answers || {}) }}",
+            "required_keys": "={{ JSON.stringify($json.required_keys || []) }}",
+            "metadata": "={{ JSON.stringify($json.metadata || {}) }}",
+            "last_question": "={{$json.last_question || \"\"}}",
+            "missing_fields": "={{ JSON.stringify($json.missing_fields || []) }}",
+            "project_classification": "={{ JSON.stringify($json.project_classification || {}) }}"
+          },
+          "matchingColumns": [],
+          "schema": []
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1,
+      "position": [
+        -400,
+        624
+      ],
+      "id": "ce2a7969-8d14-4997-992b-d84b6a424799",
+      "name": "Insert New Session (Form)"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "dataTableId": {
+          "__rl": true,
+          "value": "JUREjsduC6ISYo6f",
+          "mode": "list",
+          "cachedResultName": "agent_sessions_swm",
+          "cachedResultUrl": "/projects/u4AB9CJNbwvqj8lM/datatables/JUREjsduC6ISYo6f"
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "session_id",
+              "keyValue": "={{$json.session_id}}"
+            }
+          ]
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "status": "={{ $json.status }}",
+            "answers": "={{ $('Process Form Submit').item.json.answers }}",
+            "metadata": "={{ $('Process Form Submit').item.json.metadata }}",
+            "missing_fields": "={{ $('Process Form Submit').item.json.missing_fields }}",
+            "round_counter": "={{ $json.round_counter || 0 }}",
+            "max_rounds": "={{ $json.max_rounds || 50 }}",
+            "required_keys": "={{ $('Process Form Submit').item.json.required_keys }}",
+            "requester_email": "={{ $json.requester_email }}",
+            "session_id": "={{ $json.session_id }}",
+            "project_classification": "={{ $('Process Form Submit').item.json.project_classification || '{}' }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "session_id",
+              "displayName": "session_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "requester_email",
+              "displayName": "requester_email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "status",
+              "displayName": "status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "required_keys",
+              "displayName": "required_keys",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "answers",
+              "displayName": "answers",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "metadata",
+              "displayName": "metadata",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "last_question",
+              "displayName": "last_question",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "round_counter",
+              "displayName": "round_counter",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "max_rounds",
+              "displayName": "max_rounds",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "missing_fields",
+              "displayName": "missing_fields",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "project_classification",
+              "displayName": "project_classification",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1,
+      "position": [
+        -400,
+        880
+      ],
+      "id": "7dfc1d50-fd08-4b45-a0e5-ef98f04694ee",
+      "name": "Update Existing Session (Form)"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Get session data from database (either Insert or Update node)\nconst dbData = $input.first().json;\n\n// Parse JSON strings from database\nlet answers = {};\nlet metadata = {};\n\ntry {\n  answers = typeof dbData.answers === 'string' ? JSON.parse(dbData.answers) : (dbData.answers || {});\n} catch (e) {\n  console.log('Error parsing answers:', e);\n}\n\ntry {\n  metadata = typeof dbData.metadata === 'string' ? JSON.parse(dbData.metadata) : (dbData.metadata || {});\n} catch (e) {\n  console.log('Error parsing metadata:', e);\n}\n\nreturn {\n  json: {\n    session_id: dbData.session_id,\n    requester_email: dbData.requester_email,\n    status: dbData.status,\n    answers: answers,\n    metadata: metadata,\n    confirmed_at: new Date().toISOString(),\n  }\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -176,
+        720
+      ],
+      "id": "69c411e4-b340-48cf-ad8d-1c1a7ffecc20",
+      "name": "Prepare Email Data (Form)"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify($json) }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        64,
+        528
+      ],
+      "id": "ec6f805b-64f8-4f6a-9108-1e6856f7b762",
+      "name": "Respond: Form Submitted"
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "dataTableId": {
+          "__rl": true,
+          "value": "JUREjsduC6ISYo6f",
+          "mode": "list",
+          "cachedResultName": "agent_sessions_swm",
+          "cachedResultUrl": "/projects/u4AB9CJNbwvqj8lM/datatables/JUREjsduC6ISYo6f"
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "session_id",
+              "keyValue": "={{$json.session_id}}"
+            },
+            {
+              "keyName": "status",
+              "condition": "neq",
+              "keyValue": "confirmed"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1,
+      "position": [
+        -2320,
+        1152
+      ],
+      "id": "602a2a7b-e589-4fe4-b7fc-6198e0a83d90",
+      "name": "Data Tables: Get Session",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "session-exists-check",
+              "leftValue": "={{$json.id}}",
+              "rightValue": "",
+              "operator": {
+                "type": "number",
+                "operation": "exists",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -2096,
+        1152
+      ],
+      "id": "8f46faa3-bda4-456b-b95f-10a011ec1753",
+      "name": "IF: Session exists?"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n  \"reply_text\": \"Session nicht gefunden. Bitte starte eine neue Anfrage per E-Mail an das Change Team.\",\n  \"status\": \"error\",\n  \"session_id\": \"\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        -1872,
+        1168
+      ],
+      "id": "eacc60cc-2e75-4cf0-9632-4beb8ad0ef30",
+      "name": "Respond: No Session Found"
+    },
+    {
+      "parameters": {
+        "jsCode": "const row = $json;\nconst input = $('Normalize Webhook Input').first().json;\n\n// Parse JSON fields from DB\nlet requiredKeys = [];\ntry { requiredKeys = JSON.parse(row.required_keys || \"[]\"); } catch(e) { requiredKeys = []; }\n\nlet answers = {};\ntry { answers = JSON.parse(row.answers || \"{}\"); } catch(e) { answers = {}; }\n\nlet metadata = {};\ntry { metadata = JSON.parse(row.metadata || \"{}\"); } catch(e) { metadata = {}; }\n\nlet missingFields = [];\ntry { missingFields = JSON.parse(row.missing_fields || \"[]\"); } catch(e) { missingFields = []; }\n\nreturn {\n  json: {\n    session_id: row.session_id,\n    requester_email: row.requester_email,\n    status: row.status,\n    round_counter: parseInt(row.round_counter) || 0,\n    max_rounds: parseInt(row.max_rounds) || 50,\n    required_keys: JSON.stringify(requiredKeys),\n    answers: answers,\n    metadata: metadata,\n    last_question: row.last_question || null,\n    missing_fields: missingFields,\n    incoming_body: input.bodyText || input.message,\n  },\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1872,
+        976
+      ],
+      "id": "5644117c-2efb-4eb5-9022-c5e79b1bfd1e",
+      "name": "Normalize Session Row"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "check-confirmed",
+              "leftValue": "={{$json.status}}",
+              "rightValue": "confirmed",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -1648,
+        976
+      ],
+      "id": "a34011b9-9574-4bd8-8ecb-f131ce12baa8",
+      "name": "IF: Check if Confirmed"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n  \"reply_text\": \"Deine Change-Anfrage wurde bereits abgeschlossen und an das Change Team weitergeleitet. Bei Rückfragen wende dich bitte direkt ans Team.\",\n  \"status\": \"confirmed\",\n  \"session_id\": \"{{ $json.session_id }}\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        -1360,
+        864
+      ],
+      "id": "2e417411-0c51-4fae-b728-6e06963139e5",
+      "name": "Respond: Already Confirmed"
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "gpt-4.1-mini",
+          "mode": "list",
+          "cachedResultName": "GPT-4.1-MINI"
+        },
+        "responses": {
+          "values": [
+            {
+              "role": "system",
+              "content": "Du bist ein Change-Management Agent für die Stadtwerke München (SWM). Deine Aufgabe ist es, strukturiert Informationen für einen Change-Antrag zu sammeln.\n\nWICHTIGE REGELN:\n1. Stelle IMMER nur EINE Frage pro Antwort\n2. Sei freundlich, professionell und auf Deutsch\n3. Nutze die bereits gesammelten Informationen aus dem Session-Context\n4. Wenn ein Feld bereits beantwortet wurde, frage nicht erneut danach\n5. Frage die Felder in der logischen Reihenfolge ab\n\nFELDER DIE DU SAMMELN MUSST (in dieser Reihenfolge):\n1. beschreibung_vorhaben - \"Beschreibung des Vorhabens/Projektes/Initiative\"\n2. stichpunkte - \"Thema/Titel in Stichpunkten\"\n3. ansprechpartner_name - \"Wer ist Ansprechpartner*in / PAG?\"\n4. zielsetzung - \"Zielsetzung des Vorhabens\"\n5. zeithorizont - \"Zeithorizont\"\n6. startdatum - \"Startdatum\"\n7. dauer_heisse_phasen - \"Dauer / heiße Phasen\"\n8. beitrag_konzernstrategie - \"Beitrag zur Konzernstrategie\"\n9. strategische_ziele - \"Welche strategischen Ziele\"\n10. was_passiert_wenn_nicht_erfolgreich - \"Was passiert bei Misserfolg\"\n11. betroffene_bereiche_personen - \"Betroffene Bereiche/Personen\"\n12. anzahl_mitarbeitende_fuehrungskraefte - \"Anzahl MA & FK\"\n13. erwartungen_change_begleitung - \"Erwartungen an Change-Begleitung\"\n14. changebedarf_pag - \"Changebedarf\"\n15. ziel_change_begleitung_von - \"Von (Ist-Zustand)\"\n16. ziel_change_begleitung_zu - \"Zu (Soll-Zustand)\"\n17. erfolg_verhindern - \"Hindernisse\"\n18. erfolg_beitragen - \"Erfolgsfaktoren\"\n19. sonstiges - \"Sonstiges\"\n20. vereinbarungen - \"Vereinbarungen\"\n\nDu MUSST als JSON antworten:\n{\n  \"action\": \"ask\" | \"summarize\" | \"max_rounds\" | \"approval_ok\" | \"approval_change\",\n  \"next_question\": \"Die konkrete Frage\",\n  \"updated_answers\": { \"feld_name\": \"extrahierte_antwort\" },\n  \"missing_fields\": [\"noch_fehlendes_feld1\"],\n  \"reply_text\": \"Der vollständige Text an den Nutzer\"\n}\n\nLOGIK:\n- status == \"open\": Extrahiere Antworten, stelle nächste Frage\n- Wenn round_counter >= max_rounds und wichtige Felder fehlen: action = \"max_rounds\"\n- Wenn alle wichtigen Felder ausgefüllt: action = \"summarize\"\n- status == \"waiting_for_approval\" + Nutzer sagt OK: action = \"approval_ok\"\n- status == \"waiting_for_approval\" + Nutzer will Änderung: action = \"approval_change\""
+            },
+            {
+              "content": "=Session Status: {{ $json.status }}\nRound Counter: {{ $json.round_counter }} / {{ $json.max_rounds }}\nBereits beantwortete Felder: {{ JSON.stringify($json.answers) }}\nNoch fehlende Felder: {{ JSON.stringify($json.missing_fields) }}\nLetzte gestellte Frage: {{ $json.last_question }}\n\nNeue Nutzerantwort:\n{{ $json.incoming_body }}\n\nAnalysiere die Antwort und erstelle das JSON-Response."
+            }
+          ]
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 2,
+      "position": [
+        -1424,
+        1152
+      ],
+      "id": "44cdcb50-c7b3-4f31-b366-90db8783915d",
+      "name": "LLM: Analyze Message",
+      "credentials": {
+        "openAiApi": {
+          "id": "Wjly2IEOwNXQDHwA",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Parse LLM JSON Response - ROBUST VERSION\nconst input = $input.all()[0].json;\n\nconsole.log('[Parse LLM] Raw input keys:', Object.keys(input));\nconsole.log('[Parse LLM] Raw input:', JSON.stringify(input, null, 2).substring(0, 1000));\n\nlet parsed = null;\nlet textContent = null;\n\n// ---------- Verschiedene LLM Output-Strukturen probieren ----------\n// Struktur 1: output[].content[].text (OpenAI Chat format)\nif (!textContent && Array.isArray(input.output) && input.output.length > 0) {\n  const firstOutput = input.output[0];\n  if (firstOutput.content && Array.isArray(firstOutput.content) && firstOutput.content.length > 0) {\n    textContent = firstOutput.content[0].text;\n    console.log('[Parse LLM] Found via output[].content[].text');\n  }\n}\n\n// Struktur 2: message.content (Alternative Chat format)\nif (!textContent && input.message && input.message.content) {\n  textContent = input.message.content;\n  console.log('[Parse LLM] Found via message.content');\n}\n\n// Struktur 3: choices[].message.content (OpenAI API direct)\nif (!textContent && Array.isArray(input.choices) && input.choices.length > 0) {\n  textContent = input.choices[0].message?.content;\n  console.log('[Parse LLM] Found via choices[].message.content');\n}\n\n// Struktur 4: Direkter String output\nif (!textContent && typeof input.output === 'string') {\n  textContent = input.output;\n  console.log('[Parse LLM] Found via string output');\n}\n\n// Struktur 5: text Feld direkt\nif (!textContent && input.text) {\n  textContent = input.text;\n  console.log('[Parse LLM] Found via text field');\n}\n\n// Struktur 6: content Feld direkt\nif (!textContent && typeof input.content === 'string') {\n  textContent = input.content;\n  console.log('[Parse LLM] Found via content field');\n}\n\nconsole.log('[Parse LLM] Extracted textContent:', textContent ? textContent.substring(0, 500) : 'null');\n\n// ---------- JSON aus Text extrahieren ----------\nif (textContent) {\n  try {\n    // Versuch 1: JSON in Markdown Code Block\n    const jsonMatch = textContent.match(/```(?:json)?\\s*([\\s\\S]*?)\\s*```/);\n    if (jsonMatch) {\n      parsed = JSON.parse(jsonMatch[1].trim());\n      console.log('[Parse LLM] Parsed from code block');\n    } else {\n      // Versuch 2: Direktes JSON (evtl. mit fuehrendem/folgendem Text)\n      const jsonStart = textContent.indexOf('{');\n      const jsonEnd = textContent.lastIndexOf('}');\n      if (jsonStart !== -1 && jsonEnd > jsonStart) {\n        const jsonStr = textContent.substring(jsonStart, jsonEnd + 1);\n        parsed = JSON.parse(jsonStr);\n        console.log('[Parse LLM] Parsed from raw JSON substring');\n      } else {\n        // Versuch 3: Ganzer String als JSON\n        parsed = JSON.parse(textContent);\n        console.log('[Parse LLM] Parsed entire string');\n      }\n    }\n  } catch (e) {\n    console.log('[Parse LLM] JSON Parse Error:', e.message);\n    parsed = null;\n  }\n}\n\n// ---------- Fallback bei Parse-Fehler ----------\nif (!parsed) {\n  console.log('[Parse LLM] Using fallback response');\n  parsed = {\n    action: 'ask',\n    next_question: 'Entschuldigung, es gab ein technisches Problem. Kannst du deine Nachricht wiederholen?',\n    updated_answers: {},\n    missing_fields: [],\n    reply_text: textContent || 'Entschuldigung, es gab ein technisches Problem. Kannst du deine Nachricht bitte wiederholen?'\n  };\n}\n\n// ---------- Clean Result mit Typ-Sicherheit ----------\nconst cleanResult = {\n  action: parsed.action || 'ask',\n  next_question: String(parsed.next_question || ''),\n  updated_answers: (typeof parsed.updated_answers === 'object' && parsed.updated_answers) ? parsed.updated_answers : {},\n  missing_fields: Array.isArray(parsed.missing_fields) ? parsed.missing_fields : [],\n  reply_text: String(parsed.reply_text || '')\n};\n\nconsole.log('[Parse LLM] Clean result:', JSON.stringify(cleanResult, null, 2));\n\nreturn { json: cleanResult };"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1072,
+        1152
+      ],
+      "id": "20887753-6d53-4f6c-92e2-3ed377ed24e3",
+      "name": "Parse LLM JSON Response"
+    },
+    {
+      "parameters": {
+        "jsCode": "const session = $('Normalize Session Row').first().json;\nconst llmResult = $('Parse LLM JSON Response').first().json;\n\n// Sicherstellen dass session.answers ein Objekt ist\nlet existingAnswers = session.answers || {};\nif (typeof existingAnswers === 'string') {\n  try { existingAnswers = JSON.parse(existingAnswers); } catch(e) { existingAnswers = {}; }\n}\n\n// Merge neue Antworten\nconst updatedAnswers = {\n  ...existingAnswers,\n  ...(llmResult.updated_answers || {})\n};\n\n// Entferne korrupte Keys\nObject.keys(updatedAnswers).forEach(key => {\n  if (/^\\d+$/.test(key)) delete updatedAnswers[key];\n});\n\n// Required Keys sicherstellen\nlet requiredKeys = session.required_keys || [];\nif (typeof requiredKeys === 'string') {\n  try { requiredKeys = JSON.parse(requiredKeys); } catch(e) { requiredKeys = []; }\n}\nif (!Array.isArray(requiredKeys)) requiredKeys = [];\n\n// Berechne fehlende Felder\nconst actualMissingFields = requiredKeys.filter(key => !updatedAnswers[key] || updatedAnswers[key].trim() === '');\n\n// Round Counter\nlet newRoundCounter = session.round_counter;\nconst hasNewAnswers = llmResult.updated_answers && Object.keys(llmResult.updated_answers).length > 0;\nif (llmResult.action === \"ask\" && !hasNewAnswers) {\n  newRoundCounter = session.round_counter + 1;\n}\n\n// Status und Reply\nlet newStatus = session.status;\nlet replyText = String(llmResult.reply_text || \"\");\n\n// Auto-summarize wenn alle Felder beantwortet\nif (llmResult.action === \"ask\" && actualMissingFields.length === 0) {\n  newStatus = \"waiting_for_approval\";\n  replyText = createSummary(updatedAnswers);\n} else if (llmResult.action === \"ask\") {\n  newStatus = \"open\";\n} else if (llmResult.action === \"summarize\") {\n  newStatus = \"waiting_for_approval\";\n  replyText = createSummary(updatedAnswers);\n} else if (llmResult.action === \"max_rounds\") {\n  newStatus = \"max_rounds_reached\";\n} else if (llmResult.action === \"approval_ok\") {\n  newStatus = \"confirmed\";\n  replyText = \"Vielen Dank für deine Bestätigung! 🎉\\n\\nDeine Change-Anfrage wurde an das Change Team weitergeleitet. Du erhältst in Kürze eine Bestätigungs-E-Mail.\\n\\nViele Grüße\\nDein Change Agent\";\n} else if (llmResult.action === \"approval_change\") {\n  newStatus = \"open\";\n}\n\nfunction createSummary(answers) {\n  let summary = \"📋 **Zusammenfassung deiner Change-Anfrage**\\n\\n\";\n  summary += \"Bitte prüfe die folgenden Informationen:\\n\\n\";\n  \n  // Feste Reihenfolge der Felder (wie in den E-Mails)\n  const fieldOrder = [\n    \"beschreibung_vorhaben\",\n    \"stichpunkte\",\n    \"ansprechpartner_name\",\n    \"zielsetzung\",\n    \"zeithorizont\",\n    \"startdatum\",\n    \"dauer_heisse_phasen\",\n    \"beitrag_konzernstrategie\",\n    \"strategische_ziele\",\n    \"was_passiert_wenn_nicht_erfolgreich\",\n    \"betroffene_bereiche_personen\",\n    \"anzahl_mitarbeitende_fuehrungskraefte\",\n    \"erwartungen_change_begleitung\",\n    \"changebedarf_pag\",\n    \"ziel_change_begleitung_von\",\n    \"ziel_change_begleitung_zu\",\n    \"erfolg_verhindern\",\n    \"erfolg_beitragen\",\n    \"sonstiges\",\n    \"vereinbarungen\"\n  ];\n  \n  const fieldLabels = {\n    \"beschreibung_vorhaben\": \"Beschreibung des Vorhabens\",\n    \"stichpunkte\": \"Thema/Titel\",\n    \"ansprechpartner_name\": \"Ansprechpartner*in\",\n    \"zielsetzung\": \"Zielsetzung\",\n    \"zeithorizont\": \"Zeithorizont\",\n    \"startdatum\": \"Startdatum\",\n    \"dauer_heisse_phasen\": \"Dauer/Heiße Phasen\",\n    \"beitrag_konzernstrategie\": \"Beitrag zur Konzernstrategie\",\n    \"strategische_ziele\": \"Strategische Ziele\",\n    \"was_passiert_wenn_nicht_erfolgreich\": \"Was passiert bei Misserfolg\",\n    \"betroffene_bereiche_personen\": \"Betroffene Bereiche/Personen\",\n    \"anzahl_mitarbeitende_fuehrungskraefte\": \"Anzahl MA & FK\",\n    \"erwartungen_change_begleitung\": \"Erwartungen an Change-Begleitung\",\n    \"changebedarf_pag\": \"Changebedarf\",\n    \"ziel_change_begleitung_von\": \"Von (Ist-Zustand)\",\n    \"ziel_change_begleitung_zu\": \"Zu (Soll-Zustand)\",\n    \"erfolg_verhindern\": \"Hindernisse\",\n    \"erfolg_beitragen\": \"Erfolgsfaktoren\",\n    \"sonstiges\": \"Sonstiges\",\n    \"vereinbarungen\": \"Vereinbarungen\"\n  };\n  \n  // Felder in fester Reihenfolge ausgeben\n  for (const key of fieldOrder) {\n    if (answers[key]) {\n      const label = fieldLabels[key] || key;\n      summary += `**${label}:**\\n${answers[key]}\\n\\n`;\n    }\n  }\n  \n  summary += \"\\n---\\n\\n\";\n  summary += \"Sind alle Angaben korrekt?\\n\\n\";\n  summary += \"👉 Antworte mit 'OK' wenn alles passt\\n\";\n  summary += \"👉 Oder beschreibe welche Änderungen du vornehmen möchtest\";\n  \n  return summary;\n}\n\n// Extract project classification from metadata\nlet projectClassification = '{}';\nif (typeof session.metadata === 'object' && session.metadata) {\n  projectClassification = JSON.stringify(session.metadata.classification || session.metadata.projectClass || {});\n}\n\nconst result = {\n  session_id: session.session_id,\n  requester_email: session.requester_email,\n  status: newStatus,\n  round_counter: newRoundCounter,\n  max_rounds: session.max_rounds,\n  required_keys: session.required_keys,\n  answers: JSON.stringify(updatedAnswers),\n  metadata: session.metadata,\n  last_question: String(llmResult.next_question || \"\"),\n  missing_fields: actualMissingFields,\n  reply_text: replyText,\n  email_intent: false,\n  project_classification: projectClassification\n};\n\nreturn { json: result };"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -848,
+        1152
+      ],
+      "id": "abe7fa5c-315b-487a-aa4b-ea24f6d7a856",
+      "name": "Apply LLM Result"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "dataTableId": {
+          "__rl": true,
+          "value": "JUREjsduC6ISYo6f",
+          "mode": "list",
+          "cachedResultName": "agent_sessions_swm",
+          "cachedResultUrl": "/projects/u4AB9CJNbwvqj8lM/datatables/JUREjsduC6ISYo6f"
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "session_id",
+              "keyValue": "={{$json.session_id}}"
+            }
+          ]
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "status": "={{ $json.status }}",
+            "round_counter": "={{ $json.round_counter }}",
+            "answers": "={{ $json.answers }}",
+            "last_question": "={{ $json.last_question }}",
+            "project_classification": "={{ $json.project_classification || '{}' }}",
+            "missing_fields": "={{ JSON.stringify($json.missing_fields) }}"
+          },
+          "matchingColumns": [],
+          "schema": []
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1,
+      "position": [
+        -624,
+        1152
+      ],
+      "id": "5b278227-f7d6-4ef5-9d89-7b9b799b82b5",
+      "name": "Update row(s)"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "check-confirmed-final",
+              "leftValue": "={{$json.status}}",
+              "rightValue": "confirmed",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            },
+            {
+              "id": "check-email-intent",
+              "leftValue": "={{$json.email_intent || false}}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -400,
+        1152
+      ],
+      "id": "d3ea5d06-1721-48c1-a654-cc21bfe58933",
+      "name": "IF: Send Confirmation Emails?"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Prepare data for emails\nconst data = $json;\n\nlet metadata = data.metadata || {};\nif (typeof metadata === 'string') {\n  try { metadata = JSON.parse(metadata); } catch(e) { metadata = {}; }\n}\n\nlet answers = data.answers || {};\nif (typeof answers === 'string') {\n  try { answers = JSON.parse(answers); } catch(e) { answers = {}; }\n}\n\nreturn {\n  json: {\n    ...data,\n    metadata: metadata,\n    answers: answers,\n    confirmed_at: new Date().toISOString()\n  }\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -176,
+        1216
+      ],
+      "id": "7cb14c46-ed29-4ea9-b646-ae7b01fac252",
+      "name": "Prepare Email Data"
+    },
+    {
+      "parameters": {
+        "fromEmail": "liveley.workflows@gmail.com",
+        "toEmail": "={{ $json.requester_email }}",
+        "subject": "=✅ Deine Change-Anfrage wurde bestätigt",
+        "html": "=<!DOCTYPE html>\n<html>\n<head>\n  <style>\n    body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }\n    .container { max-width: 700px; margin: 0 auto; padding: 20px; }\n    .header { background-color: #4CAF50; color: white; padding: 20px; text-align: center; border-radius: 8px 8px 0 0; }\n    .content { background-color: #f9f9f9; padding: 20px; border-radius: 0 0 8px 8px; }\n    .field { margin-bottom: 15px; padding: 10px; background: white; border-radius: 4px; border-left: 4px solid #4CAF50; }\n    .field-label { font-weight: bold; color: #4CAF50; margin-bottom: 5px; }\n    .field-value { color: #333; white-space: pre-wrap; }\n    .meta { background: #e8f5e9; padding: 15px; border-radius: 4px; margin-bottom: 20px; }\n    .footer { margin-top: 20px; font-size: 12px; color: #666; text-align: center; }\n  </style>\n</head>\n<body>\n  <div class=\"container\">\n    <div class=\"header\">\n      <h1>✅ Change-Anfrage Bestätigt</h1>\n      <p>Stadtwerke München</p>\n    </div>\n    <div class=\"content\">\n      <p>Hallo,</p>\n      \n      <p>vielen Dank! Deine Change-Anfrage wurde erfolgreich an das Change Team weitergeleitet.</p>\n      \n      <div class=\"meta\">\n        <p><strong>Session-ID:</strong> {{ $json.session_id }}</p>\n        <p><strong>Eingereicht am:</strong> {{ $json.confirmed_at }}</p>\n        <p><strong>Status:</strong> <span style=\"color: green;\">✅ Bestätigt</span></p>\n      </div>\n      \n      <h2>📋 Deine vollständige Zusammenfassung</h2>\n      \n      <div class=\"field\">\n        <div class=\"field-label\">Beschreibung des Vorhabens</div>\n        <div class=\"field-value\">{{ $json.answers.beschreibung_vorhaben || 'Nicht angegeben' }}</div>\n      </div>\n      \n      <div class=\"field\">\n        <div class=\"field-label\">Thema/Titel</div>\n        <div class=\"field-value\">{{ $json.answers.stichpunkte || 'Nicht angegeben' }}</div>\n      </div>\n      \n      <div class=\"field\">\n        <div class=\"field-label\">Ansprechpartner*in</div>\n        <div class=\"field-value\">{{ $json.answers.ansprechpartner_name || 'Nicht angegeben' }}</div>\n      </div>\n      \n      <div class=\"field\">\n        <div class=\"field-label\">Zielsetzung</div>\n        <div class=\"field-value\">{{ $json.answers.zielsetzung || 'Nicht angegeben' }}</div>\n      </div>\n      \n      <div class=\"field\">\n        <div class=\"field-label\">Zeithorizont</div>\n        <div class=\"field-value\">{{ $json.answers.zeithorizont || 'Nicht angegeben' }}</div>\n      </div>\n      \n      <div class=\"field\">\n        <div class=\"field-label\">Startdatum</div>\n        <div class=\"field-value\">{{ $json.answers.startdatum || 'Nicht angegeben' }}</div>\n      </div>\n      \n      <div class=\"field\">\n        <div class=\"field-label\">Dauer / Heiße Phasen</div>\n        <div class=\"field-value\">{{ $json.answers.dauer_heisse_phasen || 'Nicht angegeben' }}</div>\n      </div>\n      \n      <div class=\"field\">\n        <div class=\"field-label\">Beitrag zur Konzernstrategie</div>\n        <div class=\"field-value\">{{ $json.answers.beitrag_konzernstrategie || 'Nicht angegeben' }}</div>\n      </div>\n      \n      <div class=\"field\">\n        <div class=\"field-label\">Strategische Ziele</div>\n        <div class=\"field-value\">{{ $json.answers.strategische_ziele || 'Nicht angegeben' }}</div>\n      </div>\n      \n      <div class=\"field\">\n        <div class=\"field-label\">Was passiert bei Misserfolg</div>\n        <div class=\"field-value\">{{ $json.answers.was_passiert_wenn_nicht_erfolgreich || 'Nicht angegeben' }}</div>\n      </div>\n      \n      <div class=\"field\">\n        <div class=\"field-label\">Betroffene Bereiche/Personen</div>\n        <div class=\"field-value\">{{ $json.answers.betroffene_bereiche_personen || 'Nicht angegeben' }}</div>\n      </div>\n      \n      <div class=\"field\">\n        <div class=\"field-label\">Anzahl MA & FK</div>\n        <div class=\"field-value\">{{ $json.answers.anzahl_mitarbeitende_fuehrungskraefte || 'Nicht angegeben' }}</div>\n      </div>\n      \n      <div class=\"field\">\n        <div class=\"field-label\">Erwartungen an Change-Begleitung</div>\n        <div class=\"field-value\">{{ $json.answers.erwartungen_change_begleitung || 'Nicht angegeben' }}</div>\n      </div>\n      \n      <div class=\"field\">\n        <div class=\"field-label\">Changebedarf</div>\n        <div class=\"field-value\">{{ $json.answers.changebedarf_pag || 'Nicht angegeben' }}</div>\n      </div>\n      \n      <div class=\"field\">\n        <div class=\"field-label\">Von (Ist-Zustand)</div>\n        <div class=\"field-value\">{{ $json.answers.ziel_change_begleitung_von || 'Nicht angegeben' }}</div>\n      </div>\n      \n      <div class=\"field\">\n        <div class=\"field-label\">Zu (Soll-Zustand)</div>\n        <div class=\"field-value\">{{ $json.answers.ziel_change_begleitung_zu || 'Nicht angegeben' }}</div>\n      </div>\n      \n      <div class=\"field\">\n        <div class=\"field-label\">Hindernisse</div>\n        <div class=\"field-value\">{{ $json.answers.erfolg_verhindern || 'Nicht angegeben' }}</div>\n      </div>\n      \n      <div class=\"field\">\n        <div class=\"field-label\">Erfolgsfaktoren</div>\n        <div class=\"field-value\">{{ $json.answers.erfolg_beitragen || 'Nicht angegeben' }}</div>\n      </div>\n      \n      <div class=\"field\">\n        <div class=\"field-label\">Sonstiges</div>\n        <div class=\"field-value\">{{ $json.answers.sonstiges || 'Nicht angegeben' }}</div>\n      </div>\n      \n      <div class=\"field\">\n        <div class=\"field-label\">Vereinbarungen</div>\n        <div class=\"field-value\">{{ $json.answers.vereinbarungen || 'Nicht angegeben' }}</div>\n      </div>\n      \n      <hr style=\"margin: 30px 0; border: none; border-top: 1px solid #ddd;\">\n      \n      <p>Das Change Team wird sich in Kürze bei dir melden.</p>\n      \n      <p>Viele Grüße,<br>Dein Change Management Team</p>\n    </div>\n    <div class=\"footer\">\n      <p>Bei Fragen kannst du dich jederzeit an das Change Team wenden.</p>\n    </div>\n  </div>\n</body>\n</html>",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        64,
+        720
+      ],
+      "id": "8fdf0525-9f88-4c4c-b03f-c90e564d3770",
+      "name": "Send Confirmation to Requester",
+      "webhookId": "8588f302-71b8-43e9-8b9c-ec13ebd0df2d",
+      "credentials": {
+        "smtp": {
+          "id": "Q7rmCb8nQSdip4NA",
+          "name": "SMTP account (Liveley)"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "fromEmail": "liveley.workflows@gmail.com",
+        "toEmail": "liveley.workflows@gmail.com",
+        "subject": "=🔔 Neue Change-Anfrage von {{ $json.requester_email }}",
+        "html": "=<!DOCTYPE html>\n<html>\n<head>\n  <style>\n    body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }\n    .container { max-width: 700px; margin: 0 auto; padding: 20px; }\n    .header { background-color: #0066cc; color: white; padding: 20px; text-align: center; border-radius: 8px 8px 0 0; }\n    .content { background-color: #f9f9f9; padding: 20px; border-radius: 0 0 8px 8px; }\n    .field { margin-bottom: 15px; padding: 10px; background: white; border-radius: 4px; border-left: 4px solid #0066cc; }\n    .field-label { font-weight: bold; color: #0066cc; margin-bottom: 5px; }\n    .field-value { color: #333; }\n    .meta { background: #e8f4fc; padding: 15px; border-radius: 4px; margin-bottom: 20px; }\n  </style>\n</head>\n<body>\n  <div class=\"container\">\n    <div class=\"header\">\n      <h1>🔔 Neue Change-Anfrage</h1>\n    </div>\n    <div class=\"content\">\n      <div class=\"meta\">\n        <p><strong>Von:</strong> {{ $json.requester_email }}</p>\n        <p><strong>Session-ID:</strong> {{ $json.session_id }}</p>\n        <p><strong>Eingereicht am:</strong> {{ $json.confirmed_at }}</p>\n        <p><strong>Status:</strong> <span style=\"color: green;\">✅ Bestätigt</span></p>\n      </div>\n      \n      <h2>Change-Anfrage Details</h2>\n      \n      <div class=\"field\">\n        <div class=\"field-label\">Beschreibung des Vorhabens</div>\n        <div class=\"field-value\">{{ $json.answers.beschreibung_vorhaben || 'Nicht angegeben' }}</div>\n      </div>\n      \n      <div class=\"field\">\n        <div class=\"field-label\">Thema/Titel</div>\n        <div class=\"field-value\">{{ $json.answers.stichpunkte || 'Nicht angegeben' }}</div>\n      </div>\n      \n      <div class=\"field\">\n        <div class=\"field-label\">Ansprechpartner*in</div>\n        <div class=\"field-value\">{{ $json.answers.ansprechpartner_name || 'Nicht angegeben' }}</div>\n      </div>\n      \n      <div class=\"field\">\n        <div class=\"field-label\">Zielsetzung</div>\n        <div class=\"field-value\">{{ $json.answers.zielsetzung || 'Nicht angegeben' }}</div>\n      </div>\n      \n      <div class=\"field\">\n        <div class=\"field-label\">Zeithorizont</div>\n        <div class=\"field-value\">{{ $json.answers.zeithorizont || 'Nicht angegeben' }}</div>\n      </div>\n      \n      <div class=\"field\">\n        <div class=\"field-label\">Startdatum</div>\n        <div class=\"field-value\">{{ $json.answers.startdatum || 'Nicht angegeben' }}</div>\n      </div>\n      \n      <div class=\"field\">\n        <div class=\"field-label\">Dauer / Heiße Phasen</div>\n        <div class=\"field-value\">{{ $json.answers.dauer_heisse_phasen || 'Nicht angegeben' }}</div>\n      </div>\n      \n      <div class=\"field\">\n        <div class=\"field-label\">Beitrag zur Konzernstrategie</div>\n        <div class=\"field-value\">{{ $json.answers.beitrag_konzernstrategie || 'Nicht angegeben' }}</div>\n      </div>\n      \n      <div class=\"field\">\n        <div class=\"field-label\">Strategische Ziele</div>\n        <div class=\"field-value\">{{ $json.answers.strategische_ziele || 'Nicht angegeben' }}</div>\n      </div>\n      \n      <div class=\"field\">\n        <div class=\"field-label\">Was passiert bei Misserfolg</div>\n        <div class=\"field-value\">{{ $json.answers.was_passiert_wenn_nicht_erfolgreich || 'Nicht angegeben' }}</div>\n      </div>\n      \n      <div class=\"field\">\n        <div class=\"field-label\">Betroffene Bereiche/Personen</div>\n        <div class=\"field-value\">{{ $json.answers.betroffene_bereiche_personen || 'Nicht angegeben' }}</div>\n      </div>\n      \n      <div class=\"field\">\n        <div class=\"field-label\">Anzahl MA & FK</div>\n        <div class=\"field-value\">{{ $json.answers.anzahl_mitarbeitende_fuehrungskraefte || 'Nicht angegeben' }}</div>\n      </div>\n      \n      <div class=\"field\">\n        <div class=\"field-label\">Erwartungen an Change-Begleitung</div>\n        <div class=\"field-value\">{{ $json.answers.erwartungen_change_begleitung || 'Nicht angegeben' }}</div>\n      </div>\n      \n      <div class=\"field\">\n        <div class=\"field-label\">Changebedarf</div>\n        <div class=\"field-value\">{{ $json.answers.changebedarf_pag || 'Nicht angegeben' }}</div>\n      </div>\n      \n      <div class=\"field\">\n        <div class=\"field-label\">Von (Ist-Zustand)</div>\n        <div class=\"field-value\">{{ $json.answers.ziel_change_begleitung_von || 'Nicht angegeben' }}</div>\n      </div>\n      \n      <div class=\"field\">\n        <div class=\"field-label\">Zu (Soll-Zustand)</div>\n        <div class=\"field-value\">{{ $json.answers.ziel_change_begleitung_zu || 'Nicht angegeben' }}</div>\n      </div>\n      \n      <div class=\"field\">\n        <div class=\"field-label\">Hindernisse</div>\n        <div class=\"field-value\">{{ $json.answers.erfolg_verhindern || 'Nicht angegeben' }}</div>\n      </div>\n      \n      <div class=\"field\">\n        <div class=\"field-label\">Erfolgsfaktoren</div>\n        <div class=\"field-value\">{{ $json.answers.erfolg_beitragen || 'Nicht angegeben' }}</div>\n      </div>\n      \n      <div class=\"field\">\n        <div class=\"field-label\">Sonstiges</div>\n        <div class=\"field-value\">{{ $json.answers.sonstiges || 'Nicht angegeben' }}</div>\n      </div>\n      \n      <div class=\"field\">\n        <div class=\"field-label\">Vereinbarungen</div>\n        <div class=\"field-value\">{{ $json.answers.vereinbarungen || 'Nicht angegeben' }}</div>\n      </div>\n    </div>\n  </div>\n</body>\n</html>",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        64,
+        912
+      ],
+      "id": "2ba50cce-5146-4fa0-b47f-a30ac62ec503",
+      "name": "Send to Change Team",
+      "webhookId": "d8691d0b-613e-4f29-9146-ac3ac2d95631",
+      "credentials": {
+        "smtp": {
+          "id": "Q7rmCb8nQSdip4NA",
+          "name": "SMTP account (Liveley)"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Prepare response for webhook - CHAT PATH ONLY\n// Data comes from Update row(s) via IF: Send Confirmation Emails? (FALSE branch)\nconst data = $input.first().json;\n\nconsole.log('[Prepare Response] Input data:', JSON.stringify(data, null, 2));\n\n// Ensure we have reply_text\nlet replyText = data.reply_text || '';\nif (!replyText) {\n  // Fallback: try to get from Apply LLM Result if available\n  try {\n    const llmData = $('Apply LLM Result').first()?.json;\n    replyText = llmData?.reply_text || 'Deine Nachricht wurde verarbeitet.';\n  } catch (e) {\n    replyText = 'Deine Nachricht wurde verarbeitet.';\n  }\n}\n\nconst result = {\n  reply_text: replyText,\n  status: data.status || 'open',\n  session_id: data.session_id || '',\n  missing_fields: Array.isArray(data.missing_fields) ? data.missing_fields : []\n};\n\nconsole.log('[Prepare Response] Output:', JSON.stringify(result, null, 2));\n\nreturn { json: result };"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        288,
+        880
+      ],
+      "id": "c2e866df-10f2-4c80-b100-0def200cbd9b",
+      "name": "Prepare Response"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify($json) }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        512,
+        880
+      ],
+      "id": "ad18834e-24ff-466e-b650-f22d9b60dcdf",
+      "name": "Respond to Webhook"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "check-source-load-session",
+              "leftValue": "={{ $json.source }}",
+              "rightValue": "load_session",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -2768,
+        1552
+      ],
+      "id": "cb360373-ded6-4caf-a541-143f69f9006d",
+      "name": "IF: Check Source (Load Session?)"
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "dataTableId": {
+          "__rl": true,
+          "value": "JUREjsduC6ISYo6f",
+          "mode": "list",
+          "cachedResultName": "agent_sessions_swm",
+          "cachedResultUrl": "/projects/u4AB9CJNbwvqj8lM/datatables/JUREjsduC6ISYo6f"
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "session_id",
+              "keyValue": "={{$json.session_id}}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1,
+      "position": [
+        -2544,
+        1552
+      ],
+      "id": "2c8fd73a-bc82-47da-823b-b22db0b97469",
+      "name": "Get Session (Load)",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ (function() { const row = $json; function safeParse(val) { if (!val) return {}; try { let r = val; if (typeof r === 'string') { r = JSON.parse(r); if (typeof r === 'string') r = JSON.parse(r); } return r || {}; } catch(e) { return {}; } } return { session_id: row.session_id || '', answers: safeParse(row.answers), project_classification: safeParse(row.project_classification), status: row.status || 'unknown', missing_fields: safeParse(row.missing_fields) || [] }; })() }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        -2320,
+        1552
+      ],
+      "id": "a74d5ac8-0cb8-4910-9cec-6932e6dc947f",
+      "name": "Respond: Session Data"
+    },
+    {
+      "parameters": {
+        "content": "## 📧 EMAIL TRIGGER PATH\n**Zweck:** Verarbeitet eingehende E-Mails von Benutzern\n\n**Flow:**\n1. E-Mail empfangen (IMAP)\n2. Normalisieren (E-Mail-Adresse, Betreff, Body extrahieren)\n3. Prüfen: Nicht von System selbst\n4. Session in DB anlegen\n5. Chat-Link per E-Mail senden\n\n**Status:** ⚠️ Legacy - Wird durch Web-Form ersetzt",
+        "height": 258.7165642116298,
+        "width": 859.4653784219003,
+        "color": 4
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -3680,
+        224
+      ],
+      "id": "61edf474-2c64-413b-99ff-82093487362e",
+      "name": "Email Path Info"
+    },
+    {
+      "parameters": {
+        "content": "## 📝 FORM SUBMIT PATH\n**Zweck:** Speichert vollständiges Formular und sendet E-Mails\n\n**Flow:**\n1. Normalize Webhook Input\n2. IF: source == 'form'? → JA\n3. Process Form Submit (alle Daten + Classification)\n4. Get/Insert/Update Session in DB\n5. Prepare Email Data\n6. ✉️ Send Confirmation + Send to Change Team\n7. Respond: Form Submitted\n\n**Wichtig:**\n- Setzt `email_intent: true` → E-Mails werden gesendet\n- Speichert `project_classification`\n- Status: 'confirmed'",
+        "height": 280,
+        "width": 1050,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -1312,
+        512
+      ],
+      "id": "bc8a3e50-84e4-4cc7-9f4f-f4683190c89b",
+      "name": "Form Submit Path"
+    },
+    {
+      "parameters": {
+        "content": "## 💾 AUTOSAVE PATH\n**Zweck:** Speichert einzelne Formular-Felder während der Eingabe\n\n**Flow:**\n1. Normalize Webhook Input\n2. IF: source == 'form_autosave'? → JA\n3. Get Session (Autosave)\n4. Process Field Update:\n   - Merge `field_update` in `answers`\n   - Classification speichern (falls vorhanden)\n5. Update Session (Autosave) → DB write\n6. Respond: Autosave OK\n\n**Kritisch:**\n- `field_update: {\"feldname\": \"wert\"}` wird zu `answers: {\"feldname\": \"wert\"}`\n- Kein LLM\n- Keine E-Mails\n- Status: 'editing'",
+        "height": 320,
+        "width": 760,
+        "color": 6
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -1776,
+        1488
+      ],
+      "id": "64eac702-d630-4e9f-8068-038d09d06697",
+      "name": "Autosave Path"
+    },
+    {
+      "parameters": {
+        "content": "## 💬 CHAT / LLM PATH\n**Zweck:** Verarbeitet Chat-Nachrichten mit KI-Unterstützung\n\n**Flow:**\n1. Normalize Webhook Input\n2. IF: source == 'chat' oder `message` vorhanden? → JA\n3. Get Session from DB\n4. IF: Session exists? → JA\n5. Normalize Session Row\n6. IF: Already confirmed? → NEIN\n7. 🤖 LLM: Analyze Message\n8. Parse LLM JSON Response\n9. Apply LLM Result (setzt `email_intent: false`)\n10. Update row(s) → DB write\n11. IF: status == 'confirmed' AND email_intent == true? → NEIN (Chat!)\n12. Prepare Response\n13. Respond to Webhook\n\n**Hard Gate:** `email_intent: false` verhindert E-Mail-Versand!\n**Speichert:** `answers`, `project_classification`, `round_counter`",
+        "height": 380,
+        "width": 1200,
+        "color": 7
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -2544,
+        752
+      ],
+      "id": "1d2ca42d-8f36-4d63-af77-d81c95ef5f61",
+      "name": "Chat/LLM Path"
+    },
+    {
+      "parameters": {
+        "content": "## 🔍 LOAD SESSION PATH\n**Zweck:** Lädt bestehende Session-Daten für Frontend\n\n**Flow:**\n1. Normalize Webhook Input\n2. IF: source == 'load_session'? → JA\n3. Get Session (Load) from DB\n4. Respond: Session Data (JSON mit answers, classification, status)\n\n**Verwendet von:**\n- Frontend beim Seiten-Reload\n- Fortsetzung unterbrochener Formulare\n\n**Keine Änderungen an DB!**",
+        "height": 240,
+        "width": 680,
+        "color": 3
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -2768,
+        1696
+      ],
+      "id": "d72eb512-943f-4ad3-852d-9156f9844daf",
+      "name": "Load Session Path"
+    },
+    {
+      "parameters": {
+        "content": "## 🚦 ROUTING LOGIC\n**Source-Based Routing:**\n\n✉️ `source: \"form\"` → Form Submit Path\n💾 `source: \"form_autosave\"` → Autosave Path  \n💬 `message` present → Chat/LLM Path\n🔍 `source: \"load_session\"` → Load Session Path\n\n**Data Flow:**\n```\nWebhook → Normalize Input → Route by Source → Process → DB → Respond\n```\n\n**Critical Fields:**\n- `session_id`: Identifies session\n- `source`: Routes to correct branch\n- `email_intent`: Gates email sending\n- `project_classification`: Stores classification",
+        "height": 300,
+        "width": 520,
+        "color": 2
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -3488,
+        1072
+      ],
+      "id": "70d9b193-04e9-4a2c-af98-32f43064dc3a",
+      "name": "Routing Logic"
+    }
+  ],
+  "connections": {
+    "Email Trigger (IMAP)": {
+      "main": [
+        [
+          {
+            "node": "Normalize Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalize Email": {
+      "main": [
+        [
+          {
+            "node": "IF: Not From System",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF: Not From System": {
+      "main": [
+        [
+          {
+            "node": "Init Session from Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Init Session from Email": {
+      "main": [
+        [
+          {
+            "node": "Data Table: Insert Session",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Data Table: Insert Session": {
+      "main": [
+        [
+          {
+            "node": "Send Chat Link Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook Trigger": {
+      "main": [
+        [
+          {
+            "node": "Normalize Webhook Input",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalize Webhook Input": {
+      "main": [
+        [
+          {
+            "node": "IF: Check Source (Form?)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF: Check Source (Form?)": {
+      "main": [
+        [
+          {
+            "node": "Process Form Submit",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "IF: Check Source (Autosave?)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF: Check Source (Autosave?)": {
+      "main": [
+        [
+          {
+            "node": "Get Session (Autosave)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "IF: Check Source (Load Session?)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Process Form Submit": {
+      "main": [
+        [
+          {
+            "node": "Get Session (Form)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Session (Autosave)": {
+      "main": [
+        [
+          {
+            "node": "Process Field Update",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Process Field Update": {
+      "main": [
+        [
+          {
+            "node": "Update Session (Autosave)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update Session (Autosave)": {
+      "main": [
+        [
+          {
+            "node": "Respond: Autosave OK",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF: Session Exists (Form)?": {
+      "main": [
+        [
+          {
+            "node": "Update Existing Session (Form)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Insert New Session (Form)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Session (Form)": {
+      "main": [
+        [
+          {
+            "node": "IF: Session Exists (Form)?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Insert New Session (Form)": {
+      "main": [
+        [
+          {
+            "node": "Prepare Email Data (Form)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update Existing Session (Form)": {
+      "main": [
+        [
+          {
+            "node": "Prepare Email Data (Form)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Email Data (Form)": {
+      "main": [
+        [
+          {
+            "node": "Send Confirmation to Requester",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Send to Change Team",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Data Tables: Get Session": {
+      "main": [
+        [
+          {
+            "node": "IF: Session exists?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF: Session exists?": {
+      "main": [
+        [
+          {
+            "node": "Normalize Session Row",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Respond: No Session Found",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalize Session Row": {
+      "main": [
+        [
+          {
+            "node": "IF: Check if Confirmed",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF: Check if Confirmed": {
+      "main": [
+        [
+          {
+            "node": "Respond: Already Confirmed",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "LLM: Analyze Message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "LLM: Analyze Message": {
+      "main": [
+        [
+          {
+            "node": "Parse LLM JSON Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse LLM JSON Response": {
+      "main": [
+        [
+          {
+            "node": "Apply LLM Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Apply LLM Result": {
+      "main": [
+        [
+          {
+            "node": "Update row(s)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update row(s)": {
+      "main": [
+        [
+          {
+            "node": "IF: Send Confirmation Emails?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF: Send Confirmation Emails?": {
+      "main": [
+        [
+          {
+            "node": "Prepare Email Data",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Prepare Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Email Data": {
+      "main": [
+        [
+          {
+            "node": "Send Confirmation to Requester",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Send to Change Team",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Confirmation to Requester": {
+      "main": [
+        [
+          {
+            "node": "Respond: Form Submitted",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send to Change Team": {
+      "main": [
+        [
+          {
+            "node": "Respond: Form Submitted",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Response": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF: Check Source (Load Session?)": {
+      "main": [
+        [
+          {
+            "node": "Get Session (Load)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Data Tables: Get Session",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Session (Load)": {
+      "main": [
+        [
+          {
+            "node": "Respond: Session Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {
+    "Normalize Webhook Input": [
+      {
+        "session_id": "plfb4bm5",
+        "message": "",
+        "email": "anonymous@chat.local",
+        "bodyText": "",
+        "fromEmail": "anonymous@chat.local",
+        "subject": "Chat Request",
+        "source": "form_autosave",
+        "formData": null,
+        "projectClass": null,
+        "classification": null,
+        "field_update": {
+          "erwartungen": "k"
+        }
+      }
+    ],
+    "Process Form Submit": [
+      {
+        "session_id": "plfb4bm5",
+        "requester_email": "noreply@example.com",
+        "status": "confirmed",
+        "round_counter": 0,
+        "max_rounds": 50,
+        "required_keys": "[\"beschreibung_vorhaben\",\"stichpunkte\",\"ansprechpartner_name\",\"zielsetzung\",\"zeithorizont\",\"startdatum\",\"dauer_heisse_phasen\",\"beitrag_konzernstrategie\",\"strategische_ziele\",\"was_passiert_wenn_nicht_erfolgreich\",\"betroffene_bereiche_personen\",\"anzahl_mitarbeitende_fuehrungskraefte\",\"erwartungen_change_begleitung\",\"changebedarf_pag\",\"ziel_change_begleitung_von\",\"ziel_change_begleitung_zu\",\"erfolg_verhindern\",\"erfolg_beitragen\",\"sonstiges\",\"vereinbarungen\"]",
+        "answers": "{\"beschreibung_vorhaben\":\"h\",\"stichpunkte\":\"k\",\"ansprechpartner_name\":\"i\",\"zielsetzung\":\"j\",\"was_passiert_wenn_nicht_erfolgreich\":\"\",\"startdatum\":\"2025-12-19\",\"zeithorizont\":\"j\",\"dauer_heisse_phasen\":\"\",\"strategische_ziele\":\"\",\"beitrag_konzernstrategie\":\"\",\"betroffene_bereiche_personen\":\"kk\",\"anzahl_mitarbeitende_fuehrungskraefte\":\"\",\"erwartungen_change_begleitung\":\"k\",\"changebedarf_pag\":\"\",\"ziel_change_begleitung_von\":\"\",\"ziel_change_begleitung_zu\":\"\",\"erfolg_verhindern\":\"\",\"erfolg_beitragen\":\"\",\"vereinbarungen\":\"\",\"sonstiges\":\"\",\"projektklasse\":null,\"klassifizierung\":\"{}\"}",
+        "metadata": "{\"source\":\"form\",\"submitted_at\":\"2025-12-15T13:45:50.987Z\",\"projectClass\":null,\"classification\":{}}",
+        "last_question": null,
+        "missing_fields": "[]",
+        "project_classification": "{}",
+        "email_intent": true,
+        "reply_text": "✅ Deine Change-Anfrage wurde erfolgreich eingereicht und wird bearbeitet!"
+      }
+    ]
+  },
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "242e16560be4b15ec48732e58bf97d190f82ae9479ec2d8855ef98e163c481dd"
+  }
+}
+
