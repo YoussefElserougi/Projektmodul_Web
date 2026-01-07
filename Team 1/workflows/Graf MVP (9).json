@@ -1,0 +1,3075 @@
+{
+  "name": "Graf MVP",
+  "nodes": [
+    {
+      "parameters": {
+        "public": true,
+        "initialMessages": "How can I assist you today?",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        -352,
+        736
+      ],
+      "id": "dc911882-cd10-430c-bd55-d301dd174bbd",
+      "name": "When chat message received",
+      "webhookId": "996e33d7-430e-45d3-a265-b5c310eeb13c"
+    },
+    {
+      "parameters": {
+        "text": "={{ $('Email Trigger (IMAP)').item.json.textPlain }}\n{{ $('Email Trigger (IMAP)').item.json.subject }}\n{{ $('Email Trigger (IMAP)').item.json.from }}",
+        "schemaType": "manual",
+        "inputSchema": "{\n  \"type\": \"object\",\n  \"properties\": {\n    \"companyName\": {\n      \"type\": \"string\"\n    },\n    \"category\": {\n      \"type\": \"string\",\n      \"description\": \"technical support, consultant, etc.\"\n    },\n    \"products\": {\n      \"type\": \"array\",\n      \"items\": {\n        \"type\": \"string\"\n      }\n    }\n  }\n}\n",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.informationExtractor",
+      "typeVersion": 1.2,
+      "position": [
+        544,
+        1488
+      ],
+      "id": "454c34b8-cf3f-4821-b81c-b286e9d33531",
+      "name": "Information Extractor",
+      "alwaysOutputData": true,
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.emailReadImap",
+      "typeVersion": 2.1,
+      "position": [
+        -352,
+        1488
+      ],
+      "id": "621b713a-8ac5-447a-b8bb-2eeda223e871",
+      "name": "Email Trigger (IMAP)",
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1rBwHt3aqq0AGoKXXT7mf1h6obGMBUwtM_EXOrt2BvEE",
+          "mode": "list",
+          "cachedResultName": "Suport-DB",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1rBwHt3aqq0AGoKXXT7mf1h6obGMBUwtM_EXOrt2BvEE/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "issues",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1rBwHt3aqq0AGoKXXT7mf1h6obGMBUwtM_EXOrt2BvEE/edit#gid=0"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        -128,
+        1488
+      ],
+      "id": "cca6fdf0-76fe-45f1-9aa8-8f1f6ab7837d",
+      "name": "Get row(s) in sheet2",
+      "alwaysOutputData": true,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "AlZ9JcRbK2aQnohE",
+          "name": "Google Sheets account"
+        }
+      },
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "jsCode": "function extractNameAndEmail(input) {\n  const regex = /^(.*?)\\s*<([^>]+)>$/;\n  const match = input.match(regex);\n\n  if (!match) {\n    return {\n      name: \"\",\n      email: \"\"\n    };\n  }\n\n  return {\n    name: match[1].trim(),\n    email: match[2].trim()\n  };\n}\n\nlet id = 0\n\nfor (const item of $input.all()) {\n  if (item.json.id)\n  id = Math.max(id, item.json.id)\n}\n\nreturn {\n  nextId: id + 1,\n  ...extractNameAndEmail($('Email Trigger (IMAP)').first().json.from)\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        96,
+        1488
+      ],
+      "id": "559d1a35-a67d-4051-9b40-65627200e767",
+      "name": "Code in JavaScript2",
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "operation": "appendOrUpdate",
+        "documentId": {
+          "__rl": true,
+          "value": "1rBwHt3aqq0AGoKXXT7mf1h6obGMBUwtM_EXOrt2BvEE",
+          "mode": "list",
+          "cachedResultName": "Suport-DB",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1rBwHt3aqq0AGoKXXT7mf1h6obGMBUwtM_EXOrt2BvEE/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "issues",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1rBwHt3aqq0AGoKXXT7mf1h6obGMBUwtM_EXOrt2BvEE/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "id": "={{ $json.nextId }}",
+            "status": "OPEN",
+            "email": "={{ $json.email }}",
+            "name": "={{ $json.name }}",
+            "subject": "={{ $('Email Trigger (IMAP)').item.json.subject }}",
+            "emailContent": "={{ $('Email Trigger (IMAP)').item.json.textPlain }}",
+            "date": "={{ $('Email Trigger (IMAP)').item.json.date }}"
+          },
+          "matchingColumns": [
+            "id"
+          ],
+          "schema": [
+            {
+              "id": "id",
+              "displayName": "id",
+              "required": false,
+              "defaultMatch": true,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "status",
+              "displayName": "status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "email",
+              "displayName": "email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "name",
+              "displayName": "name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "subject",
+              "displayName": "subject",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "emailContent",
+              "displayName": "emailContent",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "date",
+              "displayName": "date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        320,
+        1488
+      ],
+      "id": "17389b67-db26-47c9-bbcd-70d8058e4d77",
+      "name": "Append issue",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "AlZ9JcRbK2aQnohE",
+          "name": "Google Sheets account"
+        }
+      },
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1rBwHt3aqq0AGoKXXT7mf1h6obGMBUwtM_EXOrt2BvEE",
+          "mode": "list",
+          "cachedResultName": "Suport-DB",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1rBwHt3aqq0AGoKXXT7mf1h6obGMBUwtM_EXOrt2BvEE/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1023914026,
+          "mode": "list",
+          "cachedResultName": "extracted_information",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1rBwHt3aqq0AGoKXXT7mf1h6obGMBUwtM_EXOrt2BvEE/edit#gid=1023914026"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "issue_id": "={{ $('Append issue').item.json.id }}",
+            "company_name": "={{ $json.output.companyName }}",
+            "category": "={{ $json.output.category }}",
+            "products": "={{ $json.output.products }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "issue_id",
+              "displayName": "issue_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "company_name",
+              "displayName": "company_name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "category",
+              "displayName": "category",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "products",
+              "displayName": "products",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        896,
+        1488
+      ],
+      "id": "d1c9d563-09f4-4c84-bd81-813ca73a50a4",
+      "name": "Append row in Extracted Information",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "AlZ9JcRbK2aQnohE",
+          "name": "Google Sheets account"
+        }
+      },
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-4.1-mini"
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        624,
+        1712
+      ],
+      "id": "9d828b47-ebba-4a5e-a232-50e01279a609",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "Ex1yZat6vMtDWbYv",
+          "name": "OpenAi account"
+        }
+      },
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-4",
+          "mode": "list",
+          "cachedResultName": "gpt-4"
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        -128,
+        960
+      ],
+      "id": "8e69e473-3a77-425a-b51f-ebe4a01a48c0",
+      "name": "OpenAI Chat Model1",
+      "credentials": {
+        "openAiApi": {
+          "id": "Ex1yZat6vMtDWbYv",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.embeddingsOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        208,
+        1168
+      ],
+      "id": "17aa701a-52f7-414d-9db6-1e173c5bd259",
+      "name": "Embeddings OpenAI1",
+      "credentials": {
+        "openAiApi": {
+          "id": "Ex1yZat6vMtDWbYv",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {
+          "systemMessage": "You are a Technical Support AI Assistant with access to two tools: \"datasheets_store\" (official manuals/specs) and \"historical_tickets_store\" (past resolved issues).\nYour Logic:\nFor factual questions (specs, usage), query \"datasheets_store\". Provide the official answer.\nFor troubleshooting (errors, bugs), query BOTH stores. Combine the official technical explanation from datasheets with practical solutions found in historical tickets.\nIf specific ticket advice contradicts the manual, present the manual as the standard and the ticket as a \"workaround,\" prioritizing safety.\nResponse Rules:\nCite Sources: Explicitly state where information comes from (e.g., \"According to Datasheet X...\" or \"In Ticket #123...\").\nPrivacy: You must filter out all PII (names, passwords, phone numbers) found in historical tickets.\nHonesty: If the answer is not in your tools, do not invent one. Suggest human escalation.\nTone: Professional, concise, and solution-focused."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3,
+      "position": [
+        32,
+        736
+      ],
+      "id": "c7086bff-964a-4185-89de-800e954c8c00",
+      "name": "AI Agent1"
+    },
+    {
+      "parameters": {},
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.3,
+      "position": [
+        0,
+        960
+      ],
+      "id": "2d893d18-3531-4d46-974c-f0de35fc07cf",
+      "name": "Simple Memory"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -352,
+        48
+      ],
+      "id": "5b90f7de-0767-4eeb-92a6-b8aaf8014b28",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1rBwHt3aqq0AGoKXXT7mf1h6obGMBUwtM_EXOrt2BvEE",
+          "mode": "list",
+          "cachedResultName": "Suport-DB",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1rBwHt3aqq0AGoKXXT7mf1h6obGMBUwtM_EXOrt2BvEE/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "issues",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1rBwHt3aqq0AGoKXXT7mf1h6obGMBUwtM_EXOrt2BvEE/edit#gid=0"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        -128,
+        -96
+      ],
+      "id": "6c69f3ef-f90e-4ed0-8645-9ff39600c954",
+      "name": "get_issues",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "AlZ9JcRbK2aQnohE",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1rBwHt3aqq0AGoKXXT7mf1h6obGMBUwtM_EXOrt2BvEE",
+          "mode": "list",
+          "cachedResultName": "Suport-DB",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1rBwHt3aqq0AGoKXXT7mf1h6obGMBUwtM_EXOrt2BvEE/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1023914026,
+          "mode": "list",
+          "cachedResultName": "extracted_information",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1rBwHt3aqq0AGoKXXT7mf1h6obGMBUwtM_EXOrt2BvEE/edit#gid=1023914026"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        96,
+        -96
+      ],
+      "id": "031a47b2-b945-4149-9c4e-3e253817e1d0",
+      "name": "get_extracted_information",
+      "executeOnce": true,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "AlZ9JcRbK2aQnohE",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1rBwHt3aqq0AGoKXXT7mf1h6obGMBUwtM_EXOrt2BvEE",
+          "mode": "list",
+          "cachedResultName": "Suport-DB",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1rBwHt3aqq0AGoKXXT7mf1h6obGMBUwtM_EXOrt2BvEE/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1287962512,
+          "mode": "list",
+          "cachedResultName": "solutions",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1rBwHt3aqq0AGoKXXT7mf1h6obGMBUwtM_EXOrt2BvEE/edit#gid=1287962512"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        384,
+        -96
+      ],
+      "id": "f43218e5-32bb-4b98-b531-c5f10fe18f07",
+      "name": "get_solutions",
+      "executeOnce": true,
+      "alwaysOutputData": true,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "AlZ9JcRbK2aQnohE",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const issues = {};\n\nfor (const item of $('get_issues').all()) {\n  const issue = item.json;\n\n  if (!issues[issue.id]) {\n    issues[issue.id] = {\n      issue: {},\n      extracted: {},\n      solution: {}\n    };\n  }\n\n  issues[issue.id].issue = issue\n}\n\nfor (const item of $('get_extracted_information').all()) {\n  const issue = item.json;\n  issues[issue.issue_id].extracted = issue\n}\n\nfor (const item of $('get_solutions').all()) {\n  const issue = item.json;\n\n  const keys = Object.keys(issue)\n\n  if (!keys.length) continue\n\n  console.log(issue, issues)\n  \n  issues[issue.issue_id].solution = item.json.ai_solution\n}\n\nreturn Object.values(issues);\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        672,
+        -96
+      ],
+      "id": "c34e6538-c445-4a9f-b898-bf970b6b4cf8",
+      "name": "Code in JavaScript3"
+    },
+    {
+      "parameters": {
+        "mode": "insert",
+        "memoryKey": {
+          "__rl": true,
+          "value": "issues",
+          "mode": "list",
+          "cachedResultName": "issues"
+        },
+        "embeddingBatchSize": 1000,
+        "clearStore": true
+      },
+      "type": "@n8n/n8n-nodes-langchain.vectorStoreInMemory",
+      "typeVersion": 1.3,
+      "position": [
+        928,
+        -96
+      ],
+      "id": "c90da29c-d081-4656-b966-d3371740b9f8",
+      "name": "Simple Vector Store"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.embeddingsOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        896,
+        128
+      ],
+      "id": "f0f37656-02b0-4bed-bec4-52ba7abeb244",
+      "name": "Embeddings OpenAI",
+      "credentials": {
+        "openAiApi": {
+          "id": "Ex1yZat6vMtDWbYv",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsonMode": "expressionData",
+        "jsonData": "={{ $json.issue.toJsonString() }}\n{{ $json.extracted.toJsonString() }}\n{{ $json.solution.toJsonString() }}",
+        "textSplittingMode": "custom",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.documentDefaultDataLoader",
+      "typeVersion": 1.1,
+      "position": [
+        1024,
+        128
+      ],
+      "id": "8521f71d-27a3-4287-a4bd-50a2e45e3265",
+      "name": "Default Data Loader"
+    },
+    {
+      "parameters": {},
+      "type": "@n8n/n8n-nodes-langchain.textSplitterTokenSplitter",
+      "typeVersion": 1,
+      "position": [
+        1104,
+        336
+      ],
+      "id": "bebf7ca1-5733-4e14-9b94-fcec24c12f50",
+      "name": "Token Splitter"
+    },
+    {
+      "parameters": {
+        "resource": "fileFolder",
+        "returnAll": true,
+        "filter": {
+          "folderId": {
+            "__rl": true,
+            "value": "11ObQNp0_JcACqXTe_kjbsvVItf1PJje7",
+            "mode": "list",
+            "cachedResultName": " Data sheets",
+            "cachedResultUrl": "https://drive.google.com/drive/folders/11ObQNp0_JcACqXTe_kjbsvVItf1PJje7"
+          },
+          "whatToSearch": "files"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        -128,
+        192
+      ],
+      "id": "31ed7337-a5ae-4326-9ee5-9edf945b24b3",
+      "name": "Search files and folders",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "hNwtpoAxNAxVdLyg",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "download",
+        "fileId": {
+          "__rl": true,
+          "value": "={{ $json.id }}",
+          "mode": "id"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        96,
+        192
+      ],
+      "id": "d385bd93-1f98-4bd9-a6c9-9d985123fb38",
+      "name": "Download file",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "hNwtpoAxNAxVdLyg",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "insert",
+        "memoryKey": {
+          "__rl": true,
+          "value": "documents",
+          "mode": "list"
+        },
+        "clearStore": true
+      },
+      "type": "@n8n/n8n-nodes-langchain.vectorStoreInMemory",
+      "typeVersion": 1.3,
+      "position": [
+        304,
+        192
+      ],
+      "id": "161236b9-a59d-4dd1-b1ed-b2196977a5fe",
+      "name": "Simple Vector Store3"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.embeddingsOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        304,
+        416
+      ],
+      "id": "c2433116-071b-41be-aa1d-e0223890bfe9",
+      "name": "Embeddings OpenAI3",
+      "credentials": {
+        "openAiApi": {
+          "id": "Ex1yZat6vMtDWbYv",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "dataType": "binary",
+        "loader": "pdfLoader",
+        "options": {
+          "metadata": {
+            "metadataValues": [
+              {
+                "name": "filename",
+                "value": "={{ $json.name }}"
+              }
+            ]
+          }
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.documentDefaultDataLoader",
+      "typeVersion": 1.1,
+      "position": [
+        448,
+        416
+      ],
+      "id": "d277d305-eae4-4920-9094-de0d6f848d70",
+      "name": "Default Data Loader1"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.embeddingsOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        496,
+        1168
+      ],
+      "id": "c73335f7-de8a-48e4-9139-96183557573c",
+      "name": "Embeddings OpenAI4",
+      "credentials": {
+        "openAiApi": {
+          "id": "Ex1yZat6vMtDWbYv",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "path": "issues/open",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -752,
+        2752
+      ],
+      "id": "57d428c6-c51f-4ea6-b44b-bbe7be69a092",
+      "name": "Webhook",
+      "webhookId": "d1c77cb7-f883-4da6-af9b-b8775bef653f"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1rBwHt3aqq0AGoKXXT7mf1h6obGMBUwtM_EXOrt2BvEE",
+          "mode": "list",
+          "cachedResultName": "Suport-DB",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1rBwHt3aqq0AGoKXXT7mf1h6obGMBUwtM_EXOrt2BvEE/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "issues",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1rBwHt3aqq0AGoKXXT7mf1h6obGMBUwtM_EXOrt2BvEE/edit#gid=0"
+        },
+        "filtersUI": {
+          "values": [
+            {
+              "lookupColumn": "status",
+              "lookupValue": "OPEN"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        -544,
+        2752
+      ],
+      "id": "47f3d1c9-b6b2-4b8b-b38e-5e033d2796fd",
+      "name": "get_open_issues",
+      "alwaysOutputData": true,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "AlZ9JcRbK2aQnohE",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const input = $input.all();\n\nconst first = input[0].json;\n\nif (Object.keys(first).length === 0)\n  return {\n    data: [],\n  };\n\nreturn {\n  data: $input.all().map((item) => ({\n    id: item.json.id,\n    option: item.json.subject,\n  })),\n};\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -336,
+        2752
+      ],
+      "id": "395e7c32-2d43-42eb-9230-f04d990fc319",
+      "name": "Code in JavaScript4",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        -128,
+        2752
+      ],
+      "id": "b0e03783-d73d-42ee-8bf0-2c6504530ed6",
+      "name": "Respond to Webhook",
+      "alwaysOutputData": true,
+      "executeOnce": false
+    },
+    {
+      "parameters": {
+        "path": "issues/detail",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -768,
+        3056
+      ],
+      "id": "4ba3aae7-a697-412f-8821-7e9e661a09ec",
+      "name": "Webhook1",
+      "webhookId": "6d9d06d6-a262-4b75-9acf-39f345b41d2a"
+    },
+    {
+      "parameters": {
+        "jsCode": "return {\n  issue_id: $input.first().json.query.issue_id\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -544,
+        3056
+      ],
+      "id": "52c15459-bf2d-4bef-b306-05874b085634",
+      "name": "Code in JavaScript5"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1rBwHt3aqq0AGoKXXT7mf1h6obGMBUwtM_EXOrt2BvEE",
+          "mode": "list",
+          "cachedResultName": "Suport-DB",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1rBwHt3aqq0AGoKXXT7mf1h6obGMBUwtM_EXOrt2BvEE/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1023914026,
+          "mode": "list",
+          "cachedResultName": "extracted_information",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1rBwHt3aqq0AGoKXXT7mf1h6obGMBUwtM_EXOrt2BvEE/edit#gid=1023914026"
+        },
+        "filtersUI": {
+          "values": [
+            {
+              "lookupColumn": "issue_id",
+              "lookupValue": "={{ $json.issue_id }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        -320,
+        3168
+      ],
+      "id": "7549c067-8106-4e31-a73d-64ee34db724a",
+      "name": "get_extracted",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "AlZ9JcRbK2aQnohE",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "advanced": true,
+        "mergeByFields": {
+          "values": [
+            {
+              "field1": "id",
+              "field2": "issue_id"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        -64,
+        3072
+      ],
+      "id": "0147539b-2e83-48f0-b55b-4bdb250132aa",
+      "name": "Merge",
+      "executeOnce": false
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1rBwHt3aqq0AGoKXXT7mf1h6obGMBUwtM_EXOrt2BvEE",
+          "mode": "list",
+          "cachedResultName": "Suport-DB",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1rBwHt3aqq0AGoKXXT7mf1h6obGMBUwtM_EXOrt2BvEE/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "issues",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1rBwHt3aqq0AGoKXXT7mf1h6obGMBUwtM_EXOrt2BvEE/edit#gid=0"
+        },
+        "filtersUI": {
+          "values": [
+            {
+              "lookupColumn": "id",
+              "lookupValue": "={{ $json.issue_id }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        -320,
+        2992
+      ],
+      "id": "cf1451a7-3be0-41e2-a361-63c8277fe442",
+      "name": "get_issue",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "AlZ9JcRbK2aQnohE",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        128,
+        3072
+      ],
+      "id": "eff2dff6-a40d-4352-87b8-4b7c3f6cb743",
+      "name": "Respond to Webhook1"
+    },
+    {
+      "parameters": {
+        "path": "email",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -768,
+        4400
+      ],
+      "id": "b3179234-fe9c-4458-8713-a19b833ac88e",
+      "name": "Webhook2",
+      "webhookId": "6d9d06d6-a262-4b75-9acf-39f345b41d2a"
+    },
+    {
+      "parameters": {
+        "jsCode": "return {\n  issue_id: $input.first().json.query.issue_id,\n  solution:  $input.first().json.query.solution\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -544,
+        4400
+      ],
+      "id": "9cba4023-705f-43bf-a84f-91c219e95dbe",
+      "name": "Code in JavaScript6"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1rBwHt3aqq0AGoKXXT7mf1h6obGMBUwtM_EXOrt2BvEE",
+          "mode": "list",
+          "cachedResultName": "Suport-DB",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1rBwHt3aqq0AGoKXXT7mf1h6obGMBUwtM_EXOrt2BvEE/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1023914026,
+          "mode": "list",
+          "cachedResultName": "extracted_information",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1rBwHt3aqq0AGoKXXT7mf1h6obGMBUwtM_EXOrt2BvEE/edit#gid=1023914026"
+        },
+        "filtersUI": {
+          "values": [
+            {
+              "lookupColumn": "issue_id",
+              "lookupValue": "={{ $json.issue_id }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        -320,
+        4496
+      ],
+      "id": "7e6aea16-e0c7-47da-b097-29dae92a75c9",
+      "name": "get_extracted1",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "AlZ9JcRbK2aQnohE",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "advanced": true,
+        "mergeByFields": {
+          "values": [
+            {
+              "field1": "id",
+              "field2": "issue_id"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        -96,
+        4400
+      ],
+      "id": "15c213f8-3d3a-49a7-8035-380a03d58d2e",
+      "name": "Merge2",
+      "executeOnce": false
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1rBwHt3aqq0AGoKXXT7mf1h6obGMBUwtM_EXOrt2BvEE",
+          "mode": "list",
+          "cachedResultName": "Suport-DB",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1rBwHt3aqq0AGoKXXT7mf1h6obGMBUwtM_EXOrt2BvEE/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "issues",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1rBwHt3aqq0AGoKXXT7mf1h6obGMBUwtM_EXOrt2BvEE/edit#gid=0"
+        },
+        "filtersUI": {
+          "values": [
+            {
+              "lookupColumn": "id",
+              "lookupValue": "={{ $json.issue_id }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        -320,
+        4304
+      ],
+      "id": "e30a9f46-7355-494d-84a0-ae33d7279b33",
+      "name": "get_issue1",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "AlZ9JcRbK2aQnohE",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        704,
+        4400
+      ],
+      "id": "01db0e35-622d-448c-aa52-8c08780f7452",
+      "name": "Respond to Webhook2"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Solution:  {{ $('Code in JavaScript6').item.json.solution }}\n\nInformation:{{ $json.emailContent }}\n",
+        "hasOutputParser": true,
+        "options": {
+          "systemMessage": "Use the information give and the solution to create a formal answer email. Not necessary a subject, just email content"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3,
+      "position": [
+        128,
+        4400
+      ],
+      "id": "6419862d-bc77-4877-ad9f-fdd40a975e29",
+      "name": "AI Agent3",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-4.1-mini"
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        144,
+        4624
+      ],
+      "id": "1685c189-5251-4b5e-854a-e012f56935c1",
+      "name": "OpenAI Chat Model4",
+      "credentials": {
+        "openAiApi": {
+          "id": "Ex1yZat6vMtDWbYv",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "schemaType": "manual",
+        "inputSchema": "{\n\t\"type\": \"object\",\n\t\"properties\": {\n\t\t\"emailContent\": {\n\t\t\t\"type\": \"string\"\n\t\t}\n\t}\n}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        272,
+        4624
+      ],
+      "id": "310c5f02-8f5b-4c73-8445-6b118944b6b2",
+      "name": "Structured Output Parser2"
+    },
+    {
+      "parameters": {
+        "jsCode": "return {\n  clientEmail: $('get_issue1').first().json.email,\n  subject: `Answer - ${$('get_issue1').first().json.subject}`,\n  emailContent: $input.first().json.output.emailContent\n}"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        480,
+        4400
+      ],
+      "id": "cb3a27ed-d70c-40aa-b528-d05926252852",
+      "name": "Code in JavaScript7"
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "submit",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -784,
+        5104
+      ],
+      "id": "d957f06b-c1f0-4887-b6b0-2e0ab681543c",
+      "name": "Webhook3",
+      "webhookId": "194471e2-f03e-4067-84e7-603f96965918"
+    },
+    {
+      "parameters": {
+        "jsCode": "return $input.first().json.body"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -576,
+        5104
+      ],
+      "id": "f867b361-75e2-4e78-9e73-c47c7ad1e926",
+      "name": "Code in JavaScript8"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        208,
+        5120
+      ],
+      "id": "f4afa692-1e0d-41e6-84ba-51a887edc87d",
+      "name": "Respond to Webhook3"
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $json.clientEmail }}",
+        "subject": "={{ $json.subject }}",
+        "message": "={{ $json.emailContent }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        -272,
+        5104
+      ],
+      "id": "f5c24af1-54a3-43b4-a6a6-70cfcb56407d",
+      "name": "Send a message1",
+      "webhookId": "1c44215d-8580-43ed-99f3-24f71e7570bb",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "HSrUYqm4RVKmmIAU",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1rBwHt3aqq0AGoKXXT7mf1h6obGMBUwtM_EXOrt2BvEE",
+          "mode": "list",
+          "cachedResultName": "Suport-DB",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1rBwHt3aqq0AGoKXXT7mf1h6obGMBUwtM_EXOrt2BvEE/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1287962512,
+          "mode": "list",
+          "cachedResultName": "solutions",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1rBwHt3aqq0AGoKXXT7mf1h6obGMBUwtM_EXOrt2BvEE/edit#gid=1287962512"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "email_content": "={{ $json.emailContent }}",
+            "employee_message": "={{ $json.solution }}",
+            "employee_name": "={{ $json.employeeName }}",
+            "employee_email": "={{ $json.employeeEmail }}",
+            "issue_id": "={{ $json.issueId }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "issue_id",
+              "displayName": "issue_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "employee_name",
+              "displayName": "employee_name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "employee_email",
+              "displayName": "employee_email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "employee_message",
+              "displayName": "employee_message",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "ai_solution",
+              "displayName": "ai_solution",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "email_content",
+              "displayName": "email_content",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        -272,
+        4880
+      ],
+      "id": "0c15012c-4d74-415e-8a62-3de67c2aee68",
+      "name": "Append row in sheet1",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "AlZ9JcRbK2aQnohE",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "1rBwHt3aqq0AGoKXXT7mf1h6obGMBUwtM_EXOrt2BvEE",
+          "mode": "list",
+          "cachedResultName": "Suport-DB",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1rBwHt3aqq0AGoKXXT7mf1h6obGMBUwtM_EXOrt2BvEE/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "issues",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1rBwHt3aqq0AGoKXXT7mf1h6obGMBUwtM_EXOrt2BvEE/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "id": "={{ $json.issueId }}",
+            "status": "CLOSE"
+          },
+          "matchingColumns": [
+            "id"
+          ],
+          "schema": [
+            {
+              "id": "id",
+              "displayName": "id",
+              "required": false,
+              "defaultMatch": true,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "status",
+              "displayName": "status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "email",
+              "displayName": "email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "name",
+              "displayName": "name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "subject",
+              "displayName": "subject",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "emailContent",
+              "displayName": "emailContent",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "date",
+              "displayName": "date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "row_number",
+              "displayName": "row_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "readOnly": true,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        -272,
+        5312
+      ],
+      "id": "575030db-1dbf-40fb-bdeb-23ec149688e6",
+      "name": "Update row in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "AlZ9JcRbK2aQnohE",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "POST /issues/create"
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -1168,
+        5680
+      ],
+      "typeVersion": 1,
+      "id": "62aee4ae-e264-49ad-bb96-c25f64974167",
+      "name": "Sticky Note5"
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "issues/create",
+        "responseMode": "lastNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -784,
+        5712
+      ],
+      "id": "f6c628e3-a7fc-4d6a-ad10-cb7b2f819d08",
+      "name": "Webhook4",
+      "webhookId": "73abf803-c9e4-4a62-8d7d-3937930efc6c"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1rBwHt3aqq0AGoKXXT7mf1h6obGMBUwtM_EXOrt2BvEE",
+          "mode": "list",
+          "cachedResultName": "Suport-DB",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1rBwHt3aqq0AGoKXXT7mf1h6obGMBUwtM_EXOrt2BvEE/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "issues",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1rBwHt3aqq0AGoKXXT7mf1h6obGMBUwtM_EXOrt2BvEE/edit#gid=0"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        -560,
+        5712
+      ],
+      "id": "dce610eb-f0b3-4efc-b71b-5e11e8039ab1",
+      "name": "Get row(s) in sheet3",
+      "alwaysOutputData": true,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "AlZ9JcRbK2aQnohE",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "let id = 0\n\nfor (const item of $input.all()) {\n  if (item.json.id)\n  id = Math.max(id, item.json.id)\n}\n\nreturn {\n  nextId: id + 1,\n  ...$('Webhook4').first().json.body\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -336,
+        5712
+      ],
+      "id": "7b1400a8-9e39-49e3-8a49-c898f573cf66",
+      "name": "Code in JavaScript9"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1rBwHt3aqq0AGoKXXT7mf1h6obGMBUwtM_EXOrt2BvEE",
+          "mode": "list",
+          "cachedResultName": "Suport-DB",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1rBwHt3aqq0AGoKXXT7mf1h6obGMBUwtM_EXOrt2BvEE/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "issues",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1rBwHt3aqq0AGoKXXT7mf1h6obGMBUwtM_EXOrt2BvEE/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "id": "={{ $json.nextId }}",
+            "status": "OPEN",
+            "email": "={{ $json.clientEmail }}",
+            "name": "={{ $json.clientName }}",
+            "subject": "={{ $json.subject }}",
+            "emailContent": "={{ $json.content }}",
+            "date": "={{ $json.date }}"
+          },
+          "matchingColumns": [
+            "id"
+          ],
+          "schema": [
+            {
+              "id": "id",
+              "displayName": "id",
+              "required": false,
+              "defaultMatch": true,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "status",
+              "displayName": "status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "email",
+              "displayName": "email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "name",
+              "displayName": "name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "subject",
+              "displayName": "subject",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "emailContent",
+              "displayName": "emailContent",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "date",
+              "displayName": "date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        -112,
+        5712
+      ],
+      "id": "6f1ed42a-56a9-44ff-a060-92a20ad1d827",
+      "name": "Append issue1",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "AlZ9JcRbK2aQnohE",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1rBwHt3aqq0AGoKXXT7mf1h6obGMBUwtM_EXOrt2BvEE",
+          "mode": "list",
+          "cachedResultName": "Suport-DB",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1rBwHt3aqq0AGoKXXT7mf1h6obGMBUwtM_EXOrt2BvEE/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1023914026,
+          "mode": "list",
+          "cachedResultName": "extracted_information",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1rBwHt3aqq0AGoKXXT7mf1h6obGMBUwtM_EXOrt2BvEE/edit#gid=1023914026"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "issue_id": "={{ $json.id }}",
+            "company_name": "={{ $('Code in JavaScript9').item.json.companyName }}",
+            "category": "={{ $('Code in JavaScript9').item.json.category }}",
+            "products": "={{ $('Code in JavaScript9').item.json.products }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "issue_id",
+              "displayName": "issue_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "company_name",
+              "displayName": "company_name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "category",
+              "displayName": "category",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "products",
+              "displayName": "products",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        128,
+        5712
+      ],
+      "id": "a6cdafab-b1d1-4229-8a27-6fa3042c70d2",
+      "name": "Append row in Extracted Information1",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "AlZ9JcRbK2aQnohE",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "GET issues/open",
+        "height": 96,
+        "width": 176
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -1088,
+        2736
+      ],
+      "typeVersion": 1,
+      "id": "b547c8c0-8845-4e18-ab3e-280a2614a937",
+      "name": "Sticky Note6"
+    },
+    {
+      "parameters": {
+        "content": "GET issues/detail\n$issue_id",
+        "height": 96,
+        "width": 176
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -1040,
+        3056
+      ],
+      "typeVersion": 1,
+      "id": "ca007ed8-b698-440d-af4a-613904174f1f",
+      "name": "Sticky Note7"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Generate a concise, clear, and accurate summary of the issue described below:\n\n{{ $json.emailContent }}\n\n\nAfter producing the summary, proactively attempt to resolve the issue by querying the vector-store tool for closely related historical cases.\nAnalyze the retrieved cases, identify patterns or successful resolutions, and synthesize a concrete, actionable solution tailored to the current issue.\n\nIf multiple relevant solutions are found, briefly compare them and recommend the most appropriate one. If no close match exists, propose a best-effort solution based on the available information and clearly state any assumptions.",
+        "hasOutputParser": true,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3,
+      "position": [
+        272,
+        3552
+      ],
+      "id": "78bf54d9-881f-4efe-adc8-017dbd605815",
+      "name": "AI Agent4",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "schemaType": "manual",
+        "inputSchema": "{\n\t\"type\": \"object\",\n\t\"properties\": {\n\t\t\"summarize\": {\n\t\t\t\"type\": \"string\"\n\t\t},\n        \"possibleSolution\": {\n  \t\t\t\"type\": \"string\"\n  \t\t}\n\t}\n}",
+        "autoFix": true
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        544,
+        3776
+      ],
+      "id": "cf559c08-4e3d-4806-947e-980ae55a4954",
+      "name": "Structured Output Parser3"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-4",
+          "mode": "list",
+          "cachedResultName": "gpt-4"
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        128,
+        3776
+      ],
+      "id": "fd077bee-631a-4603-9a40-5e857a9b9a33",
+      "name": "OpenAI Chat Model5",
+      "credentials": {
+        "openAiApi": {
+          "id": "Ex1yZat6vMtDWbYv",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.embeddingsOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        336,
+        3984
+      ],
+      "id": "a9adb5fa-8ef1-4b0c-acfe-78d88e631a62",
+      "name": "Embeddings OpenAI5",
+      "credentials": {
+        "openAiApi": {
+          "id": "Ex1yZat6vMtDWbYv",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "path": "issues/detail/ai",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -768,
+        3552
+      ],
+      "id": "2087d04d-1cbf-40e6-828d-e30c5e3ba870",
+      "name": "Webhook5",
+      "webhookId": "6d9d06d6-a262-4b75-9acf-39f345b41d2a"
+    },
+    {
+      "parameters": {
+        "content": "GET issues/detail/ai\n$issue_id",
+        "height": 96,
+        "width": 176
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -1040,
+        3536
+      ],
+      "typeVersion": 1,
+      "id": "893211f8-a463-4f4b-a73f-5f9f65c041c1",
+      "name": "Sticky Note8"
+    },
+    {
+      "parameters": {
+        "jsCode": "return {\n  issue_id: $input.first().json.query.issue_id\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -544,
+        3552
+      ],
+      "id": "b4e84cff-0b78-4af4-a728-efec7459f053",
+      "name": "Code in JavaScript10"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        1136,
+        3552
+      ],
+      "id": "5535fa8d-e2f0-413e-84f6-0a659b31254d",
+      "name": "Respond to Webhook4"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1rBwHt3aqq0AGoKXXT7mf1h6obGMBUwtM_EXOrt2BvEE",
+          "mode": "list",
+          "cachedResultName": "Suport-DB",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1rBwHt3aqq0AGoKXXT7mf1h6obGMBUwtM_EXOrt2BvEE/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1023914026,
+          "mode": "list",
+          "cachedResultName": "extracted_information",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1rBwHt3aqq0AGoKXXT7mf1h6obGMBUwtM_EXOrt2BvEE/edit#gid=1023914026"
+        },
+        "filtersUI": {
+          "values": [
+            {
+              "lookupColumn": "issue_id",
+              "lookupValue": "={{ $json.issue_id }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        -320,
+        3648
+      ],
+      "id": "b18b4336-e3e4-49fa-bee9-40bc7d19f9c2",
+      "name": "get_extracted2",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "AlZ9JcRbK2aQnohE",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "advanced": true,
+        "mergeByFields": {
+          "values": [
+            {
+              "field1": "id",
+              "field2": "issue_id"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        -96,
+        3552
+      ],
+      "id": "ad061fdd-9077-4e2f-af6b-bd2660c10559",
+      "name": "Merge1",
+      "executeOnce": false
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1rBwHt3aqq0AGoKXXT7mf1h6obGMBUwtM_EXOrt2BvEE",
+          "mode": "list",
+          "cachedResultName": "Suport-DB",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1rBwHt3aqq0AGoKXXT7mf1h6obGMBUwtM_EXOrt2BvEE/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "issues",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1rBwHt3aqq0AGoKXXT7mf1h6obGMBUwtM_EXOrt2BvEE/edit#gid=0"
+        },
+        "filtersUI": {
+          "values": [
+            {
+              "lookupColumn": "id",
+              "lookupValue": "={{ $json.issue_id }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        -320,
+        3456
+      ],
+      "id": "7b711944-b7ae-4416-8b4b-6fcc245d6368",
+      "name": "get_issue2",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "AlZ9JcRbK2aQnohE",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "return $input.first().json.output"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        912,
+        3552
+      ],
+      "id": "a5a124bb-438e-44ca-b09f-7d5bc15486f7",
+      "name": "Code in JavaScript11"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-4.1-mini"
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        624,
+        3984
+      ],
+      "id": "6d19f4e6-b1f7-477d-8930-1cb3390b6943",
+      "name": "OpenAI Chat Model6",
+      "credentials": {
+        "openAiApi": {
+          "id": "Ex1yZat6vMtDWbYv",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "POST /submit"
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -1152,
+        5088
+      ],
+      "typeVersion": 1,
+      "id": "6969689e-aacf-4e01-859f-069b04729288",
+      "name": "Sticky Note9"
+    },
+    {
+      "parameters": {
+        "path": "issues/all",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -784,
+        6128
+      ],
+      "id": "375c14c5-be16-4560-b253-33848df4c847",
+      "name": "Webhook6",
+      "webhookId": "6d9d06d6-a262-4b75-9acf-39f345b41d2a"
+    },
+    {
+      "parameters": {
+        "respondWith": "allIncomingItems",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        320,
+        6128
+      ],
+      "id": "314023ee-a517-4dc9-bf4b-a82c0d394e2d",
+      "name": "Respond to Webhook5"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1rBwHt3aqq0AGoKXXT7mf1h6obGMBUwtM_EXOrt2BvEE",
+          "mode": "list",
+          "cachedResultName": "Suport-DB",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1rBwHt3aqq0AGoKXXT7mf1h6obGMBUwtM_EXOrt2BvEE/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "issues",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1rBwHt3aqq0AGoKXXT7mf1h6obGMBUwtM_EXOrt2BvEE/edit#gid=0"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        -544,
+        6128
+      ],
+      "id": "c00381ca-7f9a-4ec6-a9cc-249015955810",
+      "name": "get_all_issues",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "AlZ9JcRbK2aQnohE",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1rBwHt3aqq0AGoKXXT7mf1h6obGMBUwtM_EXOrt2BvEE",
+          "mode": "list",
+          "cachedResultName": "Suport-DB",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1rBwHt3aqq0AGoKXXT7mf1h6obGMBUwtM_EXOrt2BvEE/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1023914026,
+          "mode": "list",
+          "cachedResultName": "extracted_information",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1rBwHt3aqq0AGoKXXT7mf1h6obGMBUwtM_EXOrt2BvEE/edit#gid=1023914026"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        -336,
+        6128
+      ],
+      "id": "82ce4d0c-b4b8-4ec3-9c06-caec726176da",
+      "name": "get_all_extracted",
+      "executeOnce": true,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "AlZ9JcRbK2aQnohE",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const issues = $(\"get_all_issues\").all();\n\nconst data = [];\n\nissues.map((item) => {\n  const issue = item.json;\n\n  const extracted = $(\"get_all_extracted\")\n    .all()\n    .find((item) => item.json.issue_id === issue.id).json;\n\n  const solution = $(\"get_all_solutions\")\n    .all()\n    .find((item) => item.json.issue_id === issue.id);\n\n  const products = JSON.parse(extracted.products)\n\n  if (solution) {\n    data.push({\n      ...issue,\n      ...extracted,\n      ...solution.json,\n      products\n    });\n  } else {\n    data.push({\n      ...issue,\n      ...extracted,\n      products\n    });\n  }\n});\n\nconsole.log(data);\n\nreturn data;\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        80,
+        6128
+      ],
+      "id": "6beedcc7-e03e-4452-850a-b227d21601e4",
+      "name": "Code in JavaScript12"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1rBwHt3aqq0AGoKXXT7mf1h6obGMBUwtM_EXOrt2BvEE",
+          "mode": "list",
+          "cachedResultName": "Suport-DB",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1rBwHt3aqq0AGoKXXT7mf1h6obGMBUwtM_EXOrt2BvEE/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1287962512,
+          "mode": "list",
+          "cachedResultName": "solutions",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1rBwHt3aqq0AGoKXXT7mf1h6obGMBUwtM_EXOrt2BvEE/edit#gid=1287962512"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        -112,
+        6128
+      ],
+      "id": "1f0bc81f-d156-433e-9d9f-7a331a75367e",
+      "name": "get_all_solutions",
+      "executeOnce": true,
+      "alwaysOutputData": true,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "AlZ9JcRbK2aQnohE",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "retrieve-as-tool",
+        "toolDescription": "Historical Data",
+        "memoryKey": {
+          "__rl": true,
+          "value": "documents",
+          "mode": "list",
+          "cachedResultName": "documents"
+        },
+        "topK": 5
+      },
+      "type": "@n8n/n8n-nodes-langchain.vectorStoreInMemory",
+      "typeVersion": 1.3,
+      "position": [
+        256,
+        3776
+      ],
+      "id": "dde5b742-86eb-4b1a-b9db-96ad8f2b3c7f",
+      "name": "Documents Store"
+    },
+    {
+      "parameters": {
+        "mode": "retrieve-as-tool",
+        "toolDescription": "This vector store includes documents datashets",
+        "memoryKey": {
+          "__rl": true,
+          "value": "documents",
+          "mode": "list",
+          "cachedResultName": "documents"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.vectorStoreInMemory",
+      "typeVersion": 1.3,
+      "position": [
+        128,
+        960
+      ],
+      "id": "c54b5d08-63b0-4eaf-a99d-41660d90cd93",
+      "name": "Documents Store1"
+    },
+    {
+      "parameters": {
+        "mode": "retrieve-as-tool",
+        "toolDescription": "This vector store includes historical data of issues and tickets",
+        "memoryKey": {
+          "__rl": true,
+          "value": "issues",
+          "mode": "list",
+          "cachedResultName": "issues"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.vectorStoreInMemory",
+      "typeVersion": 1.3,
+      "position": [
+        416,
+        960
+      ],
+      "id": "7049e69b-11c1-4348-a444-1eefb1ec43ab",
+      "name": "History Store"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When chat message received": {
+      "main": [
+        [
+          {
+            "node": "AI Agent1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Email Trigger (IMAP)": {
+      "main": [
+        [
+          {
+            "node": "Get row(s) in sheet2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get row(s) in sheet2": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Information Extractor": {
+      "main": [
+        [
+          {
+            "node": "Append row in Extracted Information",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript2": {
+      "main": [
+        [
+          {
+            "node": "Append issue",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Append issue": {
+      "main": [
+        [
+          {
+            "node": "Information Extractor",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Information Extractor",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent1",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Embeddings OpenAI1": {
+      "ai_embedding": [
+        [
+          {
+            "node": "Documents Store1",
+            "type": "ai_embedding",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Simple Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent1",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "get_issues",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Search files and folders",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "get_issues": {
+      "main": [
+        [
+          {
+            "node": "get_extracted_information",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "get_extracted_information": {
+      "main": [
+        [
+          {
+            "node": "get_solutions",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "get_solutions": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript3": {
+      "main": [
+        [
+          {
+            "node": "Simple Vector Store",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Embeddings OpenAI": {
+      "ai_embedding": [
+        [
+          {
+            "node": "Simple Vector Store",
+            "type": "ai_embedding",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Default Data Loader": {
+      "ai_document": [
+        [
+          {
+            "node": "Simple Vector Store",
+            "type": "ai_document",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Token Splitter": {
+      "ai_textSplitter": [
+        [
+          {
+            "node": "Default Data Loader",
+            "type": "ai_textSplitter",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Search files and folders": {
+      "main": [
+        [
+          {
+            "node": "Download file",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Download file": {
+      "main": [
+        [
+          {
+            "node": "Simple Vector Store3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Embeddings OpenAI3": {
+      "ai_embedding": [
+        [
+          {
+            "node": "Simple Vector Store3",
+            "type": "ai_embedding",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Default Data Loader1": {
+      "ai_document": [
+        [
+          {
+            "node": "Simple Vector Store3",
+            "type": "ai_document",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Embeddings OpenAI4": {
+      "ai_embedding": [
+        [
+          {
+            "node": "History Store",
+            "type": "ai_embedding",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "get_open_issues",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "get_open_issues": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript4": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook1": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript5",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript5": {
+      "main": [
+        [
+          {
+            "node": "get_extracted",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "get_issue",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "get_extracted": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "get_issue": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook2": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript6",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript6": {
+      "main": [
+        [
+          {
+            "node": "get_extracted1",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "get_issue1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "get_extracted1": {
+      "main": [
+        [
+          {
+            "node": "Merge2",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Merge2": {
+      "main": [
+        [
+          {
+            "node": "AI Agent3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "get_issue1": {
+      "main": [
+        [
+          {
+            "node": "Merge2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent3": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript7",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model4": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent3",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser2": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "AI Agent3",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript7": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook3": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript8",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript8": {
+      "main": [
+        [
+          {
+            "node": "Append row in sheet1",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Send a message1",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Update row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Append row in sheet1": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update row in sheet": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send a message1": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get row(s) in sheet3": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript9",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript9": {
+      "main": [
+        [
+          {
+            "node": "Append issue1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Append issue1": {
+      "main": [
+        [
+          {
+            "node": "Append row in Extracted Information1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook4": {
+      "main": [
+        [
+          {
+            "node": "Get row(s) in sheet3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser3": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "AI Agent4",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model5": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent4",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Embeddings OpenAI5": {
+      "ai_embedding": [
+        [
+          {
+            "node": "Documents Store",
+            "type": "ai_embedding",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook5": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript10",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript10": {
+      "main": [
+        [
+          {
+            "node": "get_issue2",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "get_extracted2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent4": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript11",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "get_extracted2": {
+      "main": [
+        [
+          {
+            "node": "Merge1",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "get_issue2": {
+      "main": [
+        [
+          {
+            "node": "Merge1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge1": {
+      "main": [
+        [
+          {
+            "node": "AI Agent4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript11": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model6": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Structured Output Parser3",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook6": {
+      "main": [
+        [
+          {
+            "node": "get_all_issues",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "get_all_issues": {
+      "main": [
+        [
+          {
+            "node": "get_all_extracted",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "get_all_extracted": {
+      "main": [
+        [
+          {
+            "node": "get_all_solutions",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript12": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook5",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "get_all_solutions": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript12",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Documents Store": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent4",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Documents Store1": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent1",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "History Store": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent1",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "a53ebd18-d459-4822-880c-92653133e8ff",
+  "meta": {
+    "instanceId": "b411b03c753a992257786277d55445cd16ce2ad61d90c48c5436aa5de847e615"
+  },
+  "id": "6SPWQG5Ze2broedK",
+  "tags": []
+}
