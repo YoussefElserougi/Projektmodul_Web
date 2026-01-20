@@ -67,17 +67,17 @@ export function StepSelectIssue({
     <div className="space-y-6 animate-fade-in">
       <div className="text-center mb-8">
         <h2 className="text-2xl font-semibold text-foreground mb-2">
-          Select an Option
+          Select an Open Issue
         </h2>
         <p className="text-muted-foreground">
-          Choose from the available options
+          Choose from the available open issues below.
         </p>
       </div>
 
       <div className="space-y-2">
         {options.length > 0 ? (
           <>
-            <Label htmlFor="selectedOption">Option</Label>
+            <Label htmlFor="selectedOption">Issue</Label>
             <Select
               value={data.selectedOption}
               onValueChange={(value) => onChange("selectedOption", value)}
@@ -85,7 +85,7 @@ export function StepSelectIssue({
               <SelectTrigger
                 className={errors.selectedOption ? "border-destructive" : ""}
               >
-                <SelectValue placeholder="Select an option" />
+                <SelectValue placeholder="Select an issue" />
               </SelectTrigger>
               <SelectContent>
                 {options.map((option) => (

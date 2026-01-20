@@ -1,0 +1,68 @@
+services:
+  # --- n8n Service ---
+  n8n:
+    image: docker.n8n.io/n8nio/n8n
+    restart: always
+    env_file: .env
+    volumes:
+      - n8n_data:/home/node/.n8n
+      - ./n8n/workflows:/home/node/workflows
+      - ./n8n/credentials:/home/node/credentials
+    environment:
+      # If using a domain with SSL later, set this to https://your-domain.com
+      - WEBHOOK_URL=http://${PUBLIC_IP}/
+      - N8N_ENCRYPTION_KEY
+
+  n8n-python-runner:
+    image: n8nio/runners:latest
+    restart: always
+    env_file: .env
+    volumes:
+      - n8n_data:/home/node/.n8n
+    environment:
+      - N8N_RUNNERS_TASK_BROKER_URI=http://n8n:5679
+
+  # --- React Service ---
+  # Note: For heavy production, build this into static files and serve via Nginx.
+  # For now, we keep "npm run dev" for a 1:1 migration.
+  react-app:
+    image: node:20-alpine
+    working_dir: /app
+    env_file: .env
+    volumes:
+      - ./form:/app
+      - /app/node_modules
+    command: sh -c "npm install && npm run dev -- --host"
+    environment:
+      # Polling consumes high CPU, disable if file watching isn't strictly needed on prod
+      - CHOKIDAR_USEPOLLING=false
+
+  # --- Express API Service ---
+  express-api:
+    build:
+      context: ./express-api
+      dockerfile: Dockerfile
+    restart: always
+    env_file: .env
+    environment:
+      - OPENAI_API_KEY
+      # Internal Docker Network URL (Communication between containers)
+      - WEBHOOK_URL=http://n8n:5678/webhook/ai
+    depends_on:
+      - n8n
+
+  # --- Nginx (The Router) ---
+  nginx:
+    image: nginx:alpine
+    restart: always
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      - n8n
+      - react-app
+    ports:
+      # Expose HTTP directly
+      - "80:80"
+
+volumes:
+  n8n_data:

@@ -12,6 +12,13 @@ export default defineConfig({
       clientPort: 443, // Required for ngrok SSL
       path: "/form/@vite/client",
     },
+    proxy: {
+      "/api": {
+        target: "http://localhost:3000",
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/api/, ""),
+      },
+    },
   },
   plugins: [react()],
   // plugins: [react(), mode === "development" && componentTagger()].filter(

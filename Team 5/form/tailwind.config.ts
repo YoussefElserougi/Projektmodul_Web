@@ -19,7 +19,7 @@ export default {
     },
     extend: {
       fontFamily: {
-        sans: ["DM Sans", "sans-serif"],
+        sans: ["Oxanium", "sans-serif"],
       },
       colors: {
         border: "#A80000", // dark red

@@ -12,8 +12,15 @@ export interface CreateIssuePayload {
   products: string[];
 }
 
+export interface AIResponse {
+  output: string;
+}
+
 export interface IssueAIResponse {
-  summarize: string;
+  files: {
+    name: string;
+    link: string;
+  }[];
   possibleSolution: string;
 }
 
@@ -44,6 +51,14 @@ export interface OpenIssuesResponse {
 }
 
 export const issueService = {
+
+  getAIMessage: async (prompt: string) => {
+    const response = await api.get<AIResponse>(`/ai/chat`, {
+      params: { prompt },
+    });
+    return response.data;
+  },
+
   getIssueDetails: async (issueId: number) => {
     const response = await api.get<IssueDetails>(`/issues/detail`, {
       params: { issue_id: issueId },

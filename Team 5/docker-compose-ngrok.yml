@@ -1,0 +1,66 @@
+services:
+  # --- n8n Service ---
+  n8n:
+    image: docker.n8n.io/n8nio/n8n
+    restart: always
+    env_file: ngrok.env
+    volumes:
+      - n8n_data:/home/node/.n8n
+      - ./n8n/workflows:/home/node/workflows
+      - ./n8n/credentials:/home/node/credentials
+    environment:
+      - N8N_ENCRYPTION_KEY
+
+  # --- React Service ---
+  react-app:
+    image: node:20-alpine
+    working_dir: /app
+    env_file: ngrok.env
+    volumes:
+      - ./form:/app
+      - /app/node_modules
+    # Ensure Vite runs on 0.0.0.0
+    command: sh -c "npm install && npm run dev -- --host"
+    environment:
+      - CHOKIDAR_USEPOLLING=true
+
+  # --- Express API Service ---
+  express-api:
+    build:
+      context: ./express-api
+      dockerfile: Dockerfile
+    restart: always
+    environment:
+      - OPENAI_API_KEY
+      - WEBHOOK_URL=http://n8n:5678/webhook/ai
+    depends_on:
+      - n8n
+
+  # --- Nginx (The Router) ---
+  nginx:
+    image: nginx:alpine
+    restart: always
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      - n8n
+      - react-app
+    ports:
+      - "8080:80" # Optional: Access locally via http://localhost:8080
+
+  # --- Ngrok (Single Tunnel) ---
+  ngrok:
+    image: ngrok/ngrok:latest
+    restart: always
+    depends_on:
+      - nginx
+    env_file: ngrok.env
+    environment:
+      - NGROK_AUTHTOKEN
+    # Point ngrok to Nginx (port 80), not n8n directly
+    command: http --url=${NGROK_DOMAIN} nginx:80 --pooling-enabled
+    ports:
+      - "4040:4040"
+
+volumes:
+  n8n_data:

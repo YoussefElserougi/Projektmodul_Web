@@ -122,12 +122,12 @@ export function StepInfo({ formData, issueId, onChange }: StepInfoProps) {
 
       {isLoadingAI ? (
         <>
-          {/* Summarize */}
+          {/* Possible Solution */}
           <div className="p-6 rounded-lg bg-secondary/50 border border-border">
             <div className="flex items-center gap-3 mb-4">
-              <MessageSquare className="w-6 h-6 text-primary" />
+              <Lightbulb className="w-6 h-6 text-primary" />
               <h2 className="font-semibold text-foreground text-xl">
-                Summarize
+                Possible Solution
               </h2>
             </div>
 
@@ -137,12 +137,11 @@ export function StepInfo({ formData, issueId, onChange }: StepInfoProps) {
             </div>
           </div>
 
-          {/* Possible Solution */}
           <div className="p-6 rounded-lg bg-secondary/50 border border-border">
             <div className="flex items-center gap-3 mb-4">
-              <Lightbulb className="w-6 h-6 text-primary" />
+              <MessageSquare className="w-6 h-6 text-primary" />
               <h2 className="font-semibold text-foreground text-xl">
-                Possible Solution
+                Reference Files
               </h2>
             </div>
 
@@ -154,19 +153,6 @@ export function StepInfo({ formData, issueId, onChange }: StepInfoProps) {
         </>
       ) : (
         <>
-          {/* Summarize */}
-          <div className="p-6 rounded-lg bg-secondary/50 border border-border">
-            <div className="flex items-center gap-3 mb-4">
-              <MessageSquare className="w-6 h-6 text-primary" />
-              <h2 className="font-semibold text-foreground text-xl">
-                Summarize
-              </h2>
-            </div>
-            <p className="text-muted-foreground leading-relaxed">
-              {dataAI.summarize}
-            </p>
-          </div>
-
           {/* Possible Solution */}
           <div className="p-6 rounded-lg bg-secondary/50 border border-border">
             <div className="flex items-center gap-3 mb-4">
@@ -178,6 +164,34 @@ export function StepInfo({ formData, issueId, onChange }: StepInfoProps) {
             <p className="text-muted-foreground leading-relaxed">
               {dataAI.possibleSolution}
             </p>
+          </div>
+
+          <div className="p-6 rounded-lg bg-secondary/50 border border-border">
+            <div className="flex items-center gap-3 mb-4">
+              <MessageSquare className="w-6 h-6 text-primary" />
+              <h2 className="font-semibold text-foreground text-xl">
+                Reference Files
+              </h2>
+            </div>
+            <div className="space-y-2">
+              {dataAI.files.length === 0 && (
+                <p className="text-muted-foreground">
+                  No reference files provided.
+                </p>
+              )}
+              {dataAI.files.map((file, index) => (
+                <div key={index}>
+                  <a
+                    href={file.link}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-primary hover:underline"
+                  >
+                    {file.name}
+                  </a>
+                </div>
+              ))}
+            </div>
           </div>
         </>
       )}

@@ -27,8 +27,6 @@ export const Login = () => {
   const features = [
     { icon: Sparkles, text: "AI Chat & Assistance" },
     { icon: Search, text: "Intelligent search in service documents" },
-    { icon: FolderOpen, text: "Projects" },
-    { icon: ImageIcon, text: "Image & text assistant" },
   ];
 
   return (

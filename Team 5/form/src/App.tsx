@@ -11,6 +11,8 @@ import {
   Tools,
   CreateIssue,
   AllIssues,
+  Evaluation,
+  Chat,
 } from "@/pages";
 import { RoutePaths } from "./pages/enum";
 
@@ -36,6 +38,14 @@ const pages = [
   {
     path: RoutePaths.ALL_ISSUES,
     element: <AllIssues />,
+  },
+  {
+    path: RoutePaths.CHAT,
+    element: <Chat />,
+  },
+  {
+    path: RoutePaths.EVALUATION,
+    element: <Evaluation />,
   },
 ];
 

@@ -1,8 +1,8 @@
-import { IssueDashboard } from "./IssueDashboard";
-import { Login } from "./Login";
-import { NotFound } from "./NotFound";
-import { Tools } from "./Tools";
-import { CreateIssue } from "./CreateIssue";
-import { AllIssues } from "./AllIssues";
-
-export { IssueDashboard, Login, NotFound, Tools, CreateIssue, AllIssues };
+export * from "./AllIssues";
+export * from "./CreateIssue";
+export * from "./IssueDashboard";
+export * from "./Login";
+export * from "./NotFound";
+export * from "./Tools";
+export * from "./Evaluation";
+export * from "./Chat";

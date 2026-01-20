@@ -149,7 +149,7 @@ export function MultiStepForm() {
       {!isThankYouPage && (
         <div className="mb-8 text-center">
           <h1 className="text-2xl font-bold text-foreground mb-2 flex items-center justify-center gap-2">
-            Graf Syteco <span className="text-primary">Assistant</span>
+            Ticket Response Flow
             <Sparkles className="w-4 h-4 text-primary animate-pulse-soft" />
           </h1>
 

@@ -46,9 +46,9 @@ export function StepEmailForm({ data, onChange, errors }: StepEmailFormProps) {
     <div className="space-y-6 animate-fade-in">
       <div className="text-center mb-8">
         <h2 className="text-2xl font-semibold text-foreground mb-2">
-          Compose Email
+          Write Response Email
         </h2>
-        <p className="text-muted-foreground">Fill in the email details below</p>
+        <p className="text-muted-foreground">Fill in the information below</p>
       </div>
 
       {error && (

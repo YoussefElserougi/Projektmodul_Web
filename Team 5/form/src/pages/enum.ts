@@ -4,4 +4,6 @@ export enum RoutePaths {
   TOOLS = "/form/tools",
   CREATE_ISSUE = "/form/create-issue",
   ALL_ISSUES = "/form/issues",
+  EVALUATION = "/form/evaluation",
+  CHAT = "/form/chat",
 }

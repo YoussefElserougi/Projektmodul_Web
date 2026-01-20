@@ -54,6 +54,37 @@ export const AllIssues = () => {
     );
   }
 
+  if (!data || data.length === 0) {
+    return (
+      <div className="container mx-auto py-8 px-4">
+        <div className="flex items-center gap-4 mb-8">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => navigate(RoutePaths.TOOLS)}
+          >
+            <ArrowLeft className="w-6 h-6" />
+          </Button>
+          <h1 className="text-3xl font-bold">All Issues</h1>
+        </div>
+        <div className="flex items-center justify-center h-[50vh]">
+          <Card className="border-border shadow-2xl bg-card/95 backdrop-blur-sm w-full max-w-md">
+            <CardHeader>
+              <CardTitle className="text-2xl font-bold text-center">
+                No Issues Found
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-center text-muted-foreground">
+                There are currently no issues to display.
+              </p>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="container mx-auto py-8 px-4">
       <div className="flex items-center gap-4 mb-8">

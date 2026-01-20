@@ -8,7 +8,9 @@ services:
     environment:
       - N8N_HOST=localhost
     volumes:
-      - n8n_data:/home/node/.n8n
+      - n8n_data_local:/home/node/.n8n
+      - ./n8n/workflows:/home/node/workflows
+      - ./n8n/credentials:/home/node/credentials
 
 volumes:
-  n8n_data:
+  n8n_data_local:

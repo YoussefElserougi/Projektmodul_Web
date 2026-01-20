@@ -116,7 +116,7 @@ export const CreateIssue = () => {
         <Card className="border-border shadow-2xl bg-card/95 backdrop-blur-sm">
           <CardHeader>
             <CardTitle className="text-2xl font-bold text-center">
-              Create Technical Issue
+              Create Issue
             </CardTitle>
           </CardHeader>
           <CardContent>

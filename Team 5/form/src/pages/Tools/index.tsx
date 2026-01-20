@@ -7,6 +7,7 @@ import {
   Sparkles,
   LogOut,
   ClipboardList,
+  BookOpenCheck,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useContext } from "react";
@@ -18,13 +19,6 @@ export const Tools = () => {
   const { setEmail } = useContext(AuthContext);
 
   const options = [
-    {
-      id: "chat",
-      title: "Knowledge Hub Chat",
-      icon: MessageSquare,
-      description: "AI-powered chat assistant",
-      path: "/chat",
-    },
     {
       id: "open-issue",
       title: "New Support Ticket",
@@ -46,16 +40,24 @@ export const Tools = () => {
       description: "View and manage all technical issues",
       path: RoutePaths.ALL_ISSUES,
     },
+    {
+      id: "chat",
+      title: "Knowledge Hub Chat",
+      icon: MessageSquare,
+      description: "AI-powered chat assistant",
+      path: RoutePaths.CHAT,
+    },
+    {
+      id: "evaluation",
+      title: "AI Quality Evaluation",
+      icon: BookOpenCheck,
+      description: "Evaluate AI responses for quality assurance",
+      path: RoutePaths.EVALUATION,
+    },
   ];
 
   const handleOnClick = (path: string) => {
-    if (path === "/chat") {
-      window.location.href = `${
-        import.meta.env.VITE_API_BASE_URL
-      }/996e33d7-430e-45d3-a265-b5c310eeb13c/chat`;
-    } else {
-      navigate(path);
-    }
+    navigate(path);
   };
 
   const handleLogout = () => {
