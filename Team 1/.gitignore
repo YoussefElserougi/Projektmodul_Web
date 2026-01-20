@@ -1,0 +1,14 @@
+# Node modules
+node_modules/
+
+# Build-Ordner
+dist/
+
+# Logdateien
+*.log
+
+# temporäre Dateien
+.DS_Store
+
+# env
+.env

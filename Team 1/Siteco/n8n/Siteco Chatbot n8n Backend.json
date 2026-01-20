@@ -6,7 +6,7 @@
         "promptType": "define",
         "text": "={{ $json.message }}",
         "options": {
-          "systemMessage": "You are a helpful, freindly, internal AI assistant for Siteco.\nAnswer only questions related to Siteco, including company information, processes, and work instructions.\nDo not answer general, unrelated, or external questions.\nIf a question is not about Siteco or cannot be answered with the available information, clearly state that you cannot answer it.",
+          "systemMessage": "You are a helpful, friendly, internal AI assistant for Siteco.\nAnswer only questions related to Siteco, including company information, processes, and work instructions.\n\nYou must always respond in German.\n\nYou must answer strictly based on the information available in your provided dataset / retrieved context.\nDo not use general knowledge, assumptions, or external information.\n\nNever offer to create, draft, generate, write, or produce anything (e.g., emails, documents, templates, presentations, summaries, plans, code, or any other content).\nYou only provide factual information that is present in the dataset.\n\nIf the answer cannot be found in the dataset / retrieved context, respond clearly that you can´t answer this question.\n\nDo not answer general, unrelated, or external questions.",
           "returnIntermediateSteps": true
         }
       },
@@ -639,7 +639,7 @@
     },
     {
       "parameters": {
-        "jsCode": "const topics = $json.topics;\n\nlet text = '📊 Chatbot-Auswertung – Themencluster\\n\\n';\n\ntopics.forEach(t => {\n  text += `🔹 ${t.topic}\\n`;\n  t.questions.forEach(q => {\n    text += `- ${q}\\n`;\n  });\n  text += '\\n';\n});\n\nreturn [{ json: { text } }];"
+        "jsCode": "const topics = $json.topics || [];\n\nlet html = `\n<div style=\"font-family: Arial, sans-serif; line-height: 1.5;\">\n  <h2 style=\"margin:0 0 12px;\">📊 Chatbot-Auswertung – Themencluster</h2>\n`;\n\nfor (const t of topics) {\n  html += `<h3 style=\"margin:16px 0 8px;\">${escapeHtml(t.topic)}</h3>`;\n  html += `<ul style=\"margin:6px 0 12px 18px;\">`;\n  for (const q of (t.questions || [])) {\n    html += `<li>${escapeHtml(q)}</li>`;\n  }\n  html += `</ul>`;\n}\n\nhtml += `</div>`;\n\nfunction escapeHtml(s) {\n  return String(s ?? '')\n    .replace(/&/g, '&amp;')\n    .replace(/</g, '&lt;')\n    .replace(/>/g, '&gt;')\n    .replace(/\"/g, '&quot;')\n    .replace(/'/g, '&#039;');\n}\n\nreturn [{ json: { html } }];\n"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -713,22 +713,22 @@
     {
       "parameters": {
         "sendTo": "leonbrack@kabelmail.de",
-        "subject": "test",
-        "message": "test",
+        "subject": "FAQ Chatbot Auswertung - KW 04",
+        "message": "={{ $json.html }}",
         "options": {}
       },
       "type": "n8n-nodes-base.gmail",
       "typeVersion": 2.1,
       "position": [
-        -96,
+        -80,
         -1840
       ],
-      "id": "4b064434-738f-497c-95dd-c7a4fa65f3bf",
+      "id": "bd657c65-80b9-47c7-864f-90775fac1a09",
       "name": "Send a message",
-      "webhookId": "3a97c059-b590-4b5e-8532-3628d649d73c",
+      "webhookId": "2b5d246e-0d5d-4da9-967c-9a9a69239d7e",
       "credentials": {
         "gmailOAuth2": {
-          "id": "RIIVpEPBuWESPqCc",
+          "id": "O3DVwmryYlcmyvTS",
           "name": "Gmail account"
         }
       }
@@ -1028,7 +1028,13 @@
     },
     "Create Mail Text": {
       "main": [
-        []
+        [
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          }
+        ]
       ]
     },
     "Webhook Mail": {
@@ -1052,18 +1058,13 @@
           }
         ]
       ]
-    },
-    "Send a message": {
-      "main": [
-        []
-      ]
     }
   },
   "active": true,
   "settings": {
     "executionOrder": "v1"
   },
-  "versionId": "354ecec1-7bad-47c5-bf24-9016d65caaa4",
+  "versionId": "c464a942-94c9-4d9b-a6b5-3f670a386346",
   "meta": {
     "templateCredsSetupCompleted": true,
     "instanceId": "cc145cc963a9208d2129165b427ec555832eb1bb530e3080bf1ac1aa53f53902"
