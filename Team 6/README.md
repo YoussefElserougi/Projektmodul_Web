@@ -1,7 +1,8 @@
-# LinkedIn Automation System for Atolls GmbH
+# LinkedIn Content Automation System
+**Academic Project - Hochschule München**
 
 ## Team Members
-- Barbara 
+- Barbara
 - Aicha
 - Li Jingyan
 - Phatjira
@@ -9,13 +10,12 @@
 
 **Technical Consultant:** Youssef Elserougi
 
-**Client:** Atolls GmbH (Maria Wurzer, Sarah Belaid, Karla Maryed Blanco Rodríguez)
-
 ---
 
 ## Project Overview
 
 An AI-powered LinkedIn content automation system that generates, approves, and publishes three types of content:
+
 - **Recruitment posts** - Job openings and employer branding
 - **Product showcase** - Company services and solutions
 - **Employee engagement** - Team culture and achievements
@@ -24,11 +24,44 @@ The system uses a multi-agent AI architecture with Slack-based approval workflow
 
 ---
 
+## Project Development
+
+**Team:** Barbara, Aicha, Li Jingyan, Phatjira, Samira
+
+### Technical Implementation
+
+**Content Generation Workflow - Phatjira**
+* Initial n8n workflow structure
+* AI agent integration (OpenAI/Gemini)
+* Automatic content classification system
+* Image generation pipeline with Gemini AI
+* SVG to PNG conversion workflow
+
+**Approval System & Integration Architecture - Barbara**
+* Dual-workflow system architecture
+* Slack approval system with interactive buttons
+* Modal-based editing functionality
+* Sequential approval logic (text first, then image)
+* Airtable integration for centralized data management
+* Content versioning system with "superseded" tracking
+* Cross-workflow communication and data flow
+* Switch-based routing for 6 action types (approve/reject/regenerate for text and images)
+* End-to-end system testing and debugging
+
+**AI Content Strategy - Aicha, Li Jingyan, Samira**
+* LinkedIn content research and analysis (60-90 posts across categories)
+* AI prompt engineering for recruitment, product showcase, and employee engagement
+* Brand voice documentation and hashtag strategy
+
+**Technical Guidance:** Youssef Elserougi (Instructor)
+
+---
+
 ## Architecture
 
 ### Two-Workflow System
 
-#### **Workflow 1: AI Content Generation & Coordination**
+**Workflow 1: AI Content Generation & Coordination**
 - **Triggers:** Slack mentions and webhook callbacks
 - **Functions:**
   - Content generation via AI agents
@@ -36,16 +69,14 @@ The system uses a multi-agent AI architecture with Slack-based approval workflow
   - Image generation (Gemini AI)
   - Image hosting (Cloudinary)
   - Sequential approval coordination
-- **Nodes:** 28 nodes
 
-#### **Workflow 2: Slack Approval System**
+**Workflow 2: Slack Approval System**
 - **Trigger:** Slack button interactions
 - **Functions:**
   - Switch-based routing (6 action types)
-  - Actions: approve_post, reject_post, regenerate_post, approve_image, reject_image, regenerate_image
+  - Actions: approve_text, reject_text, regenerate_text, edit_text, approve_image, reject_image, regenerate_image
   - LinkedIn publication
   - Callback webhook management
-- **Nodes:** 12 nodes
 
 ---
 
@@ -82,45 +113,46 @@ The system uses a multi-agent AI architecture with Slack-based approval workflow
 ## Setup Requirements
 
 ### Prerequisites
-1. n8n instance (Docker recommended)
-2. ngrok account for webhook tunneling
-3. Slack workspace with app configuration
-4. LinkedIn API access (Share on LinkedIn)
-5. Gemini AI API key
-6. Cloudinary account
+- n8n instance (Docker recommended)
+- ngrok account for webhook tunneling
+- Slack workspace with app configuration
+- LinkedIn API access (Share on LinkedIn)
+- Gemini AI API key
+- Cloudinary account
 
 ### Credentials Needed (Not Included)
+
 The workflow JSON files have been cleaned of all sensitive data. You will need to configure:
 
-- **Slack:**
-  - Bot User OAuth Token
-  - Signing Secret
-  - Webhook URLs
-  - Interactive Components endpoint
+**Slack:**
+- Bot User OAuth Token
+- Signing Secret
+- Webhook URLs
+- Interactive Components endpoint
 
-- **LinkedIn:**
-  - OAuth Client ID
-  - OAuth Client Secret
-  - Redirect URIs
+**LinkedIn:**
+- OAuth Client ID
+- OAuth Client Secret
+- Redirect URIs
 
-- **Gemini AI:**
-  - API Key
+**Gemini AI:**
+- API Key
 
-- **Cloudinary:**
-  - Cloud Name
-  - API Key
-  - API Secret
+**Cloudinary:**
+- Cloud Name
+- API Key
+- API Secret
 
-- **n8n:**
-  - Webhook URLs (via ngrok)
-  - Environment variables for webhook functionality
+**n8n:**
+- Webhook URLs (via ngrok)
+- Environment variables for webhook functionality
 
 ---
 
 ## Workflow Files
 
-- `workflow_1_CLEAN.json` - AI Content Generation & Coordination (28 nodes)
-- `workflow_2_CLEAN.json` - Slack Approval System (12 nodes)
+- `workflow_1.json` - AI Content Generation & Coordination (28 nodes)
+- `workflow_2.json` - Slack Approval System (12 nodes)
 
 **Note:** All sensitive information (API keys, tokens, webhook URLs, credentials) has been removed from these files for security. You will need to reconfigure these values when importing into your n8n instance.
 
@@ -137,13 +169,16 @@ The workflow JSON files have been cleaned of all sensitive data. You will need t
 ### LinkedIn API Limitations
 - **Current Access:** "Share on LinkedIn" for personal accounts
 - **Required for Production:** Community Management API (restricted to registered businesses)
-- **Workaround:** Atolls must apply directly for enterprise API access
+- **Workaround:** Client must apply directly for enterprise API access
 
-### Data Flow
+---
+
+## Data Flow
+
 1. User mentions Slack bot with content request
 2. Workflow 1 generates content via AI agents
 3. Content sent to Slack with approval buttons
-4. User approves/rejects/regenerates text
+4. User approves/rejects/edit/regenerates text
 5. Upon text approval, image generation triggered
 6. User approves/rejects/regenerates image
 7. Upon image approval, content published to LinkedIn
@@ -153,17 +188,17 @@ The workflow JSON files have been cleaned of all sensitive data. You will need t
 
 ## Known Limitations
 
-1. **LinkedIn API Access:** Community Management API for demographic analytics unavailable to student accounts
-2. **Demonstration Mode:** Currently uses personal LinkedIn accounts due to API restrictions
-3. **Edit Functionality:** Uses thread-based editing rather than modal interfaces
-4. **Webhook Dependencies:** Requires ngrok tunneling, which may disconnect
+- **LinkedIn API Access:** Community Management API for demographic analytics unavailable to student accounts
+- **Demonstration Mode:** Currently uses personal LinkedIn accounts due to API restrictions
+- **Edit Functionality:** Uses thread-based editing rather than modal interfaces
+- **Webhook Dependencies:** Requires ngrok tunneling, which may disconnect
 
 ---
 
 ## Future Enhancements
 
 - Airtable integration for project tracking and historical records
-- LinkedIn Company Page access via Atolls enterprise API application
+- LinkedIn Company Page access via industry partner enterprise API application
 - Enhanced edit functionality with Slack modals
 - Production deployment with stable webhook endpoints
 - Comprehensive analytics dashboard
@@ -173,18 +208,20 @@ The workflow JSON files have been cleaned of all sensitive data. You will need t
 ## Academic Context
 
 This project serves dual purposes:
-1. **Functional Delivery:** Working automation system for Atolls GmbH
+
+1. **Functional Delivery:** Working automation system for industry partner
 2. **Academic Requirements:** Weekly design logs and course presentations at Hochschule München (MUC.DAI Department)
 
-**Course:** Projektmodul Web  
-**Institution:** Hochschule München  
-**Semester:** Winter 2024/2025
+- **Course:** Projektmodul Web
+- **Institution:** Hochschule München
+- **Semester:** Winter 2025/2026
 
 ---
 
 ## Contact
 
 For questions about this project:
+
 - **Course Instructor:** youssef.elserougi@hm.edu
 - **Team Lead:** Barbara (Integration & Quality)
 
@@ -192,13 +229,14 @@ For questions about this project:
 
 ## License
 
-This project was developed as part of an academic course at Hochschule München in collaboration with Atolls GmbH.
+This project was developed as part of an academic course at Hochschule München in collaboration with an industry partner.
 
 ---
 
 ## Acknowledgments
 
 Special thanks to:
+
 - Youssef Elserougi for n8n expertise and technical guidance
-- Atolls GmbH team for project opportunity and collaboration
+- Our industry partner for project opportunity and collaboration
 - Hochschule München MUC.DAI Department for academic support
