@@ -197,12 +197,12 @@ export async function sendFormToN8n({
     payload.classification = classificationToSend;
   }
 
-  console.log(`[n8n] Sending form data directly to n8n webhook`);
+  console.log(`[n8n] Sending form data via API route`);
   console.log(`[n8n] Form payload:`, JSON.stringify(payload, null, 2));
 
   try {
-    // Direkter n8n Aufruf (Static Export unterstützt keine API Routes)
-    const response = await fetch(N8N_WEBHOOK_URL, {
+    // Verwende API-Route statt direktem n8n Call (umgeht CORS)
+    const response = await fetch("/api/n8n", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

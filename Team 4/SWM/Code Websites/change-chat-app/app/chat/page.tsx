@@ -44,12 +44,9 @@ function ChatPageContent() {
         setSessionId(sessionFromUrl);
         console.log(`[ChatPage] Using session from URL: ${sessionFromUrl}`);
         
-        // Load existing session data (direkt von n8n, da Static Export keine API Routes unterstützt)
+        // Load existing session data
         try {
-          const response = await fetch(`${N8N_ENDPOINTS.GET_SESSION}?session_id=${sessionFromUrl}`, {
-            method: "GET",
-            headers: { "Content-Type": "application/json" },
-          });
+          const response = await fetch(`/api/n8n/get-session?session_id=${sessionFromUrl}`);
           if (response.ok) {
             const data = await response.json();
             console.log('[ChatPage] Loaded session data:', data);
@@ -321,7 +318,6 @@ function ChatPageContent() {
         body: JSON.stringify({
           session_id: sessionId,
           email: requesterEmail,
-          source: "welcome_email", // Route to Welcome Email path in n8n
         }),
       });
       

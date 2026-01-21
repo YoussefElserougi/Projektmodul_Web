@@ -5,24 +5,17 @@ export const N8N_BASE_URL = "https://vmd185817.contaboserver.net";
 
 // Webhook-Endpoints
 export const N8N_ENDPOINTS = {
-  // Chat-Workflow (UC1/UC2) - Haupt-Endpoint für alle Anfragen
-  // Verwendet "source" Parameter für Routing:
-  // - source: "form_submit" → Formular absenden
-  // - source: "form_autosave" → Auto-Save einzelne Felder
-  // - source: "chat" → Chat-Nachrichten
+  // Chat-Workflow (UC1/UC2)
   CHAT: `${N8N_BASE_URL}/webhook/change-chat`,
   
-  // Field-Update für Auto-Save (routet an change-chat mit source: form_autosave)
-  UPDATE_FIELD: `${N8N_BASE_URL}/webhook/change-chat`,
+  // Field-Update für Auto-Save
+  UPDATE_FIELD: `${N8N_BASE_URL}/webhook/update-field`,
   
-  // Welcome-Email nach Formular-Submit (routet an change-chat)
-  WELCOME_EMAIL: `${N8N_BASE_URL}/webhook/change-chat`,
+  // Welcome-Email nach Formular-Submit
+  WELCOME_EMAIL: `${N8N_BASE_URL}/webhook/welcome-email`,
   
   // Session-Liste für Dashboard
   LIST_SESSIONS: `${N8N_BASE_URL}/webhook/list-sessions`,
-  
-  // Session-Details abrufen (für Session-Wiederherstellung)
-  GET_SESSION: `${N8N_BASE_URL}/webhook/get-session`,
   
   // UC3: Changekommunikation
   COMMUNICATION: `${N8N_BASE_URL}/webhook/change-communication`,

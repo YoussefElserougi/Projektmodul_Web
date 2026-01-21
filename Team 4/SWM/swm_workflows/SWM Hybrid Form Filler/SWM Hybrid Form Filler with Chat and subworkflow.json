@@ -2,7 +2,7 @@
   "nodes": [
     {
       "parameters": {
-        "jsCode": "// Webhook Input normalisieren - ROBUST VERSION (GET + POST)\nconst rawInput = $input.first().json;\n\n// ---------- GET vs POST Detection ----------\n// Bei GET-Requests kommen die Daten als query-Parameter\nconst isGetRequest = rawInput.query != null && Object.keys(rawInput.query || {}).length > 0;\nconst queryParams = rawInput.query || {};\n\nconsole.log('[Normalize Webhook] HTTP Method detected:', isGetRequest ? 'GET' : 'POST');\nconsole.log('[Normalize Webhook] Query params:', JSON.stringify(queryParams));\n\n// ---------- Hilfsfunktion: robustes Unwrapping ----------\nfunction unwrapPayload(input) {\n  // Falls input null/undefined\n  if (input == null) return {};\n  \n  // Falls Array: erstes Element nehmen\n  if (Array.isArray(input)) {\n    return unwrapPayload(input[0]);\n  }\n  \n  // Falls String: könnte JSON sein\n  if (typeof input === 'string') {\n    try {\n      return unwrapPayload(JSON.parse(input));\n    } catch (e) {\n      return {};\n    }\n  }\n  \n  // Falls Objekt mit body-Wrapper\n  if (typeof input === 'object' && input.body != null) {\n    return unwrapPayload(input.body);\n  }\n  \n  return input;\n}\n\n// Bei GET: Query-Parameter direkt nutzen, bei POST: Body unwrappen\nconst data = isGetRequest ? queryParams : unwrapPayload(rawInput);\n\n// Log für Debugging\nconsole.log('[Normalize Webhook] Raw input type:', typeof rawInput);\nconsole.log('[Normalize Webhook] Unwrapped data:', JSON.stringify(data, null, 2));\n\n// field_update robust extrahieren (könnte auch stringified sein)\nlet fieldUpdate = data.field_update || null;\nif (typeof fieldUpdate === 'string') {\n  try { fieldUpdate = JSON.parse(fieldUpdate); } catch (e) { fieldUpdate = null; }\n}\n\n// ---------- FALLBACK: field + value → field_update ----------\n// Frontend sendet evtl. { field: 'name', value: 'wert' } statt { field_update: { name: 'wert' } }\nif (!fieldUpdate && data.field && data.value !== undefined) {\n  fieldUpdate = { [data.field]: data.value };\n  console.log('[Normalize Webhook] Converted field+value to field_update:', JSON.stringify(fieldUpdate));\n}\n\n// classification robust extrahieren\nlet classification = data.classification || null;\nif (typeof classification === 'string') {\n  try { classification = JSON.parse(classification); } catch (e) { classification = null; }\n}\n\nconsole.log('[Normalize Webhook] field_update:', JSON.stringify(fieldUpdate));\nconsole.log('[Normalize Webhook] classification:', JSON.stringify(classification));\nconsole.log('[Normalize Webhook] Final source:', data.source || 'chat');\n\nreturn {\n  json: {\n    session_id: data.session_id || \"\",\n    message: data.message || \"\",\n    email: data.email || \"anonymous@chat.local\",\n    bodyText: data.message || \"\",\n    fromEmail: data.email || \"anonymous@chat.local\",\n    subject: \"Chat Request\",\n    source: data.source || \"chat\",\n    formData: data.formData || null,\n    projectClass: data.projectClass || null,\n    classification: classification,\n    field_update: fieldUpdate,\n  }\n};"
+        "jsCode": "// Webhook Input normalisieren - ROBUST VERSION (GET + POST)\nconst rawInput = $input.first().json;\n\n// ---------- GET vs POST Detection ----------\n// Bei GET-Requests kommen die Daten als query-Parameter\nconst isGetRequest = rawInput.query != null && Object.keys(rawInput.query || {}).length > 0;\nconst queryParams = rawInput.query || {};\n\nconsole.log('[Normalize Webhook] HTTP Method detected:', isGetRequest ? 'GET' : 'POST');\nconsole.log('[Normalize Webhook] Query params:', JSON.stringify(queryParams));\n\n// ---------- Hilfsfunktion: robustes Unwrapping ----------\nfunction unwrapPayload(input) {\n  // Falls input null/undefined\n  if (input == null) return {};\n  \n  // Falls Array: erstes Element nehmen\n  if (Array.isArray(input)) {\n    return unwrapPayload(input[0]);\n  }\n  \n  // Falls String: könnte JSON sein\n  if (typeof input === 'string') {\n    try {\n      return unwrapPayload(JSON.parse(input));\n    } catch (e) {\n      return {};\n    }\n  }\n  \n  // Falls Objekt mit body-Wrapper\n  if (typeof input === 'object' && input.body != null) {\n    return unwrapPayload(input.body);\n  }\n  \n  return input;\n}\n\n// Bei GET: Query-Parameter direkt nutzen, bei POST: Body unwrappen\nconst data = isGetRequest ? queryParams : unwrapPayload(rawInput);\n\n// Log für Debugging\nconsole.log('[Normalize Webhook] Raw input type:', typeof rawInput);\nconsole.log('[Normalize Webhook] Unwrapped data:', JSON.stringify(data, null, 2));\n\n// field_update robust extrahieren (könnte auch stringified sein)\nlet fieldUpdate = data.field_update || null;\nif (typeof fieldUpdate === 'string') {\n  try { fieldUpdate = JSON.parse(fieldUpdate); } catch (e) { fieldUpdate = null; }\n}\n\n// classification robust extrahieren\nlet classification = data.classification || null;\nif (typeof classification === 'string') {\n  try { classification = JSON.parse(classification); } catch (e) { classification = null; }\n}\n\nconsole.log('[Normalize Webhook] field_update:', JSON.stringify(fieldUpdate));\nconsole.log('[Normalize Webhook] classification:', JSON.stringify(classification));\nconsole.log('[Normalize Webhook] Final source:', data.source || 'chat');\n\nreturn {\n  json: {\n    session_id: data.session_id || \"\",\n    message: data.message || \"\",\n    email: data.email || \"anonymous@chat.local\",\n    bodyText: data.message || \"\",\n    fromEmail: data.email || \"anonymous@chat.local\",\n    subject: \"Chat Request\",\n    source: data.source || \"chat\",\n    formData: data.formData || null,\n    projectClass: data.projectClass || null,\n    classification: classification,\n    field_update: fieldUpdate,\n  }\n};"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -15,7 +15,7 @@
     },
     {
       "parameters": {
-        "jsCode": "// Process complete form submission\nconst input = $input.first().json;\n\n// Alle möglichen Felder\nconst allRequiredKeys = [\n  \"beschreibung_vorhaben\",\n  \"stichpunkte\",\n  \"ansprechpartner_name\",\n  \"zielsetzung\",\n  \"zeithorizont\",\n  \"startdatum\",\n  \"dauer_heisse_phasen\",\n  \"beitrag_konzernstrategie\",\n  \"strategische_ziele\",\n  \"was_passiert_wenn_nicht_erfolgreich\",\n  \"betroffene_bereiche_personen\",\n  \"anzahl_mitarbeitende_fuehrungskraefte\",\n  \"erwartungen_change_begleitung\",\n  \"changebedarf_pag\",\n  \"ziel_change_begleitung_von\",\n  \"ziel_change_begleitung_zu\",\n  \"erfolg_verhindern\",\n  \"erfolg_beitragen\",\n  \"sonstiges\",\n  \"vereinbarungen\"\n];\n\n// Strategische Felder (nur für standard/strategic Projekte erforderlich)\nconst strategicOnlyKeys = [\n  \"dauer_heisse_phasen\",\n  \"beitrag_konzernstrategie\",\n  \"strategische_ziele\"\n];\n\nconst formData = input.formData || {};\nconst projectClass = input.projectClass || 'standard';\n\n// Required Keys basierend auf Projektklasse\nlet requiredKeys;\nif (projectClass === 'mini') {\n  requiredKeys = allRequiredKeys.filter(key => !strategicOnlyKeys.includes(key));\n} else {\n  requiredKeys = allRequiredKeys;\n}\n\nconst updatedAnswers = {\n  ...formData,\n  projektklasse: projectClass,\n  klassifizierung: JSON.stringify(input.classification || {}),\n};\n\n// Berechne missing_fields - Felder die leer oder nicht vorhanden sind\nconst missingFields = requiredKeys.filter(key => {\n  const value = formData[key];\n  return !value || (typeof value === 'string' && value.trim() === '');\n});\n\nconsole.log('[Process Form Submit] Project class:', projectClass);\nconsole.log('[Process Form Submit] Required keys:', requiredKeys.length);\nconsole.log('[Process Form Submit] Missing fields:', missingFields);\n\nreturn {\n  json: {\n    session_id: input.session_id,\n    requester_email: input.email,\n    status: \"submitted_request\",\n    round_counter: 0,\n    max_rounds: 50,\n    required_keys: JSON.stringify(requiredKeys),\n    answers: JSON.stringify(updatedAnswers),\n    metadata: JSON.stringify({\n      source: \"form\",\n      submitted_at: new Date().toISOString(),\n      projectClass: projectClass,\n      classification: input.classification || {}\n    }),\n    last_question: null,\n    missing_fields: JSON.stringify(missingFields),\n    project_classification: JSON.stringify(input.classification || {}),\n    email_intent: true,\n    reply_text: \"✅ Deine Change-Anfrage wurde erfolgreich eingereicht und wird bearbeitet!\",\n  }\n};"
+        "jsCode": "// Process complete form submission\nconst input = $input.first().json;\n\nconst requiredKeys = [\n  \"beschreibung_vorhaben\",\n  \"stichpunkte\",\n  \"ansprechpartner_name\",\n  \"zielsetzung\",\n  \"zeithorizont\",\n  \"startdatum\",\n  \"dauer_heisse_phasen\",\n  \"beitrag_konzernstrategie\",\n  \"strategische_ziele\",\n  \"was_passiert_wenn_nicht_erfolgreich\",\n  \"betroffene_bereiche_personen\",\n  \"anzahl_mitarbeitende_fuehrungskraefte\",\n  \"erwartungen_change_begleitung\",\n  \"changebedarf_pag\",\n  \"ziel_change_begleitung_von\",\n  \"ziel_change_begleitung_zu\",\n  \"erfolg_verhindern\",\n  \"erfolg_beitragen\",\n  \"sonstiges\",\n  \"vereinbarungen\"\n];\n\nconst formData = input.formData || {};\nconst updatedAnswers = {\n  ...formData,\n  projektklasse: input.projectClass,\n  klassifizierung: JSON.stringify(input.classification || {}),\n};\n\nreturn {\n  json: {\n    session_id: input.session_id,\n    requester_email: input.email,\n    status: \"submitted_request\",\n    round_counter: 0,\n    max_rounds: 50,\n    required_keys: JSON.stringify(requiredKeys),\n    answers: JSON.stringify(updatedAnswers),\n    metadata: JSON.stringify({\n      source: \"form\",\n      submitted_at: new Date().toISOString(),\n      projectClass: input.projectClass,\n      classification: input.project_classification || {}\n    }),\n    last_question: null,\n    missing_fields: JSON.stringify([]),\n    project_classification: JSON.stringify(input.classification || {}),\n    email_intent: true,\n    reply_text: \"✅ Deine Change-Anfrage wurde erfolgreich eingereicht und wird bearbeitet!\",\n  }\n};"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -320,17 +320,17 @@
         "columns": {
           "mappingMode": "defineBelow",
           "value": {
-            "status": "={{ $('Process Form Submit').item.json.status }}",
-            "session_id": "={{ $('Process Form Submit').item.json.session_id }}",
-            "requester_email": "={{ $('Process Form Submit').item.json.requester_email }}",
-            "round_counter": "={{ $('Process Form Submit').item.json.round_counter }}",
-            "max_rounds": "={{ $('Process Form Submit').item.json.max_rounds }}",
-            "answers": "={{ $('Process Form Submit').item.json.answers }}",
-            "required_keys": "={{ $('Process Form Submit').item.json.required_keys }}",
-            "metadata": "={{ $('Process Form Submit').item.json.metadata }}",
-            "last_question": "={{ $('Process Form Submit').item.json.last_question || '' }}",
-            "missing_fields": "={{ $('Process Form Submit').item.json.missing_fields }}",
-            "project_classification": "={{ $('Process Form Submit').item.json.project_classification }}"
+            "status": "={{ $json.status }}",
+            "session_id": "={{ $json.session_id }}",
+            "requester_email": "={{ $json.requester_email }}",
+            "round_counter": "={{ $json.round_counter }}",
+            "max_rounds": "={{ $json.max_rounds }}",
+            "answers": "={{ JSON.stringify($json.answers || {}) }}",
+            "required_keys": "={{ JSON.stringify($json.required_keys || []) }}",
+            "metadata": "={{ JSON.stringify($json.metadata || {}) }}",
+            "last_question": "={{$json.last_question || \"\"}}",
+            "missing_fields": "={{ JSON.stringify($json.missing_fields || []) }}",
+            "project_classification": "={{ JSON.stringify($json.project_classification || {}) }}"
           },
           "matchingColumns": [],
           "schema": []
@@ -361,7 +361,7 @@
           "conditions": [
             {
               "keyName": "session_id",
-              "keyValue": "={{ $('Process Form Submit').item.json.session_id }}"
+              "keyValue": "={{$json.session_id}}"
             }
           ]
         },
@@ -372,11 +372,11 @@
             "answers": "={{ $('Process Form Submit').item.json.answers }}",
             "metadata": "={{ $('Process Form Submit').item.json.metadata }}",
             "missing_fields": "={{ $('Process Form Submit').item.json.missing_fields }}",
-            "round_counter": "={{ $('Process Form Submit').item.json.round_counter || 0 }}",
-            "max_rounds": "={{ $('Process Form Submit').item.json.max_rounds || 50 }}",
+            "round_counter": "={{ $json.round_counter || 0 }}",
+            "max_rounds": "={{ $json.max_rounds || 50 }}",
             "required_keys": "={{ $('Process Form Submit').item.json.required_keys }}",
-            "requester_email": "={{ $('Process Form Submit').item.json.requester_email }}",
-            "session_id": "={{ $('Process Form Submit').item.json.session_id }}",
+            "requester_email": "={{ $json.requester_email }}",
+            "session_id": "={{ $json.session_id }}",
             "project_classification": "={{ $('Process Form Submit').item.json.project_classification || '{}' }}"
           },
           "matchingColumns": [],
@@ -508,7 +508,7 @@
     },
     {
       "parameters": {
-        "jsCode": "// Get session data from Process Form Submit (not from DB - avoids missing data)\n// DB nodes may not return all fields, so we get directly from the source\nconst processedData = $('Process Form Submit').first().json;\n\n// Parse JSON strings\nlet answers = {};\nlet metadata = {};\n\ntry {\n  answers = typeof processedData.answers === 'string' ? JSON.parse(processedData.answers) : (processedData.answers || {});\n} catch (e) {\n  console.log('Error parsing answers:', e);\n}\n\ntry {\n  metadata = typeof processedData.metadata === 'string' ? JSON.parse(processedData.metadata) : (processedData.metadata || {});\n} catch (e) {\n  console.log('Error parsing metadata:', e);\n}\n\nconsole.log('[Prepare Email Data] requester_email:', processedData.requester_email);\nconsole.log('[Prepare Email Data] session_id:', processedData.session_id);\n\nreturn {\n  json: {\n    session_id: processedData.session_id,\n    requester_email: processedData.requester_email,\n    status: processedData.status,\n    answers: answers,\n    metadata: metadata,\n    confirmed_at: new Date().toISOString(),\n    reply_text: processedData.reply_text || '✅ Deine Change-Anfrage wurde erfolgreich eingereicht!',\n  }\n};"
+        "jsCode": "// Get session data from database (either Insert or Update node)\nconst dbData = $input.first().json;\n\n// Parse JSON strings from database\nlet answers = {};\nlet metadata = {};\n\ntry {\n  answers = typeof dbData.answers === 'string' ? JSON.parse(dbData.answers) : (dbData.answers || {});\n} catch (e) {\n  console.log('Error parsing answers:', e);\n}\n\ntry {\n  metadata = typeof dbData.metadata === 'string' ? JSON.parse(dbData.metadata) : (dbData.metadata || {});\n} catch (e) {\n  console.log('Error parsing metadata:', e);\n}\n\nreturn {\n  json: {\n    session_id: dbData.session_id,\n    requester_email: dbData.requester_email,\n    status: dbData.status,\n    answers: answers,\n    metadata: metadata,\n    confirmed_at: new Date().toISOString(),\n  }\n};"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -1290,11 +1290,6 @@
       "main": [
         [
           {
-            "node": "Respond: Form Submitted",
-            "type": "main",
-            "index": 0
-          },
-          {
             "node": "Send Confirmation to Requester",
             "type": "main",
             "index": 0
@@ -1310,12 +1305,22 @@
     "Send Confirmation to Requester": {
       "main": [
         [
+          {
+            "node": "Respond: Form Submitted",
+            "type": "main",
+            "index": 0
+          }
         ]
       ]
     },
     "Send to Change Team": {
       "main": [
         [
+          {
+            "node": "Respond: Form Submitted",
+            "type": "main",
+            "index": 0
+          }
         ]
       ]
     },
@@ -1345,11 +1350,6 @@
       "main": [
         [
           {
-            "node": "Respond: Welcome Email Sent",
-            "type": "main",
-            "index": 0
-          },
-          {
             "node": "Send Welcome Email",
             "type": "main",
             "index": 0
@@ -1360,6 +1360,11 @@
     "Send Welcome Email": {
       "main": [
         [
+          {
+            "node": "Respond: Welcome Email Sent",
+            "type": "main",
+            "index": 0
+          }
         ]
       ]
     },

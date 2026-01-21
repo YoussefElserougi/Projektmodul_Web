@@ -28,10 +28,10 @@
       "type": "n8n-nodes-base.dataTable",
       "typeVersion": 1,
       "position": [
-        -224,
-        288
+        -1504,
+        192
       ],
-      "id": "09ac5b70-3a0f-4061-9df2-a280499ae05e",
+      "id": "5ba1d9d7-2ff8-4f94-bd74-e84871c71a51",
       "name": "Data Tables: Get Session",
       "alwaysOutputData": true
     },
@@ -63,10 +63,10 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.2,
       "position": [
-        16,
-        288
+        -1280,
+        192
       ],
-      "id": "13fb373f-6d52-4fd6-a85c-7e828027ea4f",
+      "id": "e132dd14-9b91-4eec-9362-de6807d98ea7",
       "name": "IF: Session exists?"
     },
     {
@@ -78,10 +78,10 @@
       "type": "n8n-nodes-base.respondToWebhook",
       "typeVersion": 1.1,
       "position": [
-        240,
-        384
+        -1056,
+        288
       ],
-      "id": "1d386c4b-c911-4835-8bae-de666beed697",
+      "id": "87956947-e90f-4611-89c5-7a7e3dce694b",
       "name": "Respond: No Session Found"
     },
     {
@@ -91,10 +91,10 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        240,
-        192
+        -1056,
+        96
       ],
-      "id": "e94bee43-7b96-4dd1-b190-fd0cd3397538",
+      "id": "41a1e9b3-baff-437f-9e29-39e0c47bcd83",
       "name": "Normalize Session Row"
     },
     {
@@ -124,10 +124,10 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.2,
       "position": [
-        464,
-        192
+        -832,
+        96
       ],
-      "id": "41b00c3a-bac5-4f5c-962e-d963896bb7df",
+      "id": "e54f89ef-c1a6-473f-a146-72178fba2ab8",
       "name": "IF: Check if Confirmed"
     },
     {
@@ -139,10 +139,10 @@
       "type": "n8n-nodes-base.respondToWebhook",
       "typeVersion": 1.1,
       "position": [
-        752,
-        80
+        -544,
+        -16
       ],
-      "id": "37db60d5-1c3e-46e1-8e87-a69fa90aeca8",
+      "id": "1c10e5db-4af5-4834-86f7-341842bf557a",
       "name": "Respond: Already Confirmed"
     },
     {
@@ -160,7 +160,7 @@
               "content": "Du bist ein Change-Management Agent für die Stadtwerke München (SWM). Deine Aufgabe ist es, strukturiert Informationen für einen Change-Antrag zu sammeln.\n\nWICHTIGE REGELN:\n1. Stelle IMMER nur EINE Frage pro Antwort\n2. Sei freundlich, professionell und auf Deutsch\n3. Nutze die bereits gesammelten Informationen aus dem Session-Context\n4. Wenn ein Feld bereits beantwortet wurde, frage nicht erneut danach\n5. Frage die Felder in der logischen Reihenfolge ab\n\nFELDER DIE DU SAMMELN MUSST (in dieser Reihenfolge):\n1. beschreibung_vorhaben - \"Beschreibung des Vorhabens/Projektes/Initiative\"\n2. stichpunkte - \"Thema/Titel in Stichpunkten\"\n3. ansprechpartner_name - \"Wer ist Ansprechpartner*in / PAG?\"\n4. zielsetzung - \"Zielsetzung des Vorhabens\"\n5. zeithorizont - \"Zeithorizont\"\n6. startdatum - \"Startdatum\"\n7. dauer_heisse_phasen - \"Dauer / heiße Phasen\"\n8. beitrag_konzernstrategie - \"Beitrag zur Konzernstrategie\"\n9. strategische_ziele - \"Welche strategischen Ziele\"\n10. was_passiert_wenn_nicht_erfolgreich - \"Was passiert bei Misserfolg\"\n11. betroffene_bereiche_personen - \"Betroffene Bereiche/Personen\"\n12. anzahl_mitarbeitende_fuehrungskraefte - \"Anzahl MA & FK\"\n13. erwartungen_change_begleitung - \"Erwartungen an Change-Begleitung\"\n14. changebedarf_pag - \"Changebedarf\"\n15. ziel_change_begleitung_von - \"Von (Ist-Zustand)\"\n16. ziel_change_begleitung_zu - \"Zu (Soll-Zustand)\"\n17. erfolg_verhindern - \"Hindernisse\"\n18. erfolg_beitragen - \"Erfolgsfaktoren\"\n19. sonstiges - \"Sonstiges\"\n20. vereinbarungen - \"Vereinbarungen\"\n\nDu MUSST als JSON antworten:\n{\n  \"action\": \"ask\" | \"summarize\" | \"max_rounds\" | \"approval_ok\" | \"approval_change\",\n  \"next_question\": \"Die konkrete Frage\",\n  \"updated_answers\": { \"feld_name\": \"extrahierte_antwort\" },\n  \"missing_fields\": [\"noch_fehlendes_feld1\"],\n  \"reply_text\": \"Der vollständige Text an den Nutzer\"\n}\n\nLOGIK:\n- status == \"open\": Extrahiere Antworten, stelle nächste Frage\n- Wenn round_counter >= max_rounds und wichtige Felder fehlen: action = \"max_rounds\"\n- Wenn alle wichtigen Felder ausgefüllt: action = \"summarize\"\n- status == \"submitted_request\" + Nutzer sagt OK: action = \"approval_ok\"\n- status == \"submitted_request\" + Nutzer will Änderung: action = \"approval_change\""
             },
             {
-              "content": "=Session Status: {{ $json.status }}\nRound Counter: {{ $json.round_counter }} / {{ $json.max_rounds }}\n\nBereits beantwortete Felder (answers):\n{{ JSON.stringify($json.answers) }}\n\nNoch fehlende Felder (missing_fields):\n{{ JSON.stringify($json.missing_fields) }}\n\nLetzte gestellte Frage (falls vorhanden):\n{{ $json.last_question }}\n\nNeue Nutzer-Nachricht (aktueller Chatturn):\n{{ $json.incoming_body }}\n\nAUFGABE FÜR DICH:\n\n1. Entscheide zuerst, was der Nutzer will:\n   - Stellt die Person eine Frage zum Formular oder zum Change-Prozess?\n   - Braucht sie Hilfe beim Formulieren eines bestimmten Feldes?\n   - Liefert sie eine konkrete Antwort, die als Inhalt für ein Feld gespeichert werden soll?\n   - Möchte sie eine Zusammenfassung prüfen oder freigeben?\n\n2. Erzeuge dann ein JSON-Objekt im vereinbarten Format:\n   - reply_text:\n     - Beantworte die Frage oder hilf beim Formulieren.\n     - Nutze maximal 2–3 kurze Absätze oder einige Bulletpoints.\n     - Falls sinnvoll, gib 1–3 konkrete Textvorschläge, die die Person ins Formular kopieren kann.\n   - updated_answers:\n     - Nur dann füllen, wenn klar ist, dass der Nutzer eine Antwort für ein bestimmtes Feld abgibt oder aktualisiert.\n     - Nutze dafür ausschließlich die Feldnamen aus der Feldliste (z. B. \"zielsetzung\", \"beschreibung_vorhaben\").\n     - Wenn der Nutzer nur um Beispiele oder Formulierungsvorschläge bittet, lasse updated_answers LEER ({}).\n   - missing_fields:\n     - Starte von der übergebenen Liste missing_fields.\n     - Entferne Felder, für die du in updated_answers eine valide neue Antwort gesetzt hast.\n   - next_question:\n     - Normalfall: leerer String \"\".\n     - Nur wenn du zur gleichen Sache eine gezielte Rückfrage brauchst, formuliere hier genau EINE präzise Rückfrage.\n   - action:\n     - Standard: \"ask\".\n     - Wenn alle Pflichtfelder gefüllt sind UND der Nutzer um eine Zusammenfassung/Prüfung bittet: \"summarize\".\n     - Wenn der Status \"submitted_request\" ist UND der Nutzer die Zusammenfassung bestätigt: \"approval_ok\".\n     - Wenn der Status \"submitted_request\" ist UND der Nutzer Änderungen wünscht: \"approval_change\".\n     - \"max_rounds\" nur verwenden, wenn sehr viele Runden ohne sinnvolle Antworten stattgefunden haben.\n\nAntworte ausschließlich mit dem JSON-Objekt, ohne zusätzliche Erklärungen oder Text außerhalb des JSON."
+              "content": "=Session Status: {{ $json.status }}\nRound Counter: {{ $json.round_counter }} / {{ $json.max_rounds }}\nBereits beantwortete Felder: {{ JSON.stringify($json.answers) }}\nNoch fehlende Felder: {{ JSON.stringify($json.missing_fields) }}\nLetzte gestellte Frage: {{ $json.last_question }}\n\nNeue Nutzerantwort:\n{{ $json.incoming_body }}\n\nAnalysiere die Antwort und erstelle das JSON-Response."
             }
           ]
         },
@@ -170,10 +170,10 @@
       "type": "@n8n/n8n-nodes-langchain.openAi",
       "typeVersion": 2,
       "position": [
-        688,
-        288
+        -608,
+        192
       ],
-      "id": "284f3878-8bf9-453c-954e-b35307f6c247",
+      "id": "208e54c3-dd74-45bb-9f7b-40030c68aacd",
       "name": "LLM: Analyze Message",
       "credentials": {
         "openAiApi": {
@@ -189,23 +189,23 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        1040,
-        288
+        -256,
+        192
       ],
-      "id": "a6c6e698-3cf1-41ab-b449-dcb869478753",
+      "id": "c99bfcf1-ca42-4805-9994-5e538cff34b1",
       "name": "Parse LLM JSON Response"
     },
     {
       "parameters": {
-        "jsCode": "const session = $('Normalize Session Row').first().json;\nconst llmResult = $('Parse LLM JSON Response').first().json;\n\n// Sicherstellen dass session.answers ein Objekt ist\nlet existingAnswers = session.answers || {};\nif (typeof existingAnswers === 'string') {\n  try { existingAnswers = JSON.parse(existingAnswers); } catch(e) { existingAnswers = {}; }\n}\n\n// Merge neue Antworten\nconst updatedAnswers = {\n  ...existingAnswers,\n  ...(llmResult.updated_answers || {})\n};\n\n// Entferne korrupte Keys\nObject.keys(updatedAnswers).forEach(key => {\n  if (/^\\d+$/.test(key)) delete updatedAnswers[key];\n});\n\n// Required Keys sicherstellen\nlet requiredKeys = session.required_keys || [];\nif (typeof requiredKeys === 'string') {\n  try { requiredKeys = JSON.parse(requiredKeys); } catch(e) { requiredKeys = []; }\n}\nif (!Array.isArray(requiredKeys)) requiredKeys = [];\n\n// Berechne fehlende Felder\nconst actualMissingFields = requiredKeys.filter(key => !updatedAnswers[key] || updatedAnswers[key].trim() === '');\n\n// Round Counter\nlet newRoundCounter = session.round_counter;\nconst hasNewAnswers = llmResult.updated_answers && Object.keys(llmResult.updated_answers).length > 0;\nif (llmResult.action === \"ask\" && !hasNewAnswers) {\n  newRoundCounter = session.round_counter + 1;\n}\n\n// Status und Reply\nlet newStatus = session.status;\nlet replyText = String(llmResult.reply_text || \"\");\n\n// Auto-summarize wenn alle Felder beantwortet\nif (llmResult.action === \"ask\" && actualMissingFields.length === 0) {\n  newStatus = \"waiting_for_approval\";\n  replyText = createSummary(updatedAnswers);\n} else if (llmResult.action === \"ask\") {\n  newStatus = \"open\";\n} else if (llmResult.action === \"summarize\") {\n  newStatus = \"waiting_for_approval\";\n  replyText = createSummary(updatedAnswers);\n} else if (llmResult.action === \"max_rounds\") {\n  newStatus = \"max_rounds_reached\";\n} else if (llmResult.action === \"approval_ok\") {\n  newStatus = \"confirmed\";\n  replyText = \"Vielen Dank für deine Bestätigung! 🎉\\n\\nDeine Change-Anfrage wurde an das Change Team weitergeleitet. Du erhältst in Kürze eine Bestätigungs-E-Mail.\\n\\nViele Grüße\\nDein Change Agent\";\n} else if (llmResult.action === \"approval_change\") {\n  newStatus = \"open\";\n}\n\nfunction createSummary(answers) {\n  let summary = \"📋 **Zusammenfassung deiner Change-Anfrage**\\n\\n\";\n  summary += \"Bitte prüfe die folgenden Informationen:\\n\\n\";\n  \n  // Feste Reihenfolge der Felder (wie in den E-Mails)\n  const fieldOrder = [\n    \"beschreibung_vorhaben\",\n    \"stichpunkte\",\n    \"ansprechpartner_name\",\n    \"zielsetzung\",\n    \"zeithorizont\",\n    \"startdatum\",\n    \"dauer_heisse_phasen\",\n    \"beitrag_konzernstrategie\",\n    \"strategische_ziele\",\n    \"was_passiert_wenn_nicht_erfolgreich\",\n    \"betroffene_bereiche_personen\",\n    \"anzahl_mitarbeitende_fuehrungskraefte\",\n    \"erwartungen_change_begleitung\",\n    \"changebedarf_pag\",\n    \"ziel_change_begleitung_von\",\n    \"ziel_change_begleitung_zu\",\n    \"erfolg_verhindern\",\n    \"erfolg_beitragen\",\n    \"sonstiges\",\n    \"vereinbarungen\"\n  ];\n  \n  const fieldLabels = {\n    \"beschreibung_vorhaben\": \"Beschreibung des Vorhabens\",\n    \"stichpunkte\": \"Thema/Titel\",\n    \"ansprechpartner_name\": \"Ansprechpartner*in\",\n    \"zielsetzung\": \"Zielsetzung\",\n    \"zeithorizont\": \"Zeithorizont\",\n    \"startdatum\": \"Startdatum\",\n    \"dauer_heisse_phasen\": \"Dauer/Heiße Phasen\",\n    \"beitrag_konzernstrategie\": \"Beitrag zur Konzernstrategie\",\n    \"strategische_ziele\": \"Strategische Ziele\",\n    \"was_passiert_wenn_nicht_erfolgreich\": \"Was passiert bei Misserfolg\",\n    \"betroffene_bereiche_personen\": \"Betroffene Bereiche/Personen\",\n    \"anzahl_mitarbeitende_fuehrungskraefte\": \"Anzahl MA & FK\",\n    \"erwartungen_change_begleitung\": \"Erwartungen an Change-Begleitung\",\n    \"changebedarf_pag\": \"Changebedarf\",\n    \"ziel_change_begleitung_von\": \"Von (Ist-Zustand)\",\n    \"ziel_change_begleitung_zu\": \"Zu (Soll-Zustand)\",\n    \"erfolg_verhindern\": \"Hindernisse\",\n    \"erfolg_beitragen\": \"Erfolgsfaktoren\",\n    \"sonstiges\": \"Sonstiges\",\n    \"vereinbarungen\": \"Vereinbarungen\"\n  };\n  \n  // Felder in fester Reihenfolge ausgeben\n  for (const key of fieldOrder) {\n    if (answers[key]) {\n      const label = fieldLabels[key] || key;\n      summary += `**${label}:**\\n${answers[key]}\\n\\n`;\n    }\n  }\n  \n  summary += \"\\n---\\n\\n\";\n  summary += \"Sind alle Angaben korrekt?\\n\\n\";\n  summary += \"👉 Antworte mit 'OK' wenn alles passt\\n\";\n  summary += \"👉 Oder beschreibe welche Änderungen du vornehmen möchtest\";\n  \n  return summary;\n}\n\n// Extract project classification from metadata\nlet projectClassification = '{}';\nif (typeof session.metadata === 'object' && session.metadata) {\n  projectClassification = JSON.stringify(session.metadata.classification || session.metadata.projectClass || {});\n}\n\nconst result = {\n  session_id: session.session_id,\n  requester_email: session.requester_email,\n  status: newStatus,\n  round_counter: newRoundCounter,\n  max_rounds: session.max_rounds,\n  required_keys: session.required_keys,\n  answers: JSON.stringify(updatedAnswers),\n  metadata: session.metadata,\n  last_question: String(llmResult.next_question || \"\"),\n  missing_fields: actualMissingFields,\n  reply_text: replyText,\n  email_intent: false,\n  project_classification: projectClassification\n};\n\nreturn { json: result };"
+        "jsCode": "const session = $('Normalize Session Row').first().json;\nconst llmResult = $('Parse LLM JSON Response').first().json;\n\n// Sicherstellen dass session.answers ein Objekt ist\nlet existingAnswers = session.answers || {};\nif (typeof existingAnswers === 'string') {\n  try { existingAnswers = JSON.parse(existingAnswers); } catch(e) { existingAnswers = {}; }\n}\n\n// Merge neue Antworten\nconst updatedAnswers = {\n  ...existingAnswers,\n  ...(llmResult.updated_answers || {})\n};\n\n// Entferne korrupte Keys\nObject.keys(updatedAnswers).forEach(key => {\n  if (/^\\d+$/.test(key)) delete updatedAnswers[key];\n});\n\n// Required Keys sicherstellen\nlet requiredKeys = session.required_keys || [];\nif (typeof requiredKeys === 'string') {\n  try { requiredKeys = JSON.parse(requiredKeys); } catch(e) { requiredKeys = []; }\n}\nif (!Array.isArray(requiredKeys)) requiredKeys = [];\n\n// Berechne fehlende Felder - robust gegen nicht-String Werte\nconst actualMissingFields = requiredKeys.filter(key => {\n  const value = updatedAnswers[key];\n  // Prüfe ob Wert fehlt oder leer ist (String-safe)\n  return !value || String(value).trim() === '';\n});\n\n// Round Counter\nlet newRoundCounter = session.round_counter;\nconst hasNewAnswers = llmResult.updated_answers && Object.keys(llmResult.updated_answers).length > 0;\nif (llmResult.action === \"ask\" && !hasNewAnswers) {\n  newRoundCounter = session.round_counter + 1;\n}\n\n// Status und Reply\nlet newStatus = session.status;\nlet replyText = String(llmResult.reply_text || \"\");\n\n// Auto-summarize wenn alle Felder beantwortet\nif (llmResult.action === \"ask\" && actualMissingFields.length === 0) {\n  newStatus = \"waiting_for_approval\";\n  replyText = createSummary(updatedAnswers);\n} else if (llmResult.action === \"ask\") {\n  newStatus = \"open\";\n} else if (llmResult.action === \"summarize\") {\n  newStatus = \"waiting_for_approval\";\n  replyText = createSummary(updatedAnswers);\n} else if (llmResult.action === \"max_rounds\") {\n  newStatus = \"max_rounds_reached\";\n} else if (llmResult.action === \"approval_ok\") {\n  newStatus = \"confirmed\";\n  replyText = \"Vielen Dank für deine Bestätigung! 🎉\\n\\nDeine Change-Anfrage wurde an das Change Team weitergeleitet. Du erhältst in Kürze eine Bestätigungs-E-Mail.\\n\\nViele Grüße\\nDein Change Agent\";\n} else if (llmResult.action === \"approval_change\") {\n  newStatus = \"open\";\n}\n\nfunction createSummary(answers) {\n  let summary = \"📋 **Zusammenfassung deiner Change-Anfrage**\\n\\n\";\n  summary += \"Bitte prüfe die folgenden Informationen:\\n\\n\";\n  \n  // Feste Reihenfolge der Felder (wie in den E-Mails)\n  const fieldOrder = [\n    \"beschreibung_vorhaben\",\n    \"stichpunkte\",\n    \"ansprechpartner_name\",\n    \"zielsetzung\",\n    \"zeithorizont\",\n    \"startdatum\",\n    \"dauer_heisse_phasen\",\n    \"beitrag_konzernstrategie\",\n    \"strategische_ziele\",\n    \"was_passiert_wenn_nicht_erfolgreich\",\n    \"betroffene_bereiche_personen\",\n    \"anzahl_mitarbeitende_fuehrungskraefte\",\n    \"erwartungen_change_begleitung\",\n    \"changebedarf_pag\",\n    \"ziel_change_begleitung_von\",\n    \"ziel_change_begleitung_zu\",\n    \"erfolg_verhindern\",\n    \"erfolg_beitragen\",\n    \"sonstiges\",\n    \"vereinbarungen\"\n  ];\n  \n  const fieldLabels = {\n    \"beschreibung_vorhaben\": \"Beschreibung des Vorhabens\",\n    \"stichpunkte\": \"Thema/Titel\",\n    \"ansprechpartner_name\": \"Ansprechpartner*in\",\n    \"zielsetzung\": \"Zielsetzung\",\n    \"zeithorizont\": \"Zeithorizont\",\n    \"startdatum\": \"Startdatum\",\n    \"dauer_heisse_phasen\": \"Dauer/Heiße Phasen\",\n    \"beitrag_konzernstrategie\": \"Beitrag zur Konzernstrategie\",\n    \"strategische_ziele\": \"Strategische Ziele\",\n    \"was_passiert_wenn_nicht_erfolgreich\": \"Was passiert bei Misserfolg\",\n    \"betroffene_bereiche_personen\": \"Betroffene Bereiche/Personen\",\n    \"anzahl_mitarbeitende_fuehrungskraefte\": \"Anzahl MA & FK\",\n    \"erwartungen_change_begleitung\": \"Erwartungen an Change-Begleitung\",\n    \"changebedarf_pag\": \"Changebedarf\",\n    \"ziel_change_begleitung_von\": \"Von (Ist-Zustand)\",\n    \"ziel_change_begleitung_zu\": \"Zu (Soll-Zustand)\",\n    \"erfolg_verhindern\": \"Hindernisse\",\n    \"erfolg_beitragen\": \"Erfolgsfaktoren\",\n    \"sonstiges\": \"Sonstiges\",\n    \"vereinbarungen\": \"Vereinbarungen\"\n  };\n  \n  // Felder in fester Reihenfolge ausgeben\n  for (const key of fieldOrder) {\n    if (answers[key]) {\n      const label = fieldLabels[key] || key;\n      summary += `**${label}:**\\n${answers[key]}\\n\\n`;\n    }\n  }\n  \n  summary += \"\\n---\\n\\n\";\n  summary += \"Sind alle Angaben korrekt?\\n\\n\";\n  summary += \"👉 Antworte mit 'OK' wenn alles passt\\n\";\n  summary += \"👉 Oder beschreibe welche Änderungen du vornehmen möchtest\";\n  \n  return summary;\n}\n\n// Extract project classification from metadata\nlet projectClassification = '{}';\nif (typeof session.metadata === 'object' && session.metadata) {\n  projectClassification = JSON.stringify(session.metadata.classification || session.metadata.projectClass || {});\n}\n\nconst result = {\n  session_id: session.session_id,\n  requester_email: session.requester_email,\n  status: newStatus,\n  round_counter: newRoundCounter,\n  max_rounds: session.max_rounds,\n  required_keys: session.required_keys,\n  answers: JSON.stringify(updatedAnswers),\n  metadata: session.metadata,\n  last_question: String(llmResult.next_question || \"\"),\n  missing_fields: actualMissingFields,\n  reply_text: replyText,\n  email_intent: false,\n  project_classification: projectClassification\n};\n\nreturn { json: result };"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        1264,
-        288
+        -32,
+        192
       ],
-      "id": "09cd9d45-b789-4a8d-b3a7-332db021a616",
+      "id": "aee69ae3-86b3-4973-a089-752276842193",
       "name": "Apply LLM Result"
     },
     {
@@ -245,10 +245,10 @@
       "type": "n8n-nodes-base.dataTable",
       "typeVersion": 1,
       "position": [
-        1504,
-        288
+        208,
+        192
       ],
-      "id": "689c7d08-1f27-419a-81e7-d4d8d14879c1",
+      "id": "56979bc3-b835-4c17-bf59-96dbbc81d5fa",
       "name": "Update row(s)"
     },
     {
@@ -260,10 +260,10 @@
       "type": "n8n-nodes-base.stickyNote",
       "typeVersion": 1,
       "position": [
-        -640,
-        -272
+        -1920,
+        -368
       ],
-      "id": "36fbcd05-6861-4f2e-bb66-6e09993e20e6",
+      "id": "c720fe01-a348-419e-8285-3082baf67182",
       "name": "Chat/LLM Path"
     },
     {
@@ -273,10 +273,10 @@
       "type": "n8n-nodes-base.executeWorkflowTrigger",
       "typeVersion": 1.1,
       "position": [
-        -448,
-        288
+        -1728,
+        192
       ],
-      "id": "97d39b77-1894-4536-b906-4d2e21061ce9",
+      "id": "914527e9-7410-4252-8232-768e14636c7e",
       "name": "When Executed by Another Workflow"
     },
     {
@@ -286,10 +286,10 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        1728,
-        288
+        432,
+        192
       ],
-      "id": "3a982ec8-10a9-49d7-b6af-683c673297f5",
+      "id": "03e26e4d-ec03-499b-85c1-fe293f929277",
       "name": "Prepare Response"
     }
   ],
@@ -405,6 +405,11 @@
             "index": 0
           }
         ]
+      ]
+    },
+    "Prepare Response": {
+      "main": [
+        []
       ]
     }
   },
