@@ -5,6 +5,7 @@
 
 import React, { useState, useEffect } from "react";
 import ChatAssistant from "./ChatAssistant";
+import { N8N_ENDPOINTS } from "@/lib/config";
 import {
   ProjectClass,
   SectionConfig,
@@ -33,6 +34,8 @@ export default function DynamicForm({
   const [validationIssues, setValidationIssues] = useState<ValidationIssue[]>([]);
   const [showChatSuggestion, setShowChatSuggestion] = useState<string | null>(null);
   const [chatPrefillQuestion, setChatPrefillQuestion] = useState<string | null>(null);
+  const [chatHelpLoading, setChatHelpLoading] = useState<string | null>(null); // fieldId if loading
+  const [chatHelpError, setChatHelpError] = useState<string | null>(null); // fieldId if error
   const [sessionId, setSessionId] = useState<string>("");
 
   // Session-ID initialisieren
@@ -89,7 +92,7 @@ export default function DynamicForm({
     try {
       console.log(`[DynamicForm] Auto-saving field: ${fieldId}`);
       
-      await fetch("/api/n8n/update-field", {
+      await fetch(N8N_ENDPOINTS.UPDATE_FIELD, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -310,14 +313,42 @@ export default function DynamicForm({
                               <button
                                 type="button"
                                 onClick={() => {
-                                  setChatPrefillQuestion(
-                                    `AUTO_SEND:Ich brauche Hilfe beim Ausfüllen des Feldes "${field.label}". Kannst du mir Beispiele und Tipps geben?`
-                                  );
+                                  const fieldValue = formValues[field.id] || '';
+                                  console.log(`[FieldHelp] clicked`, field.id, field.label, fieldValue);
+                                  setChatHelpLoading(field.id);
+                                  setChatHelpError(null);
+                                  
+                                  try {
+                                    // Add timestamp to make each question unique so React detects the change
+                                    const uniqueQuestion = `AUTO_SEND:Ich brauche Hilfe beim Ausfüllen des Feldes "${field.label}". ${fieldValue ? `Aktueller Wert: "${fieldValue.substring(0, 100)}${fieldValue.length > 100 ? '...' : ''}". ` : ''}Kannst du mir Beispiele und Tipps geben? [${Date.now()}]`;
+                                    setChatPrefillQuestion(uniqueQuestion);
+                                    console.log(`[FieldHelp] Chat prefill question set successfully`);
+                                  } catch (error) {
+                                    console.error(`[FieldHelp] Error setting chat question:`, error);
+                                    setChatHelpError(field.id);
+                                  } finally {
+                                    // Clear loading after brief delay to ensure state propagates
+                                    setTimeout(() => {
+                                      setChatHelpLoading(null);
+                                      console.log(`[FieldHelp] Button re-enabled for field: ${field.id}`);
+                                    }, 500);
+                                  }
                                 }}
-                                className="mt-2 text-sm text-blue-600 hover:text-blue-800 flex items-center gap-1"
+                                disabled={chatHelpLoading === field.id}
+                                className={`mt-2 text-sm flex items-center gap-1 ${
+                                  chatHelpLoading === field.id
+                                    ? 'text-gray-400 cursor-not-allowed'
+                                    : 'text-blue-600 hover:text-blue-800'
+                                }`}
                               >
-                                💬 Chat-Hilfe für dieses Feld
+                                {chatHelpLoading === field.id ? '⏳' : '💬'} Chat-Hilfe für dieses Feld
                               </button>
+                              
+                              {chatHelpError === field.id && (
+                                <p className="mt-1 text-xs text-red-600">
+                                  ❌ Fehler beim Laden der Chat-Hilfe. Bitte erneut versuchen.
+                                </p>
+                              )}
 
                               {/* Optional: Auto-Vorschlag nur für erstes leeres Feld */}
                               {showSuggestion && (

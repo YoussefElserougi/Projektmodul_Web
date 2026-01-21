@@ -9,6 +9,7 @@ import { ChatMessage as ChatMessageType } from "@/types/chat";
 import ChatMessage from "./ChatMessage";
 import ChatInput from "./ChatInput";
 import LoadingDots from "./LoadingDots";
+import { N8N_ENDPOINTS } from "@/lib/config";
 
 // Session-ID Generator
 function generateSessionId(): string {
@@ -147,8 +148,8 @@ export default function ChatWindow() {
     setIsLoading(true);
 
     try {
-      // API aufrufen
-      const response = await fetch("/api/chat", {
+      // Direkt an n8n senden (Static Export)
+      const response = await fetch(N8N_ENDPOINTS.CHAT, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -201,7 +202,8 @@ export default function ChatWindow() {
   const getStatusBadge = () => {
     const badges: Record<string, { text: string; color: string }> = {
       open: { text: "In Bearbeitung", color: "bg-blue-100 text-blue-800" },
-      waiting_for_approval: { text: "Warte auf Bestätigung", color: "bg-yellow-100 text-yellow-800" },
+      editing: { text: "In Bearbeitung", color: "bg-blue-100 text-blue-800" },
+      submitted_request: { text: "Anfrage eingereicht", color: "bg-green-100 text-green-800" },
       confirmed: { text: "Abgeschlossen", color: "bg-green-100 text-green-800" },
       max_rounds_reached: { text: "Persönliche Beratung empfohlen", color: "bg-orange-100 text-orange-800" },
     };

@@ -7,7 +7,7 @@ import React, { useState, useRef, useEffect } from "react";
 import ChatMessage from "./ChatMessage";
 import ChatInput from "./ChatInput";
 import LoadingDots from "./LoadingDots";
-import { sendToN8n } from "@/lib/n8n";
+import { N8N_ENDPOINTS } from "@/lib/config";
 import type { ChatMessage as ChatMessageType } from "@/types/chat";
 
 interface ChatAssistantProps {
@@ -45,20 +45,21 @@ export default function ChatAssistant({
     console.log(`[ChatAssistant] Using session_id: ${sessionId}`);
     console.log(`[ChatAssistant] Using email: ${email}`);
 
-    // Welcome Message
+    // Welcome Message - strukturiert ohne Markdown
     const welcomeMessage: ChatMessageType = {
       id: "welcome",
-      role: "assistant",
-      content: `👋 Hallo! Ich bin dein Change-Assistent. Ich helfe dir beim Ausfüllen des Formulars.
-
-**Ich kann:**
-• Beispiele und Tipps für einzelne Felder geben
-• Deine Eingaben auf Vollständigkeit prüfen
-• Fragen zum Change-Prozess beantworten
-
-**Projektklasse:** ${formContext?.projectClass || "Unbekannt"}
-
-Wie kann ich dir helfen?`,
+      role: "system",
+      content: "", // Fallback für alte Systeme
+      systemContent: {
+        title: "Hallo! Ich bin dein Change-Assistent.",
+        description: "Ich helfe dir beim Ausfüllen des Formulars. Frag mich einfach, wenn du Unterstützung brauchst!",
+        items: [
+          "Beispiele und Tipps für einzelne Felder geben",
+          "Deine Eingaben auf Vollständigkeit prüfen",
+          "Fragen zum Change-Prozess beantworten",
+        ],
+        footer: `Projektklasse: ${formContext?.projectClass || "Unbekannt"}`,
+      },
       timestamp: new Date(),
     };
     setMessages([welcomeMessage]);
@@ -67,9 +68,13 @@ Wie kann ich dir helfen?`,
   // Prefill für Hilfe-Fragen - mit AUTO_SEND Support
   useEffect(() => {
     if (prefillQuestion) {
+      console.log('[ChatAssistant] New prefillQuestion received:', prefillQuestion);
       // Check für AUTO_SEND: Prefix
       if (prefillQuestion.startsWith("AUTO_SEND:")) {
-        const actualQuestion = prefillQuestion.replace("AUTO_SEND:", "");
+        let actualQuestion = prefillQuestion.replace("AUTO_SEND:", "");
+        // Remove timestamp marker [1234567890] if present (used for uniqueness)
+        actualQuestion = actualQuestion.replace(/\s*\[\d+\]$/, '');
+        console.log('[ChatAssistant] AUTO_SEND detected, opening chat and sending:', actualQuestion);
         setIsOpen(true); // Öffne Widget automatisch
         // Sende Nachricht automatisch nach kurzem Delay (für UX)
         setTimeout(() => {
@@ -77,6 +82,7 @@ Wie kann ich dir helfen?`,
         }, 300);
       } else {
         // Normale Vorbefüllung (User muss selbst senden)
+        console.log('[ChatAssistant] Normal prefill, opening chat with prefilled text');
         setIsOpen(true); // Chat öffnen
         setPrefillText(prefillQuestion); // Frage vorbefüllen
       }
@@ -124,8 +130,8 @@ ${content}
         `.trim();
       }
 
-      // Sende an n8n via API-Route (umgeht CORS)
-      const response = await fetch("/api/n8n", {
+      // Direkt an n8n senden (Static Export)
+      const response = await fetch(N8N_ENDPOINTS.CHAT, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

@@ -3,15 +3,22 @@
 
 export interface ChatMessage {
   id: string;
-  role: "user" | "assistant";
+  role: "user" | "assistant" | "system";
   content: string;
   timestamp: Date;
+  // Optional: Structured content for system messages
+  systemContent?: {
+    title?: string;
+    description?: string;
+    items?: string[];
+    footer?: string;
+  };
 }
 
 export interface ChatSession {
   sessionId: string;
   email: string;
-  status: "open" | "waiting_for_approval" | "confirmed" | "max_rounds_reached";
+  status: "open" | "editing" | "confirmed" | "max_rounds_reached" | "submitted_request";
   messages: ChatMessage[];
 }
 
@@ -82,7 +89,7 @@ export interface LoadSessionPayload {
 export interface SessionData {
   session_id: string;
   requester_email: string;
-  status: "editing" | "open" | "waiting_for_approval" | "confirmed" | "max_rounds_reached";
+  status: "editing" | "open" | "confirmed" | "max_rounds_reached" | "submitted_request";
   answers: FormData;
   metadata?: Record<string, any>;
   project_classification?: Record<string, any>;

@@ -1,0 +1,324 @@
+{
+  "nodes": [
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.emailReadImap",
+      "typeVersion": 2.1,
+      "position": [
+        112,
+        304
+      ],
+      "id": "69313465-4f20-49d5-be77-1fc903e2e4a2",
+      "name": "Email Trigger (IMAP)",
+      "credentials": {
+        "imap": {
+          "id": "jrs0ISaXDOuW4ssa",
+          "name": "IMAP account (Liveley)"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Input: E-Mail-Item vom IMAP-Trigger\nreturn $input.all().map(item => {\n  const json = item.json;\n  const subject = json.subject || \"\";\n  const bodyText = (json.textPlain || \"\").trim();\n  const fromRaw = json.from || \"\";\n  const messageId = (json.metadata && json.metadata[\"message-id\"]) || json.messageId || \"\";\n\n  // E-Mail-Adresse aus dem From-Header ziehen\n  const match = fromRaw.match(/<([^>]+)>/);\n  const fromEmail = match ? match[1].toLowerCase().trim() : fromRaw.toLowerCase().trim();\n  const fromName = match ? fromRaw.replace(match[0], \"\").trim() : \"\";\n\n  return {\n    json: {\n      subject,\n      bodyText,\n      fromRaw,\n      fromEmail,\n      fromName,\n      messageId,\n    },\n  };\n});"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        336,
+        304
+      ],
+      "id": "bd779bd8-e1cf-4a82-8f5b-503de5d5aa26",
+      "name": "Normalize Email"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "not-from-system",
+              "leftValue": "={{ $json.fromEmail }}",
+              "rightValue": "liveley.workflows@gmail.com",
+              "operator": {
+                "type": "string",
+                "operation": "notEquals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        560,
+        304
+      ],
+      "id": "5fc85d60-afc7-4503-8f0a-3b66f2a00bd7",
+      "name": "IF: Not From System"
+    },
+    {
+      "parameters": {
+        "jsCode": "const email = $json;\n\nfunction generateSessionId() {\n  return Math.random().toString(36).slice(2, 10);\n}\n\nconst requiredKeys = [\n  \"beschreibung_vorhaben\",\n  \"stichpunkte\",\n  \"ansprechpartner_name\",\n  \"zielsetzung\",\n  \"zeithorizont\",\n  \"startdatum\",\n  \"dauer_heisse_phasen\",\n  \"beitrag_konzernstrategie\",\n  \"strategische_ziele\",\n  \"was_passiert_wenn_nicht_erfolgreich\",\n  \"betroffene_bereiche_personen\",\n  \"anzahl_mitarbeitende_fuehrungskraefte\",\n  \"erwartungen_change_begleitung\",\n  \"changebedarf_pag\",\n  \"ziel_change_begleitung_von\",\n  \"ziel_change_begleitung_zu\",\n  \"erfolg_verhindern\",\n  \"erfolg_beitragen\",\n  \"sonstiges\",\n  \"vereinbarungen\",\n];\n\nconst session_id = generateSessionId();\n\n// kleine Robustheit: falls email.fromEmail mal undefined wäre\nconst safeFromEmail = email.fromEmail || \"\";\nconst requesterName =\n  email.fromName || safeFromEmail.split(\"@\")[0] || \"Unbekannt\";\n\nconst session = {\n  session_id: session_id,\n  requester_email: safeFromEmail,\n  requester_name: requesterName,\n  status: \"open\",\n  round_counter: 0,\n  max_rounds: 50,\n  // wenn du hier lieber einen String brauchst, kannst du das unten umstellen\n  required_keys: requiredKeys,\n  answers: {},\n  metadata: {\n    first_message: email.bodyText,\n    subject: email.subject,\n    fromRaw: email.fromRaw,\n    messageId: email.messageId,\n    first_message_date: new Date().toISOString(),\n    source: \"email\",\n  },\n  last_question: null,\n  missing_fields: requiredKeys,\n};\n\nreturn { json: session };"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        816,
+        304
+      ],
+      "id": "dbdc7e65-64f4-4179-8c4b-d5a406422d87",
+      "name": "Init Session from Email"
+    },
+    {
+      "parameters": {
+        "dataTableId": {
+          "__rl": true,
+          "value": "JUREjsduC6ISYo6f",
+          "mode": "list",
+          "cachedResultName": "agent_sessions_swm",
+          "cachedResultUrl": "/projects/u4AB9CJNbwvqj8lM/datatables/JUREjsduC6ISYo6f"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "status": "={{ $json.status }}",
+            "session_id": "={{ $json.session_id }}",
+            "requester_email": "={{ $json.requester_email }}",
+            "round_counter": "={{ $json.round_counter }}",
+            "max_rounds": "={{ $json.max_rounds }}",
+            "answers": "={{ JSON.stringify($json.answers || {}) }}",
+            "required_keys": "={{ JSON.stringify($json.required_keys || []) }}",
+            "metadata": "={{ JSON.stringify($json.metadata || {}) }}",
+            "last_question": "={{$json.last_question || \"\"}}",
+            "missing_fields": "={{ JSON.stringify($json.missing_fields || []) }}",
+            "project_classification": "={{ JSON.stringify($json.project_classification || {}) }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "session_id",
+              "displayName": "session_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "requester_email",
+              "displayName": "requester_email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "status",
+              "displayName": "status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "required_keys",
+              "displayName": "required_keys",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "answers",
+              "displayName": "answers",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "metadata",
+              "displayName": "metadata",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "last_question",
+              "displayName": "last_question",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "round_counter",
+              "displayName": "round_counter",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "max_rounds",
+              "displayName": "max_rounds",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "missing_fields",
+              "displayName": "missing_fields",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1,
+      "position": [
+        1040,
+        304
+      ],
+      "id": "e0f6ef30-fb1a-45da-8033-bb0989de7da6",
+      "name": "Data Table: Insert Session"
+    },
+    {
+      "parameters": {
+        "fromEmail": "liveley.workflows@gmail.com",
+        "toEmail": "={{ $json.requester_email }}",
+        "subject": "=Re: {{ $('Init Session from Email').item.json.metadata?.subject || 'Change-Anfrage' }} - Dein Change-Anfrage Portal",
+        "html": "=<!DOCTYPE html>\n<html>\n<head>\n  <style>\n    body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }\n    .container { max-width: 600px; margin: 0 auto; padding: 20px; }\n    .header { background-color: #0066cc; color: white; padding: 20px; text-align: center; border-radius: 8px 8px 0 0; }\n    .content { background-color: #f9f9f9; padding: 20px; border-radius: 0 0 8px 8px; }\n    .button { display: inline-block; background-color: #0066cc; color: white !important; padding: 15px 30px; text-decoration: none; border-radius: 5px; margin: 20px 0; font-weight: bold; }\n    .button:hover { background-color: #0052a3; }\n    .footer { margin-top: 20px; font-size: 12px; color: #666; }\n  </style>\n</head>\n<body>\n  <div class=\"container\">\n    <div class=\"header\">\n      <h1>🔄 Change-Anfrage Portal</h1>\n      <p>Stadtwerke München</p>\n    </div>\n    <div class=\"content\">\n      <p>Hallo {{ $json.requester_name || 'dort' }},</p>\n      \n      <p>vielen Dank für deine Anfrage! Wir haben deine E-Mail erhalten und eine neue Change-Anfrage für dich erstellt.</p>\n      \n      <p>Um alle benötigten Informationen für deinen Change-Antrag zu erfassen, nutze bitte unser interaktives Chat-Portal:</p>\n      \n      <p style=\"text-align: center;\">\n        <a href=\"http://localhost:3000/chat?session={{ $json.session_id }}\" class=\"button\">\n          📝 Zum Chat-Portal\n        </a>\n      </p>\n      \n      <p><strong>Deine Session-ID:</strong> <code>{{ $json.session_id }}</code></p>\n      \n      <p>Im Chat-Portal wirst du Schritt für Schritt durch alle Fragen geführt. Nach Abschluss erhältst du eine Zusammenfassung zur Bestätigung.</p>\n      \n      <p>Bei Fragen kannst du jederzeit auf diese E-Mail antworten.</p>\n      \n      <p>Viele Grüße,<br>Dein Change Management Team</p>\n    </div>\n    <div class=\"footer\">\n      <p>Diese E-Mail wurde automatisch generiert. Bitte antworte nicht direkt auf diese E-Mail, sondern nutze das Chat-Portal.</p>\n    </div>\n  </div>\n</body>\n</html>",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        1264,
+        304
+      ],
+      "id": "f9630283-9a9b-4e4f-9e68-e9905d53181e",
+      "name": "Send Chat Link Email",
+      "webhookId": "101e8c88-1cd2-4a7c-b072-f27c8eb8d530",
+      "credentials": {
+        "smtp": {
+          "id": "Q7rmCb8nQSdip4NA",
+          "name": "SMTP account (Liveley)"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "## 📧 EMAIL TRIGGER PATH\n**Zweck:** Verarbeitet eingehende E-Mails von Benutzern\n\n**Flow:**\n1. E-Mail empfangen (IMAP)\n2. Normalisieren (E-Mail-Adresse, Betreff, Body extrahieren)\n3. Prüfen: Nicht von System selbst\n4. Session in DB anlegen\n5. Chat-Link per E-Mail senden\n\n**Status:** ⚠️ Legacy - Wird durch Web-Form ersetzt",
+        "height": 499,
+        "width": 1451,
+        "color": 4
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "a6d2c648-e845-4a4e-8f47-95448bc016fc",
+      "name": "Email Path Info"
+    }
+  ],
+  "connections": {
+    "Email Trigger (IMAP)": {
+      "main": [
+        [
+          {
+            "node": "Normalize Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalize Email": {
+      "main": [
+        [
+          {
+            "node": "IF: Not From System",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF: Not From System": {
+      "main": [
+        [
+          {
+            "node": "Init Session from Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Init Session from Email": {
+      "main": [
+        [
+          {
+            "node": "Data Table: Insert Session",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Data Table: Insert Session": {
+      "main": [
+        [
+          {
+            "node": "Send Chat Link Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "meta": {
+    "instanceId": "242e16560be4b15ec48732e58bf97d190f82ae9479ec2d8855ef98e163c481dd"
+  }
+}

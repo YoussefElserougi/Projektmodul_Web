@@ -1,5 +1,4 @@
 {
-  "name": "SWM Change - Partner Selection & RFP Generator (FIXED)",
   "nodes": [
     {
       "parameters": {
@@ -19,8 +18,11 @@
       },
       "type": "n8n-nodes-base.webhook",
       "typeVersion": 2,
-      "position": [-1200, 0],
-      "id": "webhook-trigger",
+      "position": [
+        -336,
+        -224
+      ],
+      "id": "013f05a1-595e-4a42-80bd-6b1e1a81753e",
       "name": "Webhook Trigger",
       "webhookId": "change-partner-selection-webhook"
     },
@@ -30,8 +32,11 @@
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [-1000, 0],
-      "id": "normalize-input",
+      "position": [
+        -112,
+        -224
+      ],
+      "id": "26ce7298-43e1-43ad-9f37-788d8bdc307e",
       "name": "Normalize Input"
     },
     {
@@ -39,9 +44,10 @@
         "operation": "get",
         "dataTableId": {
           "__rl": true,
-          "value": "cQJ0PWxEInNEL92O",
+          "value": "JUREjsduC6ISYo6f",
           "mode": "list",
-          "cachedResultName": "agent_sessions"
+          "cachedResultName": "agent_sessions_swm",
+          "cachedResultUrl": "/projects/u4AB9CJNbwvqj8lM/datatables/JUREjsduC6ISYo6f"
         },
         "matchType": "allConditions",
         "filters": {
@@ -55,8 +61,11 @@
       },
       "type": "n8n-nodes-base.dataTable",
       "typeVersion": 1,
-      "position": [-800, 0],
-      "id": "get-session",
+      "position": [
+        112,
+        -224
+      ],
+      "id": "c1c86fb6-8258-41b3-90f5-14c607d2df0e",
       "name": "Get Session Data",
       "alwaysOutputData": true
     },
@@ -87,8 +96,11 @@
       },
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.2,
-      "position": [-600, 0],
-      "id": "check-session-exists",
+      "position": [
+        336,
+        -224
+      ],
+      "id": "2894501a-22b2-4b1b-b390-415e171a3f7e",
       "name": "IF: Session Exists?"
     },
     {
@@ -97,8 +109,11 @@
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [-400, -100],
-      "id": "parse-session",
+      "position": [
+        560,
+        -320
+      ],
+      "id": "c9573c71-51ec-4dfd-9963-507e334201f7",
       "name": "Parse Session Data"
     },
     {
@@ -123,8 +138,11 @@
       },
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
-      "position": [-400, 100],
-      "id": "error-response",
+      "position": [
+        560,
+        -128
+      ],
+      "id": "9b6057ad-0c69-41fd-90b6-7f1535c68f39",
       "name": "Error: Session Not Found"
     },
     {
@@ -133,8 +151,11 @@
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [-200, -100],
-      "id": "extract-project-data",
+      "position": [
+        784,
+        -320
+      ],
+      "id": "1013220d-8a5d-4be8-8501-3f74a28b4e8f",
       "name": "Extract Project Data"
     },
     {
@@ -158,13 +179,16 @@
       },
       "type": "@n8n/n8n-nodes-langchain.openAi",
       "typeVersion": 1.8,
-      "position": [0, -100],
-      "id": "generate-requirements",
+      "position": [
+        1008,
+        -320
+      ],
+      "id": "36a73efd-0e8c-4dc2-8b83-2d38126b8e18",
       "name": "AI: Generate Requirements Profile",
       "credentials": {
         "openAiApi": {
-          "id": "p8BKivVF2bBo98Lz",
-          "name": "OpenAi account Muc.dai"
+          "id": "Wjly2IEOwNXQDHwA",
+          "name": "OpenAi account"
         }
       }
     },
@@ -174,8 +198,11 @@
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [200, -100],
-      "id": "store-requirements",
+      "position": [
+        1360,
+        -320
+      ],
+      "id": "100aa9cc-7dcc-48c3-b534-63d1c818267e",
       "name": "Store Requirements"
     },
     {
@@ -199,13 +226,16 @@
       },
       "type": "@n8n/n8n-nodes-langchain.openAi",
       "typeVersion": 1.8,
-      "position": [400, -100],
-      "id": "generate-rfp",
+      "position": [
+        1584,
+        -320
+      ],
+      "id": "3fffea63-a802-4682-99f2-e3b34ef5295d",
       "name": "AI: Generate RFP Document",
       "credentials": {
         "openAiApi": {
-          "id": "p8BKivVF2bBo98Lz",
-          "name": "OpenAi account Muc.dai"
+          "id": "Wjly2IEOwNXQDHwA",
+          "name": "OpenAi account"
         }
       }
     },
@@ -215,8 +245,11 @@
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [600, -100],
-      "id": "store-rfp",
+      "position": [
+        1936,
+        -320
+      ],
+      "id": "1d275535-a130-400d-b434-3257f7a5d2be",
       "name": "Store RFP"
     },
     {
@@ -240,13 +273,16 @@
       },
       "type": "@n8n/n8n-nodes-langchain.openAi",
       "typeVersion": 1.8,
-      "position": [800, -100],
-      "id": "generate-evaluation-criteria",
+      "position": [
+        2160,
+        -320
+      ],
+      "id": "9a132d2b-7d19-4716-ab51-cdd8e59dff22",
       "name": "AI: Generate Evaluation Criteria",
       "credentials": {
         "openAiApi": {
-          "id": "p8BKivVF2bBo98Lz",
-          "name": "OpenAi account Muc.dai"
+          "id": "Wjly2IEOwNXQDHwA",
+          "name": "OpenAi account"
         }
       }
     },
@@ -256,8 +292,11 @@
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [1000, -100],
-      "id": "store-evaluation",
+      "position": [
+        2512,
+        -320
+      ],
+      "id": "c8162d21-37d5-49f4-9bd0-2e7c50225040",
       "name": "Store Evaluation"
     },
     {
@@ -281,13 +320,16 @@
       },
       "type": "@n8n/n8n-nodes-langchain.openAi",
       "typeVersion": 1.8,
-      "position": [1200, -100],
-      "id": "generate-process-guide",
+      "position": [
+        2736,
+        -320
+      ],
+      "id": "0d572825-a844-45be-a846-6dc279171675",
       "name": "AI: Generate Process Guide",
       "credentials": {
         "openAiApi": {
-          "id": "p8BKivVF2bBo98Lz",
-          "name": "OpenAi account Muc.dai"
+          "id": "Wjly2IEOwNXQDHwA",
+          "name": "OpenAi account"
         }
       }
     },
@@ -297,8 +339,11 @@
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [1400, -100],
-      "id": "create-final-document",
+      "position": [
+        3088,
+        -320
+      ],
+      "id": "7c4b354e-eddd-4a7c-9d33-642a3c803679",
       "name": "Create Final Document"
     },
     {
@@ -309,8 +354,11 @@
       },
       "type": "n8n-nodes-base.respondToWebhook",
       "typeVersion": 1.1,
-      "position": [1600, -100],
-      "id": "success-response",
+      "position": [
+        3312,
+        -320
+      ],
+      "id": "50878041-23b8-4066-aefd-fac4b6d47917",
       "name": "Success Response"
     },
     {
@@ -323,8 +371,11 @@
       },
       "type": "n8n-nodes-base.respondToWebhook",
       "typeVersion": 1.1,
-      "position": [-200, 100],
-      "id": "error-response-webhook",
+      "position": [
+        784,
+        -128
+      ],
+      "id": "2841f8aa-7586-445f-9df9-217ffec72277",
       "name": "Error Response"
     }
   ],
@@ -503,12 +554,8 @@
     }
   },
   "pinData": {},
-  "settings": {
-    "executionOrder": "v1"
-  },
-  "staticData": null,
-  "tags": [],
-  "triggerCount": 1,
-  "updatedAt": "2025-12-17T00:00:00.000Z",
-  "versionId": "2"
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "242e16560be4b15ec48732e58bf97d190f82ae9479ec2d8855ef98e163c481dd"
+  }
 }

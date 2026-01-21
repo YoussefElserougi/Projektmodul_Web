@@ -171,25 +171,31 @@ export async function sendFormToN8n({
     
     // Metadaten
     projektklasse: projectClass,
-    klassifizierung: JSON.stringify(classification),
   };
 
-  // Baue message mit allen Daten (für LLM-Kontext)
-  const message = `
-Change-Anfrage (Projektklasse: ${projectClass.toUpperCase()})
-
-=== FORMULAR-DATEN ===
-${Object.entries(mappedData).map(([key, value]) => `${key}: ${value || "(leer)"}`).join("\n")}
-  `.trim();
-
-  // Sende an n8n mit erweitertem Payload
-  const payload = {
+  // Classification nur hinzufügen wenn vorhanden (nicht als {})
+  let classificationToSend = classification;
+  if (typeof classification === 'string' && classification.trim() !== '{}' && classification.trim() !== '') {
+    try {
+      classificationToSend = JSON.parse(classification);
+    } catch (e) {
+      console.warn('[sendFormToN8n] Could not parse classification string:', e);
+    }
+  }
+  
+  // Sende an n8n mit erweitertem Payload  
+  const payload: any = {
     session_id,
     email,
-    message,
-    formData: mappedData, // Strukturierte Daten für direkten Zugriff
-    source: "form", // Marker für n8n
+    source: "form_submit", // Wichtig: form_submit für Switch-Node in n8n!
+    formData: mappedData,
+    projectClass: projectClass,
   };
+  
+  // Nur classification hinzufügen wenn sie existiert und nicht leer ist
+  if (classificationToSend && typeof classificationToSend === 'object' && Object.keys(classificationToSend).length > 0) {
+    payload.classification = classificationToSend;
+  }
 
   console.log(`[n8n] Sending form data via API route`);
   console.log(`[n8n] Form payload:`, JSON.stringify(payload, null, 2));

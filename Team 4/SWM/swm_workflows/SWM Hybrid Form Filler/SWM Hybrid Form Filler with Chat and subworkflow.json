@@ -1,0 +1,1463 @@
+{
+  "nodes": [
+    {
+      "parameters": {
+        "jsCode": "// Webhook Input normalisieren - ROBUST VERSION (GET + POST)\nconst rawInput = $input.first().json;\n\n// ---------- GET vs POST Detection ----------\n// Bei GET-Requests kommen die Daten als query-Parameter\nconst isGetRequest = rawInput.query != null && Object.keys(rawInput.query || {}).length > 0;\nconst queryParams = rawInput.query || {};\n\nconsole.log('[Normalize Webhook] HTTP Method detected:', isGetRequest ? 'GET' : 'POST');\nconsole.log('[Normalize Webhook] Query params:', JSON.stringify(queryParams));\n\n// ---------- Hilfsfunktion: robustes Unwrapping ----------\nfunction unwrapPayload(input) {\n  // Falls input null/undefined\n  if (input == null) return {};\n  \n  // Falls Array: erstes Element nehmen\n  if (Array.isArray(input)) {\n    return unwrapPayload(input[0]);\n  }\n  \n  // Falls String: könnte JSON sein\n  if (typeof input === 'string') {\n    try {\n      return unwrapPayload(JSON.parse(input));\n    } catch (e) {\n      return {};\n    }\n  }\n  \n  // Falls Objekt mit body-Wrapper\n  if (typeof input === 'object' && input.body != null) {\n    return unwrapPayload(input.body);\n  }\n  \n  return input;\n}\n\n// Bei GET: Query-Parameter direkt nutzen, bei POST: Body unwrappen\nconst data = isGetRequest ? queryParams : unwrapPayload(rawInput);\n\n// Log für Debugging\nconsole.log('[Normalize Webhook] Raw input type:', typeof rawInput);\nconsole.log('[Normalize Webhook] Unwrapped data:', JSON.stringify(data, null, 2));\n\n// field_update robust extrahieren (könnte auch stringified sein)\nlet fieldUpdate = data.field_update || null;\nif (typeof fieldUpdate === 'string') {\n  try { fieldUpdate = JSON.parse(fieldUpdate); } catch (e) { fieldUpdate = null; }\n}\n\n// classification robust extrahieren\nlet classification = data.classification || null;\nif (typeof classification === 'string') {\n  try { classification = JSON.parse(classification); } catch (e) { classification = null; }\n}\n\nconsole.log('[Normalize Webhook] field_update:', JSON.stringify(fieldUpdate));\nconsole.log('[Normalize Webhook] classification:', JSON.stringify(classification));\nconsole.log('[Normalize Webhook] Final source:', data.source || 'chat');\n\nreturn {\n  json: {\n    session_id: data.session_id || \"\",\n    message: data.message || \"\",\n    email: data.email || \"anonymous@chat.local\",\n    bodyText: data.message || \"\",\n    fromEmail: data.email || \"anonymous@chat.local\",\n    subject: \"Chat Request\",\n    source: data.source || \"chat\",\n    formData: data.formData || null,\n    projectClass: data.projectClass || null,\n    classification: classification,\n    field_update: fieldUpdate,\n  }\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1024,
+        656
+      ],
+      "id": "f9132a8f-c91d-4fa0-a605-2435064f08de",
+      "name": "Normalize Webhook Input"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Process complete form submission\nconst input = $input.first().json;\n\nconst requiredKeys = [\n  \"beschreibung_vorhaben\",\n  \"stichpunkte\",\n  \"ansprechpartner_name\",\n  \"zielsetzung\",\n  \"zeithorizont\",\n  \"startdatum\",\n  \"dauer_heisse_phasen\",\n  \"beitrag_konzernstrategie\",\n  \"strategische_ziele\",\n  \"was_passiert_wenn_nicht_erfolgreich\",\n  \"betroffene_bereiche_personen\",\n  \"anzahl_mitarbeitende_fuehrungskraefte\",\n  \"erwartungen_change_begleitung\",\n  \"changebedarf_pag\",\n  \"ziel_change_begleitung_von\",\n  \"ziel_change_begleitung_zu\",\n  \"erfolg_verhindern\",\n  \"erfolg_beitragen\",\n  \"sonstiges\",\n  \"vereinbarungen\"\n];\n\nconst formData = input.formData || {};\nconst updatedAnswers = {\n  ...formData,\n  projektklasse: input.projectClass,\n  klassifizierung: JSON.stringify(input.classification || {}),\n};\n\nreturn {\n  json: {\n    session_id: input.session_id,\n    requester_email: input.email,\n    status: \"submitted_request\",\n    round_counter: 0,\n    max_rounds: 50,\n    required_keys: JSON.stringify(requiredKeys),\n    answers: JSON.stringify(updatedAnswers),\n    metadata: JSON.stringify({\n      source: \"form\",\n      submitted_at: new Date().toISOString(),\n      projectClass: input.projectClass,\n      classification: input.project_classification || {}\n    }),\n    last_question: null,\n    missing_fields: JSON.stringify([]),\n    project_classification: JSON.stringify(input.classification || {}),\n    email_intent: true,\n    reply_text: \"✅ Deine Change-Anfrage wurde erfolgreich eingereicht und wird bearbeitet!\",\n  }\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3040,
+        496
+      ],
+      "id": "c09dfd93-48ec-4b30-a6d1-d583e13ba74e",
+      "name": "Process Form Submit"
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "dataTableId": {
+          "__rl": true,
+          "value": "JUREjsduC6ISYo6f",
+          "mode": "list",
+          "cachedResultName": "agent_sessions_swm",
+          "cachedResultUrl": "/projects/u4AB9CJNbwvqj8lM/datatables/JUREjsduC6ISYo6f"
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "session_id",
+              "keyValue": "={{$json.session_id}}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1,
+      "position": [
+        2048,
+        400
+      ],
+      "id": "2e070c8e-85a3-46a7-94ef-acd3fcbdfa29",
+      "name": "Get Session (Autosave)",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "jsCode": "// Process field update for auto-save\n\n// Session-Datensatz aus DB holen\nconst getData = $('Get Session (Autosave)').first();\nconst row = getData ? getData.json : null;\n\n// Request-Input vom Normalize Webhook Input Node (bereits normalisiert!)\nconst normalizedInput = $('Normalize Webhook Input').first().json || {};\n\nconsole.log('[Process Field Update] Normalized input:', JSON.stringify(normalizedInput, null, 2));\nconsole.log('[Process Field Update] Row from DB:', row ? JSON.stringify(row, null, 2) : 'null');\n\nif (!row || !row.id) {\n  // Session nicht gefunden – stilles Fail\n  return [\n    {\n      json: {\n        success: false,\n        message: 'Session not found for autosave',\n      },\n    },\n  ];\n}\n\n// ---------- Required Keys basierend auf Projektklasse ----------\n// ALLE möglichen Felder (ohne ziel_change_begleitung_zu - ist jetzt Teil von _von)\nconst allRequiredKeys = [\n  \"beschreibung_vorhaben\",\n  \"stichpunkte\",\n  \"ansprechpartner_name\",\n  \"zielsetzung\",\n  \"zeithorizont\",\n  \"startdatum\",\n  \"dauer_heisse_phasen\",\n  \"beitrag_konzernstrategie\",\n  \"strategische_ziele\",\n  \"was_passiert_wenn_nicht_erfolgreich\",\n  \"betroffene_bereiche_personen\",\n  \"anzahl_mitarbeitende_fuehrungskraefte\",\n  \"erwartungen_change_begleitung\",\n  \"changebedarf_pag\",\n  \"ziel_change_begleitung_von\",\n  \"erfolg_verhindern\",\n  \"erfolg_beitragen\",\n  \"sonstiges\",\n  \"vereinbarungen\"\n];\n\n// Projektklassen-spezifische Felder (welche bei mini NICHT erforderlich sind)\nconst strategicOnlyKeys = [\n  \"dauer_heisse_phasen\",\n  \"beitrag_konzernstrategie\",\n  \"strategische_ziele\"\n];\n\n// ---------- Hilfsfunktion: robustes JSON-Parsing ----------\nfunction safeParseJson(value, fallback = {}) {\n  if (value == null || value === '') return fallback;\n\n  try {\n    let result = value;\n\n    // Wenn es ein String ist: einmal parsen\n    if (typeof result === 'string') {\n      result = JSON.parse(result);\n\n      // Manche alten Daten sind doppelt serialisiert → noch einmal versuchen\n      if (typeof result === 'string') {\n        result = JSON.parse(result);\n      }\n    }\n\n    // Am Ende brauchen wir ein Objekt\n    if (typeof result === 'object' && result !== null) {\n      return result;\n    }\n  } catch (e) {\n    console.log('[Autosave] JSON parse error:', e, 'value snippet:', String(value).slice(0, 200));\n  }\n\n  return fallback;\n}\n\n// ---------- Bestehende answers & metadata als Objekte holen ----------\nlet answers = safeParseJson(row.answers, {});\nconsole.log('[Process Field Update] Parsed existing answers:', answers);\n\nlet metadata = safeParseJson(row.metadata, {});\nconsole.log('[Process Field Update] Parsed existing metadata:', metadata);\n\n// ---------- field_update aus normalizedInput mergen ----------\nconst fieldUpdate = normalizedInput.field_update || {};\nconsole.log('[Process Field Update] Field update to merge:', JSON.stringify(fieldUpdate));\n\nconst updatedAnswers = {\n  ...answers,\n  ...fieldUpdate, // überschreibt nur die gerade autosaveten Felder\n};\n\nconsole.log('[Process Field Update] Updated answers after merge:', updatedAnswers);\n\n// ---------- Projektklasse ermitteln ----------\nconst classification = normalizedInput.classification;\nlet projectClass = normalizedInput.projectClass || updatedAnswers.projektklasse || metadata.projectClass || 'standard';\nconsole.log('[Process Field Update] Project class:', projectClass);\n\n// ---------- Required Keys für diese Projektklasse bestimmen ----------\nlet requiredKeys;\nif (projectClass === 'mini') {\n  // Mini: Strategische Felder ausblenden\n  requiredKeys = allRequiredKeys.filter(key => !strategicOnlyKeys.includes(key));\n  console.log('[Process Field Update] Using MINI required keys (without strategic fields)');\n} else {\n  // Standard oder Strategic: Alle Felder\n  requiredKeys = allRequiredKeys;\n  console.log('[Process Field Update] Using FULL required keys');\n}\nconsole.log('[Process Field Update] Required keys for project class:', requiredKeys);\n\n// ---------- missing_fields berechnen ----------\n// Entferne alle Keys die einen nicht-leeren Wert haben\nconst missingFields = requiredKeys.filter(key => {\n  const value = updatedAnswers[key];\n  return !value || (typeof value === 'string' && value.trim() === '');\n});\nconsole.log('[Process Field Update] Calculated missing_fields:', missingFields);\n\n// ---------- optionale Klassifizierung ----------\nif (classification && typeof classification === 'object' && Object.keys(classification).length > 0) {\n  metadata.classification = classification;\n  metadata.projectClass = normalizedInput.projectClass || classification.projectClass || 'unknown';\n}\nmetadata.last_autosave = new Date().toISOString();\n\n// ---------- Strings für deine DB vorbereiten ----------\n// Dein Datatable speichert sowieso Strings → wir geben hier bewusst JSON-Strings zurück\nconst answersString = JSON.stringify(updatedAnswers);\nconst metadataString = JSON.stringify(metadata);\nconst missingFieldsString = JSON.stringify(missingFields);\n\n// project_classification genauso behandeln:\nlet projectClassificationString;\nif (classification) {\n  projectClassificationString = JSON.stringify(classification);\n} else {\n  // vorhandenen Wert übernehmen oder leeres Objekt\n  if (row.project_classification == null || row.project_classification === '') {\n    projectClassificationString = '{}';\n  } else {\n    // falls der schon doppelt serialisiert ist, einmal „entwirren\"\n    const parsedPC = safeParseJson(row.project_classification, {});\n    projectClassificationString = JSON.stringify(parsedPC);\n  }\n}\n\n// ---------- Rückgabe (als ein Item) ----------\nreturn [\n  {\n    json: {\n      session_id: row.session_id,\n      requester_email: row.requester_email,\n      status: row.status || 'editing',\n      round_counter: parseInt(row.round_counter, 10) || 0,\n      max_rounds: parseInt(row.max_rounds, 10) || 50,\n\n      // jetzt als saubere JSON-Strings, wie in deinem Beispiel\n      answers: answersString,\n      metadata: metadataString,\n      project_classification: projectClassificationString,\n      missing_fields: missingFieldsString,\n\n      reply_text: 'Auto-saved',\n      success: true,\n    },\n  },\n];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2272,
+        400
+      ],
+      "id": "e410fae7-1a36-4fde-be60-cb786a5e3d98",
+      "name": "Process Field Update"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "dataTableId": {
+          "__rl": true,
+          "value": "JUREjsduC6ISYo6f",
+          "mode": "list",
+          "cachedResultName": "agent_sessions_swm",
+          "cachedResultUrl": "/projects/u4AB9CJNbwvqj8lM/datatables/JUREjsduC6ISYo6f"
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "session_id",
+              "keyValue": "={{$json.session_id}}"
+            }
+          ]
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "answers": "={{ $json.answers }}",
+            "metadata": "={{ $json.metadata }}",
+            "status": "={{ $json.status || 'editing' }}",
+            "project_classification": "={{ $json.project_classification || '{}' }}",
+            "missing_fields": "={{ $json.missing_fields || '[]' }}",
+            "round_counter": "={{ $json.round_counter || 0 }}",
+            "max_rounds": "={{ $json.max_rounds || 50 }}",
+            "session_id": "={{$json.session_id}}",
+            "requester_email": "={{$json.requester_email}}",
+            "required_keys": "={{ $('Get Session (Autosave)').item.json.required_keys }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "session_id",
+              "displayName": "session_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "requester_email",
+              "displayName": "requester_email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "status",
+              "displayName": "status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "required_keys",
+              "displayName": "required_keys",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "answers",
+              "displayName": "answers",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "metadata",
+              "displayName": "metadata",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "last_question",
+              "displayName": "last_question",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "round_counter",
+              "displayName": "round_counter",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "max_rounds",
+              "displayName": "max_rounds",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "missing_fields",
+              "displayName": "missing_fields",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "project_classification",
+              "displayName": "project_classification",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1,
+      "position": [
+        2496,
+        400
+      ],
+      "id": "43bd31b4-af76-485f-af0b-17088700e51a",
+      "name": "Update Session (Autosave)"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n  \"reply_text\": \"{{ $('Process Field Update').item.json.reply_text }}\",\n  \"status\": \"ok\",\n  \"session_id\": \"{{ $json.session_id }}\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        2720,
+        400
+      ],
+      "id": "a52850ce-da3b-4eb1-9a84-b6b159366171",
+      "name": "Respond: Autosave OK"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "session-exists-form",
+              "leftValue": "={{$json.id}}",
+              "rightValue": "",
+              "operator": {
+                "type": "number",
+                "operation": "exists",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        3488,
+        496
+      ],
+      "id": "9da988a4-e3da-470b-b295-9b646528e392",
+      "name": "IF: Session Exists (Form)?"
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "dataTableId": {
+          "__rl": true,
+          "value": "JUREjsduC6ISYo6f",
+          "mode": "list",
+          "cachedResultName": "agent_sessions_swm",
+          "cachedResultUrl": "/projects/u4AB9CJNbwvqj8lM/datatables/JUREjsduC6ISYo6f"
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "session_id",
+              "keyValue": "={{$json.session_id}}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1,
+      "position": [
+        3264,
+        496
+      ],
+      "id": "cb5b2491-c73a-4e6c-98df-f1f4618ce254",
+      "name": "Get Session (Form)",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "dataTableId": {
+          "__rl": true,
+          "value": "JUREjsduC6ISYo6f",
+          "mode": "list",
+          "cachedResultName": "agent_sessions_swm",
+          "cachedResultUrl": "/projects/u4AB9CJNbwvqj8lM/datatables/JUREjsduC6ISYo6f"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "status": "={{ $json.status }}",
+            "session_id": "={{ $json.session_id }}",
+            "requester_email": "={{ $json.requester_email }}",
+            "round_counter": "={{ $json.round_counter }}",
+            "max_rounds": "={{ $json.max_rounds }}",
+            "answers": "={{ JSON.stringify($json.answers || {}) }}",
+            "required_keys": "={{ JSON.stringify($json.required_keys || []) }}",
+            "metadata": "={{ JSON.stringify($json.metadata || {}) }}",
+            "last_question": "={{$json.last_question || \"\"}}",
+            "missing_fields": "={{ JSON.stringify($json.missing_fields || []) }}",
+            "project_classification": "={{ JSON.stringify($json.project_classification || {}) }}"
+          },
+          "matchingColumns": [],
+          "schema": []
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1,
+      "position": [
+        3744,
+        592
+      ],
+      "id": "d87cf185-238d-4f18-b316-ac7949c57c57",
+      "name": "Insert New Session (Form)"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "dataTableId": {
+          "__rl": true,
+          "value": "JUREjsduC6ISYo6f",
+          "mode": "list",
+          "cachedResultName": "agent_sessions_swm",
+          "cachedResultUrl": "/projects/u4AB9CJNbwvqj8lM/datatables/JUREjsduC6ISYo6f"
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "session_id",
+              "keyValue": "={{$json.session_id}}"
+            }
+          ]
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "status": "={{ $('Process Form Submit').item.json.status }}",
+            "answers": "={{ $('Process Form Submit').item.json.answers }}",
+            "metadata": "={{ $('Process Form Submit').item.json.metadata }}",
+            "missing_fields": "={{ $('Process Form Submit').item.json.missing_fields }}",
+            "round_counter": "={{ $json.round_counter || 0 }}",
+            "max_rounds": "={{ $json.max_rounds || 50 }}",
+            "required_keys": "={{ $('Process Form Submit').item.json.required_keys }}",
+            "requester_email": "={{ $json.requester_email }}",
+            "session_id": "={{ $json.session_id }}",
+            "project_classification": "={{ $('Process Form Submit').item.json.project_classification || '{}' }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "session_id",
+              "displayName": "session_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "requester_email",
+              "displayName": "requester_email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "status",
+              "displayName": "status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "required_keys",
+              "displayName": "required_keys",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "answers",
+              "displayName": "answers",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "metadata",
+              "displayName": "metadata",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "last_question",
+              "displayName": "last_question",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "round_counter",
+              "displayName": "round_counter",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "max_rounds",
+              "displayName": "max_rounds",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "missing_fields",
+              "displayName": "missing_fields",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "project_classification",
+              "displayName": "project_classification",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1,
+      "position": [
+        3744,
+        384
+      ],
+      "id": "aab54ad6-a778-44c3-9605-3c0c1916e1be",
+      "name": "Update Existing Session (Form)"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Get session data from database (either Insert or Update node)\nconst dbData = $input.first().json;\n\n// Parse JSON strings from database\nlet answers = {};\nlet metadata = {};\n\ntry {\n  answers = typeof dbData.answers === 'string' ? JSON.parse(dbData.answers) : (dbData.answers || {});\n} catch (e) {\n  console.log('Error parsing answers:', e);\n}\n\ntry {\n  metadata = typeof dbData.metadata === 'string' ? JSON.parse(dbData.metadata) : (dbData.metadata || {});\n} catch (e) {\n  console.log('Error parsing metadata:', e);\n}\n\nreturn {\n  json: {\n    session_id: dbData.session_id,\n    requester_email: dbData.requester_email,\n    status: dbData.status,\n    answers: answers,\n    metadata: metadata,\n    confirmed_at: new Date().toISOString(),\n  }\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        4272,
+        480
+      ],
+      "id": "904f2d87-4165-444f-9131-c76f2eed4805",
+      "name": "Prepare Email Data (Form)"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify($json) }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        5072,
+        544
+      ],
+      "id": "25549077-a09a-4b8f-adc9-f4efcbcc2a52",
+      "name": "Respond: Form Submitted"
+    },
+    {
+      "parameters": {
+        "fromEmail": "liveley.workflows@gmail.com",
+        "toEmail": "={{ $json.requester_email }}",
+        "subject": "=✅ Deine Change-Anfrage wurde bestätigt",
+        "html": "=<!DOCTYPE html>\n<html>\n<head>\n  <style>\n    body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }\n    .container { max-width: 700px; margin: 0 auto; padding: 20px; }\n    .header { background-color: #4CAF50; color: white; padding: 20px; text-align: center; border-radius: 8px 8px 0 0; }\n    .content { background-color: #f9f9f9; padding: 20px; border-radius: 0 0 8px 8px; }\n    .field { margin-bottom: 15px; padding: 10px; background: white; border-radius: 4px; border-left: 4px solid #4CAF50; }\n    .field-label { font-weight: bold; color: #4CAF50; margin-bottom: 5px; }\n    .field-value { color: #333; white-space: pre-wrap; }\n    .meta { background: #e8f5e9; padding: 15px; border-radius: 4px; margin-bottom: 20px; }\n    .footer { margin-top: 20px; font-size: 12px; color: #666; text-align: center; }\n  </style>\n</head>\n<body>\n  <div class=\"container\">\n    <div class=\"header\">\n      <h1>✅ Change-Anfrage Bestätigt</h1>\n      <p>Stadtwerke München</p>\n    </div>\n    <div class=\"content\">\n      <p>Hallo,</p>\n      \n      <p>vielen Dank! Deine Change-Anfrage wurde erfolgreich an das Change Team weitergeleitet.</p>\n      \n      <div class=\"meta\">\n        <p><strong>Session-ID:</strong> {{ $json.session_id }}</p>\n        <p><strong>Eingereicht am:</strong> {{ $json.confirmed_at }}</p>\n        <p><strong>Status:</strong> <span style=\"color: green;\">✅ Bestätigt</span></p>\n      </div>\n      \n      <h2>📋 Deine vollständige Zusammenfassung</h2>\n      \n      <div class=\"field\">\n        <div class=\"field-label\">Beschreibung des Vorhabens</div>\n        <div class=\"field-value\">{{ $json.answers.beschreibung_vorhaben || 'Nicht angegeben' }}</div>\n      </div>\n      \n      <div class=\"field\">\n        <div class=\"field-label\">Thema/Titel</div>\n        <div class=\"field-value\">{{ $json.answers.stichpunkte || 'Nicht angegeben' }}</div>\n      </div>\n      \n      <div class=\"field\">\n        <div class=\"field-label\">Ansprechpartner*in</div>\n        <div class=\"field-value\">{{ $json.answers.ansprechpartner_name || 'Nicht angegeben' }}</div>\n      </div>\n      \n      <div class=\"field\">\n        <div class=\"field-label\">Zielsetzung</div>\n        <div class=\"field-value\">{{ $json.answers.zielsetzung || 'Nicht angegeben' }}</div>\n      </div>\n      \n      <div class=\"field\">\n        <div class=\"field-label\">Zeithorizont</div>\n        <div class=\"field-value\">{{ $json.answers.zeithorizont || 'Nicht angegeben' }}</div>\n      </div>\n      \n      <div class=\"field\">\n        <div class=\"field-label\">Startdatum</div>\n        <div class=\"field-value\">{{ $json.answers.startdatum || 'Nicht angegeben' }}</div>\n      </div>\n      \n      <div class=\"field\">\n        <div class=\"field-label\">Dauer / Heiße Phasen</div>\n        <div class=\"field-value\">{{ $json.answers.dauer_heisse_phasen || 'Nicht angegeben' }}</div>\n      </div>\n      \n      <div class=\"field\">\n        <div class=\"field-label\">Beitrag zur Konzernstrategie</div>\n        <div class=\"field-value\">{{ $json.answers.beitrag_konzernstrategie || 'Nicht angegeben' }}</div>\n      </div>\n      \n      <div class=\"field\">\n        <div class=\"field-label\">Strategische Ziele</div>\n        <div class=\"field-value\">{{ $json.answers.strategische_ziele || 'Nicht angegeben' }}</div>\n      </div>\n      \n      <div class=\"field\">\n        <div class=\"field-label\">Was passiert bei Misserfolg</div>\n        <div class=\"field-value\">{{ $json.answers.was_passiert_wenn_nicht_erfolgreich || 'Nicht angegeben' }}</div>\n      </div>\n      \n      <div class=\"field\">\n        <div class=\"field-label\">Betroffene Bereiche/Personen</div>\n        <div class=\"field-value\">{{ $json.answers.betroffene_bereiche_personen || 'Nicht angegeben' }}</div>\n      </div>\n      \n      <div class=\"field\">\n        <div class=\"field-label\">Anzahl MA & FK</div>\n        <div class=\"field-value\">{{ $json.answers.anzahl_mitarbeitende_fuehrungskraefte || 'Nicht angegeben' }}</div>\n      </div>\n      \n      <div class=\"field\">\n        <div class=\"field-label\">Erwartungen an Change-Begleitung</div>\n        <div class=\"field-value\">{{ $json.answers.erwartungen_change_begleitung || 'Nicht angegeben' }}</div>\n      </div>\n      \n      <div class=\"field\">\n        <div class=\"field-label\">Changebedarf</div>\n        <div class=\"field-value\">{{ $json.answers.changebedarf_pag || 'Nicht angegeben' }}</div>\n      </div>\n      \n      <div class=\"field\">\n        <div class=\"field-label\">Von (Ist-Zustand)</div>\n        <div class=\"field-value\">{{ $json.answers.ziel_change_begleitung_von || 'Nicht angegeben' }}</div>\n      </div>\n      \n      <div class=\"field\">\n        <div class=\"field-label\">Zu (Soll-Zustand)</div>\n        <div class=\"field-value\">{{ $json.answers.ziel_change_begleitung_zu || 'Nicht angegeben' }}</div>\n      </div>\n      \n      <div class=\"field\">\n        <div class=\"field-label\">Hindernisse</div>\n        <div class=\"field-value\">{{ $json.answers.erfolg_verhindern || 'Nicht angegeben' }}</div>\n      </div>\n      \n      <div class=\"field\">\n        <div class=\"field-label\">Erfolgsfaktoren</div>\n        <div class=\"field-value\">{{ $json.answers.erfolg_beitragen || 'Nicht angegeben' }}</div>\n      </div>\n      \n      <div class=\"field\">\n        <div class=\"field-label\">Sonstiges</div>\n        <div class=\"field-value\">{{ $json.answers.sonstiges || 'Nicht angegeben' }}</div>\n      </div>\n      \n      <div class=\"field\">\n        <div class=\"field-label\">Vereinbarungen</div>\n        <div class=\"field-value\">{{ $json.answers.vereinbarungen || 'Nicht angegeben' }}</div>\n      </div>\n      \n      <hr style=\"margin: 30px 0; border: none; border-top: 1px solid #ddd;\">\n      \n      <p>Das Change Team wird sich in Kürze bei dir melden.</p>\n      \n      <p>Viele Grüße,<br>Dein Change Management Team</p>\n    </div>\n    <div class=\"footer\">\n      <p>Bei Fragen kannst du dich jederzeit an das Change Team wenden.</p>\n    </div>\n  </div>\n</body>\n</html>",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        4816,
+        416
+      ],
+      "id": "8b3c112e-fef0-407a-919c-43da97c1b55a",
+      "name": "Send Confirmation to Requester",
+      "webhookId": "8588f302-71b8-43e9-8b9c-ec13ebd0df2d",
+      "credentials": {
+        "smtp": {
+          "id": "Q7rmCb8nQSdip4NA",
+          "name": "SMTP account (Liveley)"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "fromEmail": "liveley.workflows@gmail.com",
+        "toEmail": "liveley.workflows@gmail.com",
+        "subject": "=🔔 Neue Change-Anfrage von {{ $json.requester_email }}",
+        "html": "=<!DOCTYPE html>\n<html>\n<head>\n  <style>\n    body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }\n    .container { max-width: 700px; margin: 0 auto; padding: 20px; }\n    .header { background-color: #0066cc; color: white; padding: 20px; text-align: center; border-radius: 8px 8px 0 0; }\n    .content { background-color: #f9f9f9; padding: 20px; border-radius: 0 0 8px 8px; }\n    .field { margin-bottom: 15px; padding: 10px; background: white; border-radius: 4px; border-left: 4px solid #0066cc; }\n    .field-label { font-weight: bold; color: #0066cc; margin-bottom: 5px; }\n    .field-value { color: #333; }\n    .meta { background: #e8f4fc; padding: 15px; border-radius: 4px; margin-bottom: 20px; }\n  </style>\n</head>\n<body>\n  <div class=\"container\">\n    <div class=\"header\">\n      <h1>🔔 Neue Change-Anfrage</h1>\n    </div>\n    <div class=\"content\">\n      <div class=\"meta\">\n        <p><strong>Von:</strong> {{ $json.requester_email }}</p>\n        <p><strong>Session-ID:</strong> {{ $json.session_id }}</p>\n        <p><strong>Eingereicht am:</strong> {{ $json.confirmed_at }}</p>\n        <p><strong>Status:</strong> <span style=\"color: green;\">✅ Bestätigt</span></p>\n      </div>\n      \n      <h2>Change-Anfrage Details</h2>\n      \n      <div class=\"field\">\n        <div class=\"field-label\">Beschreibung des Vorhabens</div>\n        <div class=\"field-value\">{{ $json.answers.beschreibung_vorhaben || 'Nicht angegeben' }}</div>\n      </div>\n      \n      <div class=\"field\">\n        <div class=\"field-label\">Thema/Titel</div>\n        <div class=\"field-value\">{{ $json.answers.stichpunkte || 'Nicht angegeben' }}</div>\n      </div>\n      \n      <div class=\"field\">\n        <div class=\"field-label\">Ansprechpartner*in</div>\n        <div class=\"field-value\">{{ $json.answers.ansprechpartner_name || 'Nicht angegeben' }}</div>\n      </div>\n      \n      <div class=\"field\">\n        <div class=\"field-label\">Zielsetzung</div>\n        <div class=\"field-value\">{{ $json.answers.zielsetzung || 'Nicht angegeben' }}</div>\n      </div>\n      \n      <div class=\"field\">\n        <div class=\"field-label\">Zeithorizont</div>\n        <div class=\"field-value\">{{ $json.answers.zeithorizont || 'Nicht angegeben' }}</div>\n      </div>\n      \n      <div class=\"field\">\n        <div class=\"field-label\">Startdatum</div>\n        <div class=\"field-value\">{{ $json.answers.startdatum || 'Nicht angegeben' }}</div>\n      </div>\n      \n      <div class=\"field\">\n        <div class=\"field-label\">Dauer / Heiße Phasen</div>\n        <div class=\"field-value\">{{ $json.answers.dauer_heisse_phasen || 'Nicht angegeben' }}</div>\n      </div>\n      \n      <div class=\"field\">\n        <div class=\"field-label\">Beitrag zur Konzernstrategie</div>\n        <div class=\"field-value\">{{ $json.answers.beitrag_konzernstrategie || 'Nicht angegeben' }}</div>\n      </div>\n      \n      <div class=\"field\">\n        <div class=\"field-label\">Strategische Ziele</div>\n        <div class=\"field-value\">{{ $json.answers.strategische_ziele || 'Nicht angegeben' }}</div>\n      </div>\n      \n      <div class=\"field\">\n        <div class=\"field-label\">Was passiert bei Misserfolg</div>\n        <div class=\"field-value\">{{ $json.answers.was_passiert_wenn_nicht_erfolgreich || 'Nicht angegeben' }}</div>\n      </div>\n      \n      <div class=\"field\">\n        <div class=\"field-label\">Betroffene Bereiche/Personen</div>\n        <div class=\"field-value\">{{ $json.answers.betroffene_bereiche_personen || 'Nicht angegeben' }}</div>\n      </div>\n      \n      <div class=\"field\">\n        <div class=\"field-label\">Anzahl MA & FK</div>\n        <div class=\"field-value\">{{ $json.answers.anzahl_mitarbeitende_fuehrungskraefte || 'Nicht angegeben' }}</div>\n      </div>\n      \n      <div class=\"field\">\n        <div class=\"field-label\">Erwartungen an Change-Begleitung</div>\n        <div class=\"field-value\">{{ $json.answers.erwartungen_change_begleitung || 'Nicht angegeben' }}</div>\n      </div>\n      \n      <div class=\"field\">\n        <div class=\"field-label\">Changebedarf</div>\n        <div class=\"field-value\">{{ $json.answers.changebedarf_pag || 'Nicht angegeben' }}</div>\n      </div>\n      \n      <div class=\"field\">\n        <div class=\"field-label\">Von (Ist-Zustand)</div>\n        <div class=\"field-value\">{{ $json.answers.ziel_change_begleitung_von || 'Nicht angegeben' }}</div>\n      </div>\n      \n      <div class=\"field\">\n        <div class=\"field-label\">Zu (Soll-Zustand)</div>\n        <div class=\"field-value\">{{ $json.answers.ziel_change_begleitung_zu || 'Nicht angegeben' }}</div>\n      </div>\n      \n      <div class=\"field\">\n        <div class=\"field-label\">Hindernisse</div>\n        <div class=\"field-value\">{{ $json.answers.erfolg_verhindern || 'Nicht angegeben' }}</div>\n      </div>\n      \n      <div class=\"field\">\n        <div class=\"field-label\">Erfolgsfaktoren</div>\n        <div class=\"field-value\">{{ $json.answers.erfolg_beitragen || 'Nicht angegeben' }}</div>\n      </div>\n      \n      <div class=\"field\">\n        <div class=\"field-label\">Sonstiges</div>\n        <div class=\"field-value\">{{ $json.answers.sonstiges || 'Nicht angegeben' }}</div>\n      </div>\n      \n      <div class=\"field\">\n        <div class=\"field-label\">Vereinbarungen</div>\n        <div class=\"field-value\">{{ $json.answers.vereinbarungen || 'Nicht angegeben' }}</div>\n      </div>\n    </div>\n  </div>\n</body>\n</html>",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        4816,
+        672
+      ],
+      "id": "e9bd71c9-0251-47d9-9f7e-c85be6ff7d3f",
+      "name": "Send to Change Team",
+      "webhookId": "d8691d0b-613e-4f29-9146-ac3ac2d95631",
+      "credentials": {
+        "smtp": {
+          "id": "Q7rmCb8nQSdip4NA",
+          "name": "SMTP account (Liveley)"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "dataTableId": {
+          "__rl": true,
+          "value": "JUREjsduC6ISYo6f",
+          "mode": "list",
+          "cachedResultName": "agent_sessions_swm",
+          "cachedResultUrl": "/projects/u4AB9CJNbwvqj8lM/datatables/JUREjsduC6ISYo6f"
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "session_id",
+              "keyValue": "={{$json.session_id}}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1,
+      "position": [
+        1984,
+        1488
+      ],
+      "id": "e6037696-1eb9-467a-86ba-4a24fec1c294",
+      "name": "Get Session (Load)",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ (function() { const row = $json; if (!row || !row.session_id) { return { session_id: '', requester_email: '', answers: {}, project_classification: {}, status: 'not_found', missing_fields: [] }; } function safeParse(val, fallback) { if (!val || val === '' || val === 'null') return fallback !== undefined ? fallback : {}; try { let r = val; if (typeof r === 'string') { r = JSON.parse(r); if (typeof r === 'string') r = JSON.parse(r); } return r || (fallback !== undefined ? fallback : {}); } catch(e) { return fallback !== undefined ? fallback : {}; } } const answers = safeParse(row.answers, {}); const classification = safeParse(row.project_classification, {}); const missingFields = safeParse(row.missing_fields, []); return { session_id: row.session_id || '', requester_email: row.requester_email || '', answers: answers, project_classification: classification, status: row.status || 'unknown', missing_fields: Array.isArray(missingFields) ? missingFields : [] }; })() }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        2176,
+        1488
+      ],
+      "id": "2ca8e5da-d829-424f-87af-0acdfc31ffef",
+      "name": "Respond: Session Data"
+    },
+    {
+      "parameters": {
+        "content": "## 📝 FORM SUBMIT PATH\n**Zweck:** Speichert vollständiges Formular und sendet E-Mails\n\n**Flow:**\n1. Normalize Webhook Input\n2. IF: source == 'form'? → JA\n3. Process Form Submit (alle Daten + Classification)\n4. Get/Insert/Update Session in DB\n5. Prepare Email Data\n6. ✉️ Send Confirmation + Send to Change Team\n7. Respond: Form Submitted\n\n**Wichtig:**\n- Setzt `email_intent: true` → E-Mails werden gesendet\n- Speichert `project_classification`\n- Status: 'confirmed'",
+        "height": 952,
+        "width": 1098,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        3024,
+        -32
+      ],
+      "id": "1e30a9ed-860e-4759-8d7d-3ce66b97200b",
+      "name": "Form Submit Path"
+    },
+    {
+      "parameters": {
+        "content": "## 💾 AUTOSAVE PATH\n**Zweck:** Speichert einzelne Formular-Felder während der Eingabe\n\n**Flow:**\n1. Normalize Webhook Input\n2. IF: source == 'form_autosave'? → JA\n3. Get Session (Autosave)\n4. Process Field Update:\n   - Merge `field_update` in `answers`\n   - Classification speichern (falls vorhanden)\n5. Update Session (Autosave) → DB write\n6. Respond: Autosave OK\n\n**Kritisch:**\n- `field_update: {\"feldname\": \"wert\"}` wird zu `answers: {\"feldname\": \"wert\"}`\n- Kein LLM\n- Keine E-Mails\n- Status: 'editing'",
+        "height": 960,
+        "width": 1112,
+        "color": 6
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        1904,
+        -32
+      ],
+      "id": "59e8ea38-0426-4ba6-8326-fff2bfae2595",
+      "name": "Autosave Path"
+    },
+    {
+      "parameters": {
+        "content": "## 💬 CHAT / LLM PATH\n**Zweck:** Verarbeitet Chat-Nachrichten mit KI-Unterstützung\n\n**Flow:**\n1. Normalize Webhook Input\n2. IF: source == 'chat' oder `message` vorhanden? → JA\n3. Get Session from DB\n4. IF: Session exists? → JA\n5. Normalize Session Row\n6. IF: Already confirmed? → NEIN\n7. 🤖 LLM: Analyze Message\n8. Parse LLM JSON Response\n9. Apply LLM Result (setzt `email_intent: false`)\n10. Update row(s) → DB write\n11. IF: status == 'confirmed' AND email_intent == true? → NEIN (Chat!)\n12. Prepare Response\n13. Respond to Webhook\n\n**Hard Gate:** `email_intent: false` verhindert E-Mail-Versand!\n**Speichert:** `answers`, `project_classification`, `round_counter`",
+        "height": 812,
+        "width": 2848
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        2416,
+        928
+      ],
+      "id": "3b99e32e-267d-43dd-bae3-3ebf053ea8db",
+      "name": "Chat/LLM Path"
+    },
+    {
+      "parameters": {
+        "content": "## 🔍 LOAD SESSION PATH\n**Zweck:** Lädt bestehende Session-Daten für Frontend\n\n**Flow:**\n1. Normalize Webhook Input\n2. IF: source == 'load_session'? → JA\n3. Get Session (Load) from DB\n4. Respond: Session Data (JSON mit answers, classification, status)\n\n**Verwendet von:**\n- Frontend beim Seiten-Reload\n- Fortsetzung unterbrochener Formulare\n\n**Keine Änderungen an DB!**",
+        "height": 816,
+        "width": 504,
+        "color": 3
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        1904,
+        928
+      ],
+      "id": "f05d4ada-f602-45f6-bd3d-19dc1fd97376",
+      "name": "Load Session Path"
+    },
+    {
+      "parameters": {
+        "content": "## 🚦 ROUTING LOGIC\n**Source-Based Routing:**\n\n✉️ `source: \"form\"` → Form Submit Path\n💾 `source: \"form_autosave\"` → Autosave Path  \n💬 `message` present → Chat/LLM Path\n🔍 `source: \"load_session\"` → Load Session Path\n\n**Data Flow:**\n```\nWebhook → Normalize Input → Route by Source → Process → DB → Respond\n```\n\n**Critical Fields:**\n- `session_id`: Identifies session\n- `source`: Routes to correct branch\n- `email_intent`: Gates email sending\n- `project_classification`: Stores classification",
+        "height": 2220,
+        "width": 1432,
+        "color": 2
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        480,
+        -32
+      ],
+      "id": "9f6d3b3e-307e-44f5-bb14-5e90100af055",
+      "name": "Routing Logic"
+    },
+    {
+      "parameters": {
+        "content": "## 💬 Send Confirmation Emails\n**Zweck:** Verarbeitet Form Submit und sendet eine Mail ans Change Team und den Requester",
+        "height": 956,
+        "width": 1136,
+        "color": 6
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        4128,
+        -32
+      ],
+      "id": "d8e7a648-ff44-4f90-91fd-0ba4bd8c724a",
+      "name": "Chat/LLM Path1"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Process Welcome Email Request\nconst input = $input.first().json;\n\nconst requiredKeys = [\n  \"beschreibung_vorhaben\",\n  \"stichpunkte\",\n  \"ansprechpartner_name\",\n  \"zielsetzung\",\n  \"zeithorizont\",\n  \"startdatum\",\n  \"dauer_heisse_phasen\",\n  \"beitrag_konzernstrategie\",\n  \"strategische_ziele\",\n  \"was_passiert_wenn_nicht_erfolgreich\",\n  \"betroffene_bereiche_personen\",\n  \"anzahl_mitarbeitende_fuehrungskraefte\",\n  \"erwartungen_change_begleitung\",\n  \"changebedarf_pag\",\n  \"ziel_change_begleitung_von\",\n  \"erfolg_verhindern\",\n  \"erfolg_beitragen\",\n  \"sonstiges\",\n  \"vereinbarungen\"\n];\n\nconst session_id = input.session_id;\nconst email = input.email || \"anonymous@chat.local\";\nconst requesterName = email.split(\"@\")[0];\n\nconsole.log('[Welcome Email] Creating session:', session_id, 'for:', email);\n\nreturn {\n  json: {\n    session_id: session_id,\n    requester_email: email,\n    requester_name: requesterName,\n    status: \"open\",\n    round_counter: 0,\n    max_rounds: 50,\n    required_keys: JSON.stringify(requiredKeys),\n    answers: JSON.stringify({}),\n    metadata: JSON.stringify({\n      source: \"web_form\",\n      created_at: new Date().toISOString(),\n      welcome_email_sent: true,\n    }),\n    last_question: null,\n    missing_fields: JSON.stringify(requiredKeys),\n    project_classification: \"{}\",\n  }\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2624,
+        2016
+      ],
+      "id": "dfa8c528-3613-473d-a41c-619b82a26377",
+      "name": "Process Welcome Email"
+    },
+    {
+      "parameters": {
+        "dataTableId": {
+          "__rl": true,
+          "value": "JUREjsduC6ISYo6f",
+          "mode": "list",
+          "cachedResultName": "agent_sessions_swm",
+          "cachedResultUrl": "/projects/u4AB9CJNbwvqj8lM/datatables/JUREjsduC6ISYo6f"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "session_id": "={{ $json.session_id }}",
+            "requester_email": "={{ $json.requester_email }}",
+            "status": "={{ $json.status }}",
+            "round_counter": "={{ $json.round_counter }}",
+            "max_rounds": "={{ $json.max_rounds }}",
+            "required_keys": "={{ $json.required_keys }}",
+            "answers": "={{ $json.answers }}",
+            "metadata": "={{ $json.metadata }}",
+            "missing_fields": "={{ $json.missing_fields }}",
+            "project_classification": "={{ $json.project_classification }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "session_id",
+              "displayName": "session_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "requester_email",
+              "displayName": "requester_email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "status",
+              "displayName": "status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "required_keys",
+              "displayName": "required_keys",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "answers",
+              "displayName": "answers",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "missing_fields",
+              "displayName": "missing_fields",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "project_classification",
+              "displayName": "project_classification",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "metadata",
+              "displayName": "metadata",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "last_question",
+              "displayName": "last_question",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "round_counter",
+              "displayName": "round_counter",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "max_rounds",
+              "displayName": "max_rounds",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "readOnly": false,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1,
+      "position": [
+        2848,
+        2016
+      ],
+      "id": "37c0fc46-3921-4bca-9fb3-afd40de517c3",
+      "name": "Insert Session (Welcome Email)"
+    },
+    {
+      "parameters": {
+        "fromEmail": "liveley.workflows@gmail.com",
+        "toEmail": "={{ $json.requester_email }}",
+        "subject": "=🔄 Willkommen beim SWM Change-Portal - Deine Anfrage wartet",
+        "html": "=<!DOCTYPE html>\n<html>\n<head>\n  <style>\n    body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }\n    .container { max-width: 600px; margin: 0 auto; padding: 20px; }\n    .header { background-color: #0066cc; color: white; padding: 20px; text-align: center; border-radius: 8px 8px 0 0; }\n    .content { background-color: #f9f9f9; padding: 20px; border-radius: 0 0 8px 8px; }\n    .button { display: inline-block; background-color: #0066cc; color: white !important; padding: 15px 30px; text-decoration: none; border-radius: 5px; margin: 20px 0; font-weight: bold; }\n    .button:hover { background-color: #0052a3; }\n    .footer { margin-top: 20px; font-size: 12px; color: #666; }\n    code { background: #eee; padding: 2px 6px; border-radius: 3px; font-family: monospace; }\n  </style>\n</head>\n<body>\n  <div class=\"container\">\n    <div class=\"header\">\n      <h1>🔄 Willkommen beim Change-Portal</h1>\n      <p>Stadtwerke München</p>\n    </div>\n    <div class=\"content\">\n      <p>Hallo {{ $json.requester_name || 'dort' }},</p>\n      \n      <p>vielen Dank für dein Interesse am SWM Change-Management! Eine neue Change-Anfrage wurde für dich erstellt.</p>\n      \n      <p>Klicke auf den Button unten, um dein Change-Formular auszufüllen:</p>\n      \n      <p style=\"text-align: center;\">\n        <a href=\"http://localhost:3000/chat?session={{ $json.session_id }}\" class=\"button\">\n          📝 Zum Change-Formular\n        </a>\n      </p>\n      \n      <p><strong>Deine Session-ID:</strong> <code>{{ $json.session_id }}</code></p>\n      \n      <p>Du kannst das Formular jederzeit unterbrechen und später fortsetzen. Alle Eingaben werden automatisch gespeichert.</p>\n      \n      <p>Bei Fragen erreichst du uns unter change@swm.de.</p>\n      \n      <p>Viele Grüße,<br>Dein SWM Change Management Team</p>\n    </div>\n    <div class=\"footer\">\n      <p>Diese E-Mail wurde automatisch generiert.</p>\n    </div>\n  </div>\n</body>\n</html>",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        3072,
+        2016
+      ],
+      "id": "4be08f66-7793-4700-ab07-899bc873365a",
+      "name": "Send Welcome Email",
+      "webhookId": "8441a95b-179e-4d69-b0b8-ad0df27c2ee5",
+      "credentials": {
+        "smtp": {
+          "id": "Q7rmCb8nQSdip4NA",
+          "name": "SMTP account (Liveley)"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ { success: true, session_id: $json.session_id, message: 'Welcome email sent successfully', requester_email: $json.requester_email } }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        3296,
+        2016
+      ],
+      "id": "f393a504-3d64-417f-b02e-87ea85897bc2",
+      "name": "Respond: Welcome Email Sent"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "7e886657-fa41-4ae3-ab8a-c36f9729dca9",
+                    "leftValue": "={{ $json.source }}",
+                    "rightValue": "form",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "6f918643-7a68-491d-a96b-cf4654aa7deb",
+                    "leftValue": "={{ $json.source }}",
+                    "rightValue": "form_autosave",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.source }}",
+                    "rightValue": "load_session",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "f76d0cd0-9d3e-4a01-95b1-ca216fbea47f"
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "4ce1bfa4-f229-48d4-8198-bf9927de3509",
+                    "leftValue": "={{ $json.source }}",
+                    "rightValue": "form_submit",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "cc5aa606-b5c2-4a97-9f46-cde86830e3af",
+                    "leftValue": "={{ $json.source === 'welcome_mail' || $json.source === 'welcome_email' }}",
+                    "rightValue": "=is true",
+                    "operator": {
+                      "type": "boolean",
+                      "operation": "true",
+                      "singleValue": true
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "923fac5e-17b2-4897-a471-e7a71fb75b76",
+                    "leftValue": "={{ $json.source }}",
+                    "rightValue": "chat",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.3,
+      "position": [
+        1424,
+        592
+      ],
+      "id": "e8b41739-2597-4555-b731-39cfea7c0ac7",
+      "name": "Switch"
+    },
+    {
+      "parameters": {
+        "content": "## 💬 Initiate change request from change app directly, no mail needed\n**Zweck:** Verarbeitet Anfragen direkt von der Change Website aus\n\n**Flow:**",
+        "height": 428,
+        "width": 3360,
+        "color": 4
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        1904,
+        1760
+      ],
+      "id": "a0ee7e58-f1dc-465c-929a-2dcd94112856",
+      "name": "Chat/LLM Path2"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Prepare Chat Input - Pass webhook data to subworkflow\n// Subworkflow will fetch session from DB itself!\nconst webhookInput = $('Normalize Webhook Input').first().json;\n\nconsole.log('[Prepare Chat Input] Session ID:', webhookInput.session_id);\nconsole.log('[Prepare Chat Input] Webhook source:', webhookInput.source);\n\n// Simply pass through the webhook input\n// Subworkflow's \"Data Tables: Get Session\" will fetch the session from DB\nreturn {\n  json: webhookInput\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3312,
+        1440
+      ],
+      "id": "2e07e5bf-32d4-4cd4-8bfe-e3ea6a6d23d0",
+      "name": "Prepare Chat Input"
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "MRkxyKh4a76CVVsx",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/MRkxyKh4a76CVVsx",
+          "cachedResultName": "SWM Hybrid - LLM Path"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {
+          "waitForSubWorkflow": true
+        }
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        3568,
+        1440
+      ],
+      "id": "87444107-cbe0-4d05-a78f-b4c31a356da7",
+      "name": "Call 'SWM Hybrid - LLM Path'"
+    },
+    {
+      "parameters": {
+        "multipleMethods": true,
+        "path": "change-chat",
+        "responseMode": "responseNode",
+        "options": {
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Access-Control-Allow-Origin",
+                "value": "*"
+              }
+            ]
+          }
+        }
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        800,
+        656
+      ],
+      "id": "12f93472-ce46-4329-beb0-577b916f75c2",
+      "name": "Webhook Trigger",
+      "webhookId": "change-chat-webhook"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify($json) }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        3808,
+        1440
+      ],
+      "id": "35ccc8e7-1561-4e92-a726-09205c672fe0",
+      "name": "Respond to Webhook"
+    }
+  ],
+  "connections": {
+    "Normalize Webhook Input": {
+      "main": [
+        [
+          {
+            "node": "Switch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Process Form Submit": {
+      "main": [
+        [
+          {
+            "node": "Get Session (Form)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Session (Autosave)": {
+      "main": [
+        [
+          {
+            "node": "Process Field Update",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Process Field Update": {
+      "main": [
+        [
+          {
+            "node": "Update Session (Autosave)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update Session (Autosave)": {
+      "main": [
+        [
+          {
+            "node": "Respond: Autosave OK",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF: Session Exists (Form)?": {
+      "main": [
+        [
+          {
+            "node": "Update Existing Session (Form)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Insert New Session (Form)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Session (Form)": {
+      "main": [
+        [
+          {
+            "node": "IF: Session Exists (Form)?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Insert New Session (Form)": {
+      "main": [
+        [
+          {
+            "node": "Prepare Email Data (Form)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update Existing Session (Form)": {
+      "main": [
+        [
+          {
+            "node": "Prepare Email Data (Form)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Email Data (Form)": {
+      "main": [
+        [
+          {
+            "node": "Send Confirmation to Requester",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Send to Change Team",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Confirmation to Requester": {
+      "main": [
+        [
+          {
+            "node": "Respond: Form Submitted",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send to Change Team": {
+      "main": [
+        [
+          {
+            "node": "Respond: Form Submitted",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Session (Load)": {
+      "main": [
+        [
+          {
+            "node": "Respond: Session Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Process Welcome Email": {
+      "main": [
+        [
+          {
+            "node": "Insert Session (Welcome Email)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Insert Session (Welcome Email)": {
+      "main": [
+        [
+          {
+            "node": "Send Welcome Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Welcome Email": {
+      "main": [
+        [
+          {
+            "node": "Respond: Welcome Email Sent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch": {
+      "main": [
+        [
+          {
+            "node": "Process Form Submit",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Get Session (Autosave)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Get Session (Load)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Process Form Submit",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Process Welcome Email",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Prepare Chat Input",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Chat Input": {
+      "main": [
+        [
+          {
+            "node": "Call 'SWM Hybrid - LLM Path'",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call 'SWM Hybrid - LLM Path'": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook Trigger": {
+      "main": [
+        [
+          {
+            "node": "Normalize Webhook Input",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Normalize Webhook Input",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "242e16560be4b15ec48732e58bf97d190f82ae9479ec2d8855ef98e163c481dd"
+  }
+}

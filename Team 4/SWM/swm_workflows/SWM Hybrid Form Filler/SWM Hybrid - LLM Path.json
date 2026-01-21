@@ -1,0 +1,421 @@
+{
+  "nodes": [
+    {
+      "parameters": {
+        "operation": "get",
+        "dataTableId": {
+          "__rl": true,
+          "value": "JUREjsduC6ISYo6f",
+          "mode": "list",
+          "cachedResultName": "agent_sessions_swm",
+          "cachedResultUrl": "/projects/u4AB9CJNbwvqj8lM/datatables/JUREjsduC6ISYo6f"
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "session_id",
+              "keyValue": "={{$json.session_id}}"
+            },
+            {
+              "keyName": "status",
+              "condition": "neq",
+              "keyValue": "confirmed"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1,
+      "position": [
+        -1504,
+        192
+      ],
+      "id": "5ba1d9d7-2ff8-4f94-bd74-e84871c71a51",
+      "name": "Data Tables: Get Session",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "session-exists-check",
+              "leftValue": "={{$json.id}}",
+              "rightValue": "",
+              "operator": {
+                "type": "number",
+                "operation": "exists",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -1280,
+        192
+      ],
+      "id": "e132dd14-9b91-4eec-9362-de6807d98ea7",
+      "name": "IF: Session exists?"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n  \"reply_text\": \"Session nicht gefunden. Bitte starte eine neue Anfrage per E-Mail an das Change Team.\",\n  \"status\": \"error\",\n  \"session_id\": \"\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        -1056,
+        288
+      ],
+      "id": "87956947-e90f-4611-89c5-7a7e3dce694b",
+      "name": "Respond: No Session Found"
+    },
+    {
+      "parameters": {
+        "jsCode": "// SUBWORKFLOW: $json contains DB row from \"Data Tables: Get Session\" node\n// Flow: Data Tables → IF Session exists? → THIS NODE\nconst row = $json; // Direct access - this IS the database row\n\nconsole.log('[Normalize Session Row] ===== START =====');\nconsole.log('[Normalize Session Row] Raw $json:', JSON.stringify($json, null, 2));\nconsole.log('[Normalize Session Row] Session ID:', row.session_id);\nconsole.log('[Normalize Session Row] Raw required_keys (type:', typeof row.required_keys, '):', row.required_keys);\nconsole.log('[Normalize Session Row] Raw answers (type:', typeof row.answers, '):', row.answers);\nconsole.log('[Normalize Session Row] Raw metadata (type:', typeof row.metadata, '):', row.metadata);\nconsole.log('[Normalize Session Row] Raw missing_fields (type:', typeof row.missing_fields, '):', row.missing_fields);\n\n// Parse JSON fields from DB (all stored as JSON strings)\nlet requiredKeys = [];\ntry { \n  requiredKeys = Array.isArray(row.required_keys) ? row.required_keys : JSON.parse(row.required_keys || \"[]\"); \n  console.log('[Normalize Session Row] Parsed required_keys:', requiredKeys);\n} catch(e) { \n  console.error('[Normalize Session Row] ERROR parsing required_keys:', e.message);\n  requiredKeys = []; \n}\n\nlet answers = {};\ntry { \n  answers = typeof row.answers === 'object' ? row.answers : JSON.parse(row.answers || \"{}\"); \n  console.log('[Normalize Session Row] Parsed answers:', Object.keys(answers).length, 'keys');\n} catch(e) { \n  console.error('[Normalize Session Row] ERROR parsing answers:', e.message);\n  answers = {}; \n}\n\nlet metadata = {};\ntry { \n  metadata = typeof row.metadata === 'object' ? row.metadata : JSON.parse(row.metadata || \"{}\"); \n  console.log('[Normalize Session Row] Parsed metadata:', Object.keys(metadata).length, 'keys');\n} catch(e) { \n  console.error('[Normalize Session Row] ERROR parsing metadata:', e.message);\n  metadata = {}; \n}\n\nlet missingFields = [];\ntry { \n  missingFields = Array.isArray(row.missing_fields) ? row.missing_fields : JSON.parse(row.missing_fields || \"[]\"); \n  console.log('[Normalize Session Row] Parsed missing_fields:', missingFields);\n} catch(e) { \n  console.error('[Normalize Session Row] ERROR parsing missing_fields:', e.message);\n  missingFields = []; \n}\n\nconsole.log('[Normalize Session Row] ===== OUTPUT =====');\nconsole.log('[Normalize Session Row] required_keys array length:', requiredKeys.length);\nconsole.log('[Normalize Session Row] answers object keys:', Object.keys(answers));\nconsole.log('[Normalize Session Row] metadata object keys:', Object.keys(metadata));\nconsole.log('[Normalize Session Row] missing_fields array length:', missingFields.length);\n\nreturn {\n  json: {\n    session_id: row.session_id,\n    requester_email: row.requester_email,\n    status: row.status,\n    round_counter: parseInt(row.round_counter) || 0,\n    max_rounds: parseInt(row.max_rounds) || 50,\n    required_keys: JSON.stringify(requiredKeys),\n    answers: answers,\n    metadata: metadata,\n    last_question: row.last_question || null,\n    missing_fields: missingFields,\n    incoming_body: '', // No direct access to webhook input in subworkflow\n  },\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1056,
+        96
+      ],
+      "id": "41a1e9b3-baff-437f-9e29-39e0c47bcd83",
+      "name": "Normalize Session Row"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "check-confirmed",
+              "leftValue": "={{$json.status}}",
+              "rightValue": "confirmed",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "or"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -832,
+        96
+      ],
+      "id": "e54f89ef-c1a6-473f-a146-72178fba2ab8",
+      "name": "IF: Check if Confirmed"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n  \"reply_text\": \"Deine Change-Anfrage wurde bereits abgeschlossen und an das Change Team weitergeleitet. Bei Rückfragen wende dich bitte direkt ans Team.\",\n  \"status\": \"confirmed\",\n  \"session_id\": \"{{ $json.session_id }}\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        -544,
+        -16
+      ],
+      "id": "1c10e5db-4af5-4834-86f7-341842bf557a",
+      "name": "Respond: Already Confirmed"
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "gpt-4.1-mini",
+          "mode": "list",
+          "cachedResultName": "GPT-4.1-MINI"
+        },
+        "responses": {
+          "values": [
+            {
+              "role": "system",
+              "content": "Du bist ein Change-Management Agent für die Stadtwerke München (SWM). Deine Aufgabe ist es, strukturiert Informationen für einen Change-Antrag zu sammeln.\n\nWICHTIGE REGELN:\n1. Stelle IMMER nur EINE Frage pro Antwort\n2. Sei freundlich, professionell und auf Deutsch\n3. Nutze die bereits gesammelten Informationen aus dem Session-Context\n4. Wenn ein Feld bereits beantwortet wurde, frage nicht erneut danach\n5. Frage die Felder in der logischen Reihenfolge ab\n\nFELDER DIE DU SAMMELN MUSST (in dieser Reihenfolge):\n1. beschreibung_vorhaben - \"Beschreibung des Vorhabens/Projektes/Initiative\"\n2. stichpunkte - \"Thema/Titel in Stichpunkten\"\n3. ansprechpartner_name - \"Wer ist Ansprechpartner*in / PAG?\"\n4. zielsetzung - \"Zielsetzung des Vorhabens\"\n5. zeithorizont - \"Zeithorizont\"\n6. startdatum - \"Startdatum\"\n7. dauer_heisse_phasen - \"Dauer / heiße Phasen\"\n8. beitrag_konzernstrategie - \"Beitrag zur Konzernstrategie\"\n9. strategische_ziele - \"Welche strategischen Ziele\"\n10. was_passiert_wenn_nicht_erfolgreich - \"Was passiert bei Misserfolg\"\n11. betroffene_bereiche_personen - \"Betroffene Bereiche/Personen\"\n12. anzahl_mitarbeitende_fuehrungskraefte - \"Anzahl MA & FK\"\n13. erwartungen_change_begleitung - \"Erwartungen an Change-Begleitung\"\n14. changebedarf_pag - \"Changebedarf\"\n15. ziel_change_begleitung_von - \"Von (Ist-Zustand)\"\n16. ziel_change_begleitung_zu - \"Zu (Soll-Zustand)\"\n17. erfolg_verhindern - \"Hindernisse\"\n18. erfolg_beitragen - \"Erfolgsfaktoren\"\n19. sonstiges - \"Sonstiges\"\n20. vereinbarungen - \"Vereinbarungen\"\n\nDu MUSST als JSON antworten:\n{\n  \"action\": \"ask\" | \"summarize\" | \"max_rounds\" | \"approval_ok\" | \"approval_change\",\n  \"next_question\": \"Die konkrete Frage\",\n  \"updated_answers\": { \"feld_name\": \"extrahierte_antwort\" },\n  \"missing_fields\": [\"noch_fehlendes_feld1\"],\n  \"reply_text\": \"Der vollständige Text an den Nutzer\"\n}\n\nLOGIK:\n- status == \"open\": Extrahiere Antworten, stelle nächste Frage\n- Wenn round_counter >= max_rounds und wichtige Felder fehlen: action = \"max_rounds\"\n- Wenn alle wichtigen Felder ausgefüllt: action = \"summarize\"\n- status == \"submitted_request\" + Nutzer sagt OK: action = \"approval_ok\"\n- status == \"submitted_request\" + Nutzer will Änderung: action = \"approval_change\""
+            },
+            {
+              "content": "=Session Status: {{ $json.status }}\nRound Counter: {{ $json.round_counter }} / {{ $json.max_rounds }}\nBereits beantwortete Felder: {{ JSON.stringify($json.answers) }}\nNoch fehlende Felder: {{ JSON.stringify($json.missing_fields) }}\nLetzte gestellte Frage: {{ $json.last_question }}\n\nNeue Nutzerantwort:\n{{ $json.incoming_body }}\n\nAnalysiere die Antwort und erstelle das JSON-Response."
+            }
+          ]
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 2,
+      "position": [
+        -608,
+        192
+      ],
+      "id": "208e54c3-dd74-45bb-9f7b-40030c68aacd",
+      "name": "LLM: Analyze Message",
+      "credentials": {
+        "openAiApi": {
+          "id": "Wjly2IEOwNXQDHwA",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Parse LLM JSON Response - ROBUST VERSION\nconst input = $input.all()[0].json;\n\nconsole.log('[Parse LLM] Raw input keys:', Object.keys(input));\nconsole.log('[Parse LLM] Raw input:', JSON.stringify(input, null, 2).substring(0, 1000));\n\nlet parsed = null;\nlet textContent = null;\n\n// ---------- Verschiedene LLM Output-Strukturen probieren ----------\n// Struktur 1: output[].content[].text (OpenAI Chat format)\nif (!textContent && Array.isArray(input.output) && input.output.length > 0) {\n  const firstOutput = input.output[0];\n  if (firstOutput.content && Array.isArray(firstOutput.content) && firstOutput.content.length > 0) {\n    textContent = firstOutput.content[0].text;\n    console.log('[Parse LLM] Found via output[].content[].text');\n  }\n}\n\n// Struktur 2: message.content (Alternative Chat format)\nif (!textContent && input.message && input.message.content) {\n  textContent = input.message.content;\n  console.log('[Parse LLM] Found via message.content');\n}\n\n// Struktur 3: choices[].message.content (OpenAI API direct)\nif (!textContent && Array.isArray(input.choices) && input.choices.length > 0) {\n  textContent = input.choices[0].message?.content;\n  console.log('[Parse LLM] Found via choices[].message.content');\n}\n\n// Struktur 4: Direkter String output\nif (!textContent && typeof input.output === 'string') {\n  textContent = input.output;\n  console.log('[Parse LLM] Found via string output');\n}\n\n// Struktur 5: text Feld direkt\nif (!textContent && input.text) {\n  textContent = input.text;\n  console.log('[Parse LLM] Found via text field');\n}\n\n// Struktur 6: content Feld direkt\nif (!textContent && typeof input.content === 'string') {\n  textContent = input.content;\n  console.log('[Parse LLM] Found via content field');\n}\n\nconsole.log('[Parse LLM] Extracted textContent:', textContent ? textContent.substring(0, 500) : 'null');\n\n// ---------- JSON aus Text extrahieren ----------\nif (textContent) {\n  try {\n    // Versuch 1: JSON in Markdown Code Block\n    const jsonMatch = textContent.match(/```(?:json)?\\s*([\\s\\S]*?)\\s*```/);\n    if (jsonMatch) {\n      parsed = JSON.parse(jsonMatch[1].trim());\n      console.log('[Parse LLM] Parsed from code block');\n    } else {\n      // Versuch 2: Direktes JSON (evtl. mit fuehrendem/folgendem Text)\n      const jsonStart = textContent.indexOf('{');\n      const jsonEnd = textContent.lastIndexOf('}');\n      if (jsonStart !== -1 && jsonEnd > jsonStart) {\n        const jsonStr = textContent.substring(jsonStart, jsonEnd + 1);\n        parsed = JSON.parse(jsonStr);\n        console.log('[Parse LLM] Parsed from raw JSON substring');\n      } else {\n        // Versuch 3: Ganzer String als JSON\n        parsed = JSON.parse(textContent);\n        console.log('[Parse LLM] Parsed entire string');\n      }\n    }\n  } catch (e) {\n    console.log('[Parse LLM] JSON Parse Error:', e.message);\n    parsed = null;\n  }\n}\n\n// ---------- Fallback bei Parse-Fehler ----------\nif (!parsed) {\n  console.log('[Parse LLM] Using fallback response');\n  parsed = {\n    action: 'ask',\n    next_question: 'Entschuldigung, es gab ein technisches Problem. Kannst du deine Nachricht wiederholen?',\n    updated_answers: {},\n    missing_fields: [],\n    reply_text: textContent || 'Entschuldigung, es gab ein technisches Problem. Kannst du deine Nachricht bitte wiederholen?'\n  };\n}\n\n// ---------- Clean Result mit Typ-Sicherheit ----------\nconst cleanResult = {\n  action: parsed.action || 'ask',\n  next_question: String(parsed.next_question || ''),\n  updated_answers: (typeof parsed.updated_answers === 'object' && parsed.updated_answers) ? parsed.updated_answers : {},\n  missing_fields: Array.isArray(parsed.missing_fields) ? parsed.missing_fields : [],\n  reply_text: String(parsed.reply_text || '')\n};\n\nconsole.log('[Parse LLM] Clean result:', JSON.stringify(cleanResult, null, 2));\n\nreturn { json: cleanResult };"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -256,
+        192
+      ],
+      "id": "c99bfcf1-ca42-4805-9994-5e538cff34b1",
+      "name": "Parse LLM JSON Response"
+    },
+    {
+      "parameters": {
+        "jsCode": "const session = $('Normalize Session Row').first().json;\nconst llmResult = $('Parse LLM JSON Response').first().json;\n\n// Sicherstellen dass session.answers ein Objekt ist\nlet existingAnswers = session.answers || {};\nif (typeof existingAnswers === 'string') {\n  try { existingAnswers = JSON.parse(existingAnswers); } catch(e) { existingAnswers = {}; }\n}\n\n// Merge neue Antworten\nconst updatedAnswers = {\n  ...existingAnswers,\n  ...(llmResult.updated_answers || {})\n};\n\n// Entferne korrupte Keys\nObject.keys(updatedAnswers).forEach(key => {\n  if (/^\\d+$/.test(key)) delete updatedAnswers[key];\n});\n\n// Required Keys sicherstellen\nlet requiredKeys = session.required_keys || [];\nif (typeof requiredKeys === 'string') {\n  try { requiredKeys = JSON.parse(requiredKeys); } catch(e) { requiredKeys = []; }\n}\nif (!Array.isArray(requiredKeys)) requiredKeys = [];\n\n// Berechne fehlende Felder - robust gegen nicht-String Werte\nconst actualMissingFields = requiredKeys.filter(key => {\n  const value = updatedAnswers[key];\n  // Prüfe ob Wert fehlt oder leer ist (String-safe)\n  return !value || String(value).trim() === '';\n});\n\n// Round Counter\nlet newRoundCounter = session.round_counter;\nconst hasNewAnswers = llmResult.updated_answers && Object.keys(llmResult.updated_answers).length > 0;\nif (llmResult.action === \"ask\" && !hasNewAnswers) {\n  newRoundCounter = session.round_counter + 1;\n}\n\n// Status und Reply\nlet newStatus = session.status;\nlet replyText = String(llmResult.reply_text || \"\");\n\n// Auto-summarize wenn alle Felder beantwortet\nif (llmResult.action === \"ask\" && actualMissingFields.length === 0) {\n  newStatus = \"waiting_for_approval\";\n  replyText = createSummary(updatedAnswers);\n} else if (llmResult.action === \"ask\") {\n  newStatus = \"open\";\n} else if (llmResult.action === \"summarize\") {\n  newStatus = \"waiting_for_approval\";\n  replyText = createSummary(updatedAnswers);\n} else if (llmResult.action === \"max_rounds\") {\n  newStatus = \"max_rounds_reached\";\n} else if (llmResult.action === \"approval_ok\") {\n  newStatus = \"confirmed\";\n  replyText = \"Vielen Dank für deine Bestätigung! 🎉\\n\\nDeine Change-Anfrage wurde an das Change Team weitergeleitet. Du erhältst in Kürze eine Bestätigungs-E-Mail.\\n\\nViele Grüße\\nDein Change Agent\";\n} else if (llmResult.action === \"approval_change\") {\n  newStatus = \"open\";\n}\n\nfunction createSummary(answers) {\n  let summary = \"📋 **Zusammenfassung deiner Change-Anfrage**\\n\\n\";\n  summary += \"Bitte prüfe die folgenden Informationen:\\n\\n\";\n  \n  // Feste Reihenfolge der Felder (wie in den E-Mails)\n  const fieldOrder = [\n    \"beschreibung_vorhaben\",\n    \"stichpunkte\",\n    \"ansprechpartner_name\",\n    \"zielsetzung\",\n    \"zeithorizont\",\n    \"startdatum\",\n    \"dauer_heisse_phasen\",\n    \"beitrag_konzernstrategie\",\n    \"strategische_ziele\",\n    \"was_passiert_wenn_nicht_erfolgreich\",\n    \"betroffene_bereiche_personen\",\n    \"anzahl_mitarbeitende_fuehrungskraefte\",\n    \"erwartungen_change_begleitung\",\n    \"changebedarf_pag\",\n    \"ziel_change_begleitung_von\",\n    \"ziel_change_begleitung_zu\",\n    \"erfolg_verhindern\",\n    \"erfolg_beitragen\",\n    \"sonstiges\",\n    \"vereinbarungen\"\n  ];\n  \n  const fieldLabels = {\n    \"beschreibung_vorhaben\": \"Beschreibung des Vorhabens\",\n    \"stichpunkte\": \"Thema/Titel\",\n    \"ansprechpartner_name\": \"Ansprechpartner*in\",\n    \"zielsetzung\": \"Zielsetzung\",\n    \"zeithorizont\": \"Zeithorizont\",\n    \"startdatum\": \"Startdatum\",\n    \"dauer_heisse_phasen\": \"Dauer/Heiße Phasen\",\n    \"beitrag_konzernstrategie\": \"Beitrag zur Konzernstrategie\",\n    \"strategische_ziele\": \"Strategische Ziele\",\n    \"was_passiert_wenn_nicht_erfolgreich\": \"Was passiert bei Misserfolg\",\n    \"betroffene_bereiche_personen\": \"Betroffene Bereiche/Personen\",\n    \"anzahl_mitarbeitende_fuehrungskraefte\": \"Anzahl MA & FK\",\n    \"erwartungen_change_begleitung\": \"Erwartungen an Change-Begleitung\",\n    \"changebedarf_pag\": \"Changebedarf\",\n    \"ziel_change_begleitung_von\": \"Von (Ist-Zustand)\",\n    \"ziel_change_begleitung_zu\": \"Zu (Soll-Zustand)\",\n    \"erfolg_verhindern\": \"Hindernisse\",\n    \"erfolg_beitragen\": \"Erfolgsfaktoren\",\n    \"sonstiges\": \"Sonstiges\",\n    \"vereinbarungen\": \"Vereinbarungen\"\n  };\n  \n  // Felder in fester Reihenfolge ausgeben\n  for (const key of fieldOrder) {\n    if (answers[key]) {\n      const label = fieldLabels[key] || key;\n      summary += `**${label}:**\\n${answers[key]}\\n\\n`;\n    }\n  }\n  \n  summary += \"\\n---\\n\\n\";\n  summary += \"Sind alle Angaben korrekt?\\n\\n\";\n  summary += \"👉 Antworte mit 'OK' wenn alles passt\\n\";\n  summary += \"👉 Oder beschreibe welche Änderungen du vornehmen möchtest\";\n  \n  return summary;\n}\n\n// Extract project classification from metadata\nlet projectClassification = '{}';\nif (typeof session.metadata === 'object' && session.metadata) {\n  projectClassification = JSON.stringify(session.metadata.classification || session.metadata.projectClass || {});\n}\n\nconst result = {\n  session_id: session.session_id,\n  requester_email: session.requester_email,\n  status: newStatus,\n  round_counter: newRoundCounter,\n  max_rounds: session.max_rounds,\n  required_keys: session.required_keys,\n  answers: JSON.stringify(updatedAnswers),\n  metadata: session.metadata,\n  last_question: String(llmResult.next_question || \"\"),\n  missing_fields: actualMissingFields,\n  reply_text: replyText,\n  email_intent: false,\n  project_classification: projectClassification\n};\n\nreturn { json: result };"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -32,
+        192
+      ],
+      "id": "aee69ae3-86b3-4973-a089-752276842193",
+      "name": "Apply LLM Result"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "dataTableId": {
+          "__rl": true,
+          "value": "JUREjsduC6ISYo6f",
+          "mode": "list",
+          "cachedResultName": "agent_sessions_swm",
+          "cachedResultUrl": "/projects/u4AB9CJNbwvqj8lM/datatables/JUREjsduC6ISYo6f"
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "session_id",
+              "keyValue": "={{$json.session_id}}"
+            }
+          ]
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "status": "={{ $json.status }}",
+            "round_counter": "={{ $json.round_counter }}",
+            "answers": "={{ $json.answers }}",
+            "last_question": "={{ $json.last_question }}",
+            "project_classification": "={{ $json.project_classification || '{}' }}",
+            "missing_fields": "={{ JSON.stringify($json.missing_fields) }}"
+          },
+          "matchingColumns": [],
+          "schema": []
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1,
+      "position": [
+        208,
+        192
+      ],
+      "id": "56979bc3-b835-4c17-bf59-96dbbc81d5fa",
+      "name": "Update row(s)"
+    },
+    {
+      "parameters": {
+        "content": "## 💬 CHAT / LLM PATH\n**Zweck:** Verarbeitet Chat-Nachrichten mit KI-Unterstützung\n\n**Flow:**\n1. Normalize Webhook Input\n2. IF: source == 'chat' oder `message` vorhanden? → JA\n3. Get Session from DB\n4. IF: Session exists? → JA\n5. Normalize Session Row\n6. IF: Already confirmed? → NEIN\n7. 🤖 LLM: Analyze Message\n8. Parse LLM JSON Response\n9. Apply LLM Result (setzt `email_intent: false`)\n10. Update row(s) → DB write\n11. IF: status == 'confirmed' AND email_intent == true? → NEIN (Chat!)\n12. Prepare Response\n13. Respond to Webhook\n\n**Hard Gate:** `email_intent: false` verhindert E-Mail-Versand!\n**Speichert:** `answers`, `project_classification`, `round_counter`",
+        "height": 812,
+        "width": 2848
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -1920,
+        -368
+      ],
+      "id": "c720fe01-a348-419e-8285-3082baf67182",
+      "name": "Chat/LLM Path"
+    },
+    {
+      "parameters": {
+        "inputSource": "passthrough"
+      },
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        -1728,
+        192
+      ],
+      "id": "914527e9-7410-4252-8232-768e14636c7e",
+      "name": "When Executed by Another Workflow"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Prepare response for webhook - CHAT PATH ONLY\n// Data comes from Update row(s) via IF: Send Confirmation Emails? (FALSE branch)\nconst data = $input.first().json;\n\nconsole.log('[Prepare Response] ===== INPUT =====');\nconsole.log('[Prepare Response] Full input data:', JSON.stringify(data, null, 2));\nconsole.log('[Prepare Response] Raw missing_fields (type:', typeof data.missing_fields, '):', data.missing_fields);\n\n// Ensure we have reply_text\nlet replyText = data.reply_text || '';\nif (!replyText) {\n  // Fallback: try to get from Apply LLM Result if available\n  try {\n    const llmData = $('Apply LLM Result').first()?.json;\n    replyText = llmData?.reply_text || 'Deine Nachricht wurde verarbeitet.';\n  } catch (e) {\n    replyText = 'Deine Nachricht wurde verarbeitet.';\n  }\n}\n\n// Parse missing_fields - can be JSON string or array\nlet missingFields = [];\ntry {\n  if (Array.isArray(data.missing_fields)) {\n    missingFields = data.missing_fields;\n    console.log('[Prepare Response] missing_fields is already an array:', missingFields.length, 'items');\n  } else if (typeof data.missing_fields === 'string') {\n    missingFields = JSON.parse(data.missing_fields);\n    console.log('[Prepare Response] Parsed missing_fields from string:', missingFields.length, 'items');\n  } else {\n    console.log('[Prepare Response] missing_fields is neither array nor string, using empty array');\n    missingFields = [];\n  }\n} catch (e) {\n  console.error('[Prepare Response] ERROR parsing missing_fields:', e.message);\n  missingFields = [];\n}\n\nconst result = {\n  reply_text: replyText,\n  status: data.status || 'open',\n  session_id: data.session_id || '',\n  missing_fields: missingFields\n};\n\nconsole.log('[Prepare Response] ===== OUTPUT =====');\nconsole.log('[Prepare Response] Final result:', JSON.stringify(result, null, 2));\nconsole.log('[Prepare Response] missing_fields array:', result.missing_fields);\n\nreturn { json: result };"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        432,
+        192
+      ],
+      "id": "03e26e4d-ec03-499b-85c1-fe293f929277",
+      "name": "Prepare Response"
+    }
+  ],
+  "connections": {
+    "Data Tables: Get Session": {
+      "main": [
+        [
+          {
+            "node": "IF: Session exists?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF: Session exists?": {
+      "main": [
+        [
+          {
+            "node": "Normalize Session Row",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Respond: No Session Found",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalize Session Row": {
+      "main": [
+        [
+          {
+            "node": "IF: Check if Confirmed",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF: Check if Confirmed": {
+      "main": [
+        [
+          {
+            "node": "Respond: Already Confirmed",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "LLM: Analyze Message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "LLM: Analyze Message": {
+      "main": [
+        [
+          {
+            "node": "Parse LLM JSON Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse LLM JSON Response": {
+      "main": [
+        [
+          {
+            "node": "Apply LLM Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Apply LLM Result": {
+      "main": [
+        [
+          {
+            "node": "Update row(s)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update row(s)": {
+      "main": [
+        [
+          {
+            "node": "Prepare Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When Executed by Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "Data Tables: Get Session",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Response": {
+      "main": [
+        []
+      ]
+    }
+  },
+  "pinData": {},
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "242e16560be4b15ec48732e58bf97d190f82ae9479ec2d8855ef98e163c481dd"
+  }
+}

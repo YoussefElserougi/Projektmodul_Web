@@ -1,9 +1,14 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  // Environment Variables die im Client verfügbar sein sollen
-  // (n8n Webhook URL sollte nur serverseitig genutzt werden!)
-  env: {
-    // Füge hier public env vars hinzu falls nötig
+  // Static Export für Cloudflare Pages
+  output: 'export',
+  
+  // Trailing Slashes für statisches Hosting
+  trailingSlash: true,
+  
+  // Bilder müssen unoptimiert sein für Static Export
+  images: {
+    unoptimized: true,
   },
 };
 
