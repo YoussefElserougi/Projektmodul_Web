@@ -1,0 +1,2501 @@
+{
+  "name": "Workflow 1 - Final",
+  "nodes": [
+    {
+      "parameters": {
+        "jsCode": "const message = $input.first().json;\nconst text = message.text || '';\n\n// Remove mention do bot\nconst cleanText = text.replace(/<@[A-Z0-9]+>/g, '').trim();\n\n// Detecta se tem imagem anexada\nconst hasImage = (message.files && message.files.length > 0);\nconst files = hasImage ? message.files : [];\n\nreturn [{\n  json: {\n    raw_text: cleanText,\n    hasImage: hasImage,\n    files: files,\n    channel_id: message.channel,\n    user_id: message.user\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -5104,
+        176
+      ],
+      "id": "f4acebc4-0912-4c2d-9632-b3ac1bd24d4e",
+      "name": "Parser: Extract Slack Content"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.output.category || $json.output.post_type }}",
+                    "rightValue": "recruitment",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "cfeb19bc-c296-4c2a-8059-6df12491bf59"
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "893a6bd2-68e5-496a-8a97-b90ae1b853f6",
+                    "leftValue": "={{ $json.output.category || $json.output.post_type }}",
+                    "rightValue": "showcase",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "6882fe9b-4f61-40cb-bfed-644e08036a5e",
+                    "leftValue": "={{ $json.output.category || $json.output.post_type }}",
+                    "rightValue": "engagement",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            }
+          ]
+        },
+        "options": {
+          "fallbackOutput": "extra"
+        }
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.3,
+      "position": [
+        -4160,
+        144
+      ],
+      "id": "0591373f-8842-467b-9995-871b1677b9d2",
+      "name": "Router: Detect Post Type"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "add91401-4c5f-4819-ad3a-63ab3db57d43",
+              "name": "error",
+              "value": "true",
+              "type": "string"
+            },
+            {
+              "id": "bc7636b7-edc4-4a15-9d7b-f0accfaa786b",
+              "name": "message",
+              "value": "=❌ Unable to automatically classify this post.\n\nOur AI agent couldn't determine if this is a recruitment, showcase, or engagement post.\n\n**Your message:**\n{{ $('Parser: Extract Slack Content').item.json.raw_text }}\n\n**Next steps:**\n- Please tag your post with one of these: #recruitment, #showcase, or #engagement\n- Or contact the admin team to manually categorize this post\n- If this is urgent, reach out to [your support channel]\n\nThis message will not be posted to LinkedIn.",
+              "type": "string"
+            },
+            {
+              "id": "d81cbada-8f14-4168-8439-c5e251f7b7a3",
+              "name": "raw_text",
+              "value": "{ $json.raw_text }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -3888,
+        656
+      ],
+      "id": "7bbb4c48-141f-4a86-ab70-ca182b466e06",
+      "name": "Edit Fields1"
+    },
+    {
+      "parameters": {
+        "authentication": "oAuth2",
+        "select": "channel",
+        "channelId": "SLACK_CHANNEL_ID",
+        "text": "={{ $json.message }}",
+        "otherOptions": {}
+      },
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2.3,
+      "position": [
+        -3712,
+        656
+      ],
+      "id": "8c0ec0e5-9cff-4691-be8c-c2fdac338e0f",
+      "name": "Send a message",
+      "webhookId": "33779569-88b4-44ab-b406-d3db194d38b9",
+      "credentials": {}
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\nconst originalData = items[0].json;\n\nlet rawText = '';\n\n\nif ($('Parser: Extract Slack Content').isExecuted) {\n  rawText = $('Parser: Extract Slack Content').item.json.raw_text;\n} else if ($('Parser: Extract Webhook Content').isExecuted) {\n  rawText = $('Parser: Extract Webhook Content').item.json.raw_text;\n} else if ($('Get Record from Airtable').isExecuted) {\n  rawText = $('Get Record from Airtable').first().json.user_input;\n} else {\n  throw new Error('Nenhum parser foi executado!');\n}\n  \nreturn [{\n  json: {\n    ...originalData,\n    imageType: 'showcase',\n    storagePath: '/images/showcase',\n    postType: 'showcase',\n    \n    systemMessage: `You are the Product Showcase Content Agent for ***.\n\nYour responsibilities:\n1) Generate a LinkedIn showcase post (150-180 words)\n2) Generate TWO SEPARATE fields for image creation:\n   - \"visual_prompt\": A focused photo description for AI image generation\n   - \"banner_layout\": Design specifications for post-processing\n\n-------------------------------------------------\nLINKEDIN POST REQUIREMENTS\n-------------------------------------------------\n- ⁠  ⁠Max 150–180 words\n- ⁠  ⁠Friendly, professional \"we\" voice - like talking to a colleague, not a salesperson\n- ⁠  ⁠B2B + B2C oriented\n- ⁠  ⁠Use 1–2 simple, relevant emojis (e.g., 🚀 for growth, 📊 for data, 🎯 for goals)\n- ⁠  ⁠Include 1–3 hashtags related to the topic (e.g., #Ecommerce #DataSolutions)\n- ⁠  ⁠Focus on concrete value, not vague claims\n- ⁠  ⁠Avoid buzzwords like \"revolutionary,\" \"game-changing,\" \"cutting-edge\"\n- ⁠  ⁠Structure: Hook → Problem/Context → Solution/Result → CTA\n\n-------------------------------------------------\nIMAGE OUTPUT FORMAT (CRITICAL)\n-------------------------------------------------\nYou MUST generate TWO separate fields:\n\n1) \"visual_prompt\" (max 75 words):\n   Focus ONLY on the photograph content for AI generation.\n   \n   REQUIRED ELEMENTS:\n   - People: 2-3 diverse professionals (different ethnicities, genders)\n   - Action: Actively working together - pointing at screen, discussing, gesturing\n   - Emotion: Genuine engagement - natural smiles, focused expressions, enthusiasm\n   - Setting: Modern, bright office with natural light\n   - Composition: Group clustered naturally, candid moment\n   - Technical: Professional photography, soft natural lighting, slight depth of field\n   - Aspect ratio: 16:9 landscape\n   \n   STRICTLY AVOID in visual_prompt:\n   - Any mention of text, typography, or written content\n   - Color codes or background colors\n   - Shapes, masks, frames, or design elements\n   - Logos, branding, or graphics\n   - Layout instructions or positioning\n   \n   Example:\n   \"A candid professional photograph of three diverse colleagues actively collaborating around a laptop in a bright modern office. One person pointing at the screen, another leaning in with engaged expression, third person smiling naturally. Natural window lighting, warm atmosphere, genuine teamwork moment. Professional photography quality, soft focus background, 16:9 aspect ratio.\"\n\n2) \"banner_layout\" (JSON object):\n   Design specifications for post-processing overlay:\n   {\n     \"background_color\": \"<Choose ONE from approved colors below>\",\n     \"title_text\": \"<Compelling 5-10 word title based on showcase topic>\",\n     \"client_logo\": \"<client brand name or empty string>\"\n   }\n   \n   CRITICAL for client_logo field:\n   - Use ONLY the brand name text (e.g., \"Coupons.com\")\n   - NEVER use URLs (e.g., NOT \"https://example.com/logo.png\")\n   - If no specific client is mentioned, use empty string: \"\"\n   - Do NOT use \"***\" as the client logo - *** is always in the footer\n   \n   APPROVED BACKGROUND COLORS (Choose the one that best fits the mood):\n   - \"#F2F4F3\" (Sage green - calm, sustainable, trustworthy)\n   - \"#FF9966\" (Warm orange - energetic, action-oriented, engaging)\n   - \"#E8E8E8\" (Light gray - clean, professional, neutral)\n   - \"#FFF8DC\" (Pale cream - optimistic, friendly, innovative)\n   \n   Color Selection Guide:\n   - Data/Analytics topics → Light gray (#E8E8E8)\n   - Growth/Results topics → Warm orange (#FF8C5A)\n   - Sustainability/Trust topics → Sage green (#F2F4F3)\n   - Innovation/Future topics → Pale yellow (#FFF9E6)\n\n-------------------------------------------------\nWHY THIS SEPARATION IS CRITICAL\n-------------------------------------------------\nAI image generators (Nano Banana/Gemini Imagen) CANNOT reliably:\n❌ Render readable text\n❌ Position elements precisely\n❌ Create layouts with multiple components\n❌ Generate accurate logos\n\nBy separating concerns:\n✅ AI generates high-quality candid photo\n✅ Layout, text, and logos added cleanly in post-processing\n✅ Final banner matches *** brand guidelines perfectly\n\n-------------------------------------------------\n*** BRAND VOICE GUIDELINES\n-------------------------------------------------\nDO:\n- ⁠  ⁠Be direct and conversational\n- ⁠  ⁠Lead with concrete results/data when available\n- ⁠  ⁠Use \"we\" to create partnership feeling\n- ⁠  ⁠Show genuine enthusiasm without hype\n- ⁠  ⁠Ask engaging questions when appropriate\n\nDON'T:\n- ⁠  ⁠Use corporate jargon (\"synergy,\" \"leverage,\" \"paradigm\")\n- ⁠  ⁠Make vague promises (\"unlock potential,\" \"transform your business\")\n- ⁠  ⁠Oversell (\"revolutionary,\" \"game-changing\")\n- ⁠  ⁠Be overly formal or stiff\n\nExample openings:\n✅ \"Retailers are facing a new challenge this holiday season...\"\n✅ \"Here's what happened when we helped [Client] rethink their coupon strategy...\"\n✅ \"Black Friday is almost here. Are you ready?\"\n❌ \"In today's fast-paced digital landscape, brands must leverage...\"\n\n-------------------------------------------------\nCRITICAL OUTPUT REQUIREMENTS\n-------------------------------------------------\nYour JSON output MUST include these EXACT fields:\n\n{\n  \"post_type\": \"showcase\",\n  \"topic\": \"<from user input>\",\n  \"sub_topic\": \"<your generated subtitle/context>\",\n  \"audience\": \"B2B & B2C\",\n  \"tone\": \"friendly, clear\",\n  \"post_text\": \"<your 150-180 word post>\",\n  \"hashtags\": [\"<tag1>\", \"<tag2>\", \"<tag3>\"],\n  \"emojis_used\": true,\n  \"visual_prompt\": \"<max 75 words, photo description ONLY>\",\n  \"banner_layout\": {\n    \"background_color\": \"<one of the 4 approved colors>\",\n    \"title_text\": \"<5-10 word compelling title>\",\n    \"client_logo\": \"<client name or empty string>\"\n  }\n}\n\n⚠️ CRITICAL: Use \"visual_prompt\" NOT \"image_prompt\"\n⚠️ CRITICAL: Do NOT add extra fields to banner_layout\n⚠️ CRITICAL: Output ONLY valid JSON, no markdown formatting`,\n\n    userMessage: `You must generate ONLY a raw JSON object with NO markdown formatting.\n\nUSER'S ORIGINAL REQUEST:\n\"${rawText}\"\n\nIMPORTANT: Read the user's request carefully and:\n- Extract the main topic, project, or client they want to showcase\n- Identify any specific results, metrics, or achievements mentioned\n- Note the tone and emphasis they requested\n- Use the exact client/brand name if mentioned\n\nStructure (fill all empty strings):\n{\n  \"post_type\": \"showcase\",\n  \"topic\": \"\",\n  \"sub_topic\": \"\",\n  \"audience\": \"B2B & B2C\",\n  \"tone\": \"friendly, clear\",\n  \"post_text\": \"\",\n  \"hashtags\": [],\n  \"emojis_used\": true,\n  \"visual_prompt\": \"\",\n  \"banner_layout\": {\n    \"background_color\": \"\",\n    \"title_text\": \"\",\n    \"client_logo\": \"\"\n  }\n}\n\nREMINDER FOR visual_prompt:\n- Describe a PHOTOGRAPH of 2-3 REAL PEOPLE (diverse professionals)\n- Actively working together - pointing, discussing, gesturing\n- Modern bright office with natural lighting\n- Genuine engagement and natural expressions\n- DO NOT describe graphics, charts, icons, text, or design elements\n- Maximum 75 words\n\nREMINDER FOR banner_layout:\n- Choose ONE background color from: #F2F4F3, #FF9966, #E8E8E8, #FFF8DC\n- Create compelling 5-10 word title based on the user's showcase topic\n- Use ONLY brand NAME for client_logo (e.g., \"FitZone Inc.\") if mentioned in request, or empty string \"\" if not mentioned\n\nREMINDER FOR post_text:\n- Structure: Hook → Problem/Context → Solution/Result → CTA\n- Max 150-180 words\n- Friendly, professional \"we\" voice\n- Focus on concrete results from the user's request\n- Use 1-2 professional emojis\n- Include 1-3 relevant hashtags\n\nNow generate the JSON based on the user's original request above.`\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -3872,
+        160
+      ],
+      "id": "06309f7e-0aff-4d59-88d7-59d623b6746b",
+      "name": "Prepare Showcase Data"
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\nconst originalData = items[0].json;\n\nlet rawText = '';\n\n\nif ($('Parser: Extract Slack Content').isExecuted) {\n  rawText = $('Parser: Extract Slack Content').item.json.raw_text;\n} else if ($('Parser: Extract Webhook Content').isExecuted) {\n  rawText = $('Parser: Extract Webhook Content').item.json.raw_text;\n} else if ($('Get Record from Airtable').isExecuted) {\n  rawText = $('Get Record from Airtable').first().json.user_input;\n} else {\n  throw new Error('Nenhum parser foi executado!');\n}\n\nreturn [{\n  json: {\n    ...originalData,\n    imageType: 'recruitment',\n    storagePath: '/images/recruitment',\n    postType: 'recruitment',\n    \n    systemMessage: `You are the Recruitment Content Agent for ***.\n\n-------------------------------------------------\nMEMORY USAGE RULES (CRITICAL)\n-------------------------------------------------\n✅ REMEMBER AND APPLY:\n- Writing style preferences and tone patterns\n- What types of recruitment posts perform well\n- Formatting and structure that works\n- Successful candidate engagement strategies\n\n❌ NEVER REMEMBER OR REUSE:\n- Client names or company names from previous posts\n- Job-specific details from previous roles\n- Location, salary, or employment terms from past requests\n- Any client-identifying or candidate-identifying information\n\nIMPORTANT: Each new request is an INDEPENDENT recruitment post for a NEW client.\nTreat all job details as completely fresh. Only use role information \nexplicitly provided in the current user message.\n\nYour responsibilities:\n1) Generate a LinkedIn recruitment post.\n2) Generate TWO SEPARATE fields for image creation:\n   - \"visual_prompt\": A focused photo description for AI image generation\n   - \"banner_layout\": Design specifications for post-processing\n\n-------------------------------------------------\nLINKEDIN RECRUITMENT POST REQUIREMENTS\n-------------------------------------------------\n- Max 120–160 words.\n- Warm, human, inclusive \"we\" voice.\n- Candidate-first, people-centered language.\n- Use 1–2 simple, professional emojis.\n- Include 1–3 relevant hashtags.\n- Avoid corporate clichés and generic hiring language.\n\n-------------------------------------------------\nIMAGE OUTPUT FORMAT (CRITICAL)\n-------------------------------------------------\nYou MUST generate TWO separate fields:\n\n1) \"visual_prompt\" (max 60 words):\n   Focus ONLY on the photograph content that AI will generate:\n   - Who: 1 person or 2 diverse colleagues\n   - Action: focused working, collaborating, problem-solving, or learning\n   - Setting: modern office or professional indoor environment\n   - Mood: calm, confident, welcoming, human\n   - Technical: candid style, professional photography, natural lighting, 16:9 aspect ratio\n\n   DO NOT include: layout instructions, text placement, colors, shapes, logos, or design elements.\n\n   Example:\n   \"A candid professional photo of a focused software engineer working at a laptop in a modern office. Natural lighting, calm and confident expression, warm and welcoming atmosphere. Professional photography, 16:9 aspect ratio.\"\n\n2) \"banner_layout\" (JSON object):\n   Design specifications for post-processing overlay:\n   {\n     \"background_color\": \"#F2F4F3\",\n     \"title_text\": \"<Create a clear job title based on the recruitment role>\",\n     \"client_logo\": \"<Client/company name IF explicitly mentioned in topic, otherwise null>\"\n   }\n\n-------------------------------------------------\nWHY THIS SEPARATION IS CRITICAL\n-------------------------------------------------\nAI image generators (like Nano Banana/Gemini Imagen) cannot reliably:\n- Render readable job text\n- Position layout elements precisely\n- Create structured recruitment banners\n- Generate logos accurately\n\nBy separating the \"visual_prompt\" (what AI CAN do well) from the \"banner_layout\" (what will be added in post-processing), we ensure:\n✓ AI generates a natural, human recruitment photo\n✓ Job title, CTA, and branding are added cleanly afterward\n✓ Final recruitment banner matches *** design standards\n\n-------------------------------------------------\nSTYLE GUIDELINES FOR banner_layout\n-------------------------------------------------\n- Clean, minimalist layout in landscape 16:9\n- Large neutral background: light grey, soft white, or pale beige (#F2F4F3)\n- Clear job title text block on left side\n- Photo contained in a large oval or capsule shape on the right\n- Solid black footer bar at bottom with white employer slogan\n- Professional, optimized for LinkedIn recruitment ads\n\nSTRICTLY AVOID mentioning in visual_prompt:\n- Hexadecimal color codes\n- Job titles or text content\n- Typography or fonts\n- Shapes, masks, or layout elements\n- Logos, branding, or footer bars\n\n-------------------------------------------------\nCRITICAL OUTPUT REQUIREMENTS\n-------------------------------------------------\nYour JSON output MUST include these EXACT fields with these EXACT names:\n- \"post_type\": \"recruitment\"\n- \"topic\": (from user input)\n- \"role\": (generated by you - EXTRACT FROM USER'S ORIGINAL MESSAGE)\n- \"audience\": \"Job seekers & talent\"\n- \"tone\": \"warm, clear\"\n- \"post_text\": (your generated recruitment post, 120–160 words)\n- \"hashtags\": (array of 1–3 hashtags)\n- \"emojis_used\": true\n- \"visual_prompt\": (max 60 words, photo description only)\n- \"banner_layout\": {\n    \"background_color\": \"#F2F4F3\",\n    \"title_text\": (job title based on role - USE THE EXACT ROLE FROM USER'S MESSAGE),\n    \"client_logo\": (company name from topic or null)\n  }\n\nDO NOT use \"image_prompt\" — use \"visual_prompt\" instead.\nDO NOT add extra fields to banner_layout beyond background_color, title_text, and client_logo.\n\nOutput ONLY valid JSON with all required fields.`,\n\n    userMessage: `You must generate ONLY a raw JSON object with NO markdown formatting.\n\nUSER'S ORIGINAL REQUEST:\n\"${rawText}\"\n\nIMPORTANT: Read the user's request carefully and extract:\n- The exact job title/role they mentioned (e.g., \"Key Account Manager\", \"Data Scientist\")\n- The company name if mentioned (e.g., \"***\")\n- Any specific requirements or tone they requested\n\nStructure (fill all empty strings):\n{\n  \"post_type\": \"recruitment\",\n  \"topic\": \"\",\n  \"role\": \"\",\n  \"audience\": \"Job seekers & talent\",\n  \"tone\": \"warm, clear\",\n  \"post_text\": \"\",\n  \"hashtags\": [],\n  \"emojis_used\": true,\n  \"visual_prompt\": \"\",\n  \"banner_layout\": {\n    \"background_color\": \"#F2F4F3\",\n    \"title_text\": \"\",\n    \"client_logo\": null\n  }\n}\n\nREMINDER FOR visual_prompt:\n- Describe a PHOTOGRAPH of 1-2 REAL PEOPLE (diverse professionals)\n- Focused working, collaborating, or learning\n- Modern office with natural lighting\n- Calm, confident, welcoming mood\n- DO NOT describe job titles, text, design elements, or layouts\n- Maximum 60 words\n\nREMINDER FOR banner_layout:\n- background_color: Always use \"#F2F4F3\"\n- title_text: Use the EXACT job title from the user's request above\n- client_logo: Use company name IF mentioned in the request, otherwise null\n\nREMINDER FOR post_text:\n- Follow the 3-part structure: HOOK → BODY → CLOSE + CTA\n- Max 120-160 words\n- Short paragraphs (1-3 sentences each)\n- Warm, human, inclusive \"we\" voice\n- Use 1-2 professional emojis\n- Avoid corporate jargon\n- Write about the EXACT role mentioned in the user's request\n\nNow generate the JSON based on the user's original request above.`\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -3872,
+        -48
+      ],
+      "id": "84ee32ce-ac9f-47c5-afc3-0af989e3ae5d",
+      "name": "Prepare Recruitment Data"
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\nconst originalData = items[0].json;\n\nlet rawText = '';\n\n\nif ($('Parser: Extract Slack Content').isExecuted) {\n  rawText = $('Parser: Extract Slack Content').item.json.raw_text;\n} else if ($('Parser: Extract Webhook Content').isExecuted) {\n  rawText = $('Parser: Extract Webhook Content').item.json.raw_text;\n} else if ($('Get Record from Airtable').isExecuted) {\n  rawText = $('Get Record from Airtable').first().json.user_input;\n} else {\n  throw new Error('Nenhum parser foi executado!');\n}\n  \nreturn [{\n  json: {\n    ...originalData,\n    imageType: 'engagement',\n    storagePath: '/images/engagement',\n    postType: 'engagement',\n    \n    systemMessage: `You are the *** Employee Engagement Content Agent.\n\nYour task:\n- Generate authentic, human-centered engagement content for ***.\n- Reflect real *** moments: office, events, workshops, conferences, sports activities, team celebrations, and everyday collaboration.\n- Avoid generic stock-photo aesthetics.\n\n-------------------------------------------------\nENGAGEMENT POST RULES\n-------------------------------------------------\n- Generate an Employee Engagement LinkedIn post (120–150 words).\n- Write in a warm, inclusive \"we\" voice.\n- Focus on people, culture, shared moments, and team connection.\n- Describe real, everyday moments (events, gatherings, activities).\n- Sound authentic, human, and positive.\n- Avoid corporate clichés, marketing language, or exaggerated claims.\n- Do NOT mention internal tools, workflows, prompts, or AI.\n\n-------------------------------------------------\nVISUAL_PROMPT VARIATION RULES (CRITICAL)\n-------------------------------------------------\nYou must create HIGHLY VARIED visual_prompt outputs.\nAvoid repeating the same scene structure across requests.\nVary naturally:\n- number of people (2–6)\n- activity (team event, casual gathering, workshop, celebration, outdoor activity, coffee break)\n- location (office, outdoor space, workshop, conference venue)\n- composition (standing, sitting, moving, interacting, laughing)\n- lighting (natural daylight, warm indoor light, afternoon light)\n\n-------------------------------------------------\nVISUAL_PROMPT CONSTRAINTS\n-------------------------------------------------\nThe visual_prompt describes ONLY the photograph the AI should generate.\n- Style: candid, documentary-style, authentic\n- Mood: motivated, active, positive, human\n- Setting: modern office or team environment\n- Aspect ratio: 16:9\n\nSTRICTLY DO NOT include in visual_prompt:\n- logos or brand names\n- text in the image\n- layout instructions\n- shapes, masks, typography\n- colors or hex codes\n\n-------------------------------------------------\nSCENE SELECTION (VERY IMPORTANT)\n-------------------------------------------------\nYou must infer the scene type from the content:\n- Engagement posts about people → everyday team moments\n- Events → conferences, talks, panels, networking, branded spaces\n- Sports & health → outdoor runs, team races, casual sports activities\n- Workshops → whiteboards, sticky notes, group discussions, learning environments\n\n-------------------------------------------------\nCRITICAL VISUAL RULES\n-------------------------------------------------\n- Visuals must feel documentary-style, candid, and real.\n- No staged marketing poses.\n- No exaggerated smiles or artificial scenes.\n- Natural lighting only.\n- Realistic environments: offices, conference venues, outdoor events, sports activities, workshops.\n\n-------------------------------------------------\nBRANDING RULES\n-------------------------------------------------\n- Do NOT invent logos or brand visuals.\n- If a logo is referenced, it must be subtle, realistic, and secondary.\n- Never generate fake or incorrect *** logos.\n\n-------------------------------------------------\nHASHTAGS RULES\n-------------------------------------------------\n- Provide 1–3 simple, relevant hashtags.\n- Examples: #LifeAt***, #TeamMoments, #EmployeeEngagement\n- No emojis in hashtags.\n\n-------------------------------------------------\nSTRICT OUTPUT RULES\n-------------------------------------------------\n- Output ONLY valid raw JSON.\n- Do NOT add explanations.\n- Do NOT add extra fields.\n- Do NOT use markdown code blocks.\n- Return the JSON object directly - NO nested \"output\" wrapper.\n- Start with { \"post_type\": immediately.\n- The visual_prompt must clearly describe the scene type, environment, activity, and atmosphere.\n- The visual_prompt must change meaningfully depending on the content.`,\n\n    userMessage: `Return ONLY this exact JSON structure with no wrapper objects:\n\nUSER'S ORIGINAL REQUEST:\n\"${rawText}\"\n\nIMPORTANT: Read the user's request carefully and:\n- Identify the type of engagement activity (event, celebration, workshop, sports, team moment)\n- Note any specific details about the occasion, people involved, or atmosphere\n- Capture the authentic tone and setting described\n- Vary your visual_prompt based on the actual activity type\n\n{\n  \"post_type\": \"engagement\",\n  \"topic\": \"\",\n  \"audience\": \"Employees & Followers\",\n  \"tone\": \"warm, friendly, human\",\n  \"post_text\": \"\",\n  \"hashtags\": [],\n  \"emojis_used\": true,\n  \"visual_prompt\": \"\"\n}\n\nCRITICAL RULES:\n1. Return the JSON object directly - NO nested \"output\" wrapper\n2. Start with { \"post_type\": immediately\n3. Use \"visual_prompt\" NOT \"image_prompt\"\n4. NO markdown code blocks\n5. NO explanatory text\n6. Fill all fields with generated content based on the user's original request\n7. post_text should be 120-150 words, reflecting the specific activity mentioned\n8. hashtags should be 1-3 items WITH # symbol, without emojis, relevant to the activity type\n9. visual_prompt must describe only the photograph matching the activity (no logos, text, layout instructions)\n10. VARY visual_prompt significantly based on whether it's an event, workshop, sports activity, or casual team moment\n\nREMINDER FOR post_text:\n- Write about the specific activity from the user's request\n- Use warm, inclusive \"we\" voice\n- Focus on people and shared moments\n- Sound authentic and human\n- 120-150 words\n\nREMINDER FOR visual_prompt:\n- Match the scene type to the user's request (conference, sports, workshop, office moment, etc.)\n- Vary number of people, composition, and setting naturally\n- Candid, documentary-style photography\n- Natural lighting, 16:9 aspect ratio\n- NO text, logos, or design elements\n\nReturn the JSON now:`\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -3872,
+        416
+      ],
+      "id": "84df27fa-2b76-4c0a-b880-fda75295ea79",
+      "name": "Prepare Engagement Data",
+      "notesInFlow": false
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-4.1-mini"
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        -3120,
+        624
+      ],
+      "id": "6f5df095-f06a-42d3-9ea7-b8bc195d2d1c",
+      "name": "OpenAI Chat Model4",
+      "credentials": {}
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-4.1-mini"
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        -2976,
+        816
+      ],
+      "id": "03c164f5-7347-4a71-ace3-332b89c4f4a3",
+      "name": "OpenAI Chat Model",
+      "credentials": {}
+    },
+    {
+      "parameters": {
+        "schemaType": "manual",
+        "inputSchema": "{\n  \"$schema\": \"http://json-schema.org/draft-07/schema#\",\n  \"type\": \"object\",\n  \"properties\": {\n    \"post_type\": {\n      \"type\": \"string\",\n      \"enum\": [\"recruitment\", \"showcase\", \"engagement\"]\n    },\n    \"topic\": {\n      \"type\": \"string\"\n    },\n    \"sub_topic\": {\n      \"type\": \"string\"\n    },\n    \"role\": {\n      \"type\": \"string\"\n    },\n    \"audience\": {\n      \"type\": \"string\"\n    },\n    \"tone\": {\n      \"type\": \"string\"\n    },\n    \"post_text\": {\n      \"type\": \"string\"\n    },\n    \"hashtags\": {\n      \"type\": \"array\",\n      \"items\": {\n        \"type\": \"string\"\n      }\n    },\n    \"emojis_used\": {\n      \"type\": \"boolean\"\n    },\n    \"visual_prompt\": {\n      \"type\": \"string\"\n    },\n    \"banner_layout\": {\n      \"type\": \"object\",\n      \"properties\": {\n        \"background_color\": {\n          \"type\": \"string\"\n        },\n        \"title_text\": {\n          \"type\": \"string\"\n        }\n      }\n    }\n  },\n  \"required\": [\n    \"post_type\",\n    \"topic\",\n    \"audience\",\n    \"tone\",\n    \"post_text\",\n    \"hashtags\",\n    \"emojis_used\",\n    \"visual_prompt\"\n  ],\n  \"additionalProperties\": false\n}",
+        "autoFix": true
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        -2928,
+        640
+      ],
+      "id": "a17276ab-3071-4d79-8a9a-30c1bd53b20c",
+      "name": "Structured Output Parser"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-4.1-mini"
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        -4800,
+        368
+      ],
+      "id": "74ab8213-0004-4783-8a7a-2626b31a9b36",
+      "name": "OpenAI Chat Model1",
+      "credentials": {}
+    },
+    {
+      "parameters": {
+        "schemaType": "manual",
+        "inputSchema": "{\n  \"type\": \"object\",\n  \"properties\": {\n    \"category\": {\n      \"type\": \"string\",\n      \"enum\": [\"recruitment\", \"showcase\", \"engagement\"]\n    }\n  },\n  \"required\": [\"category\"]\n}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        -4576,
+        368
+      ],
+      "id": "7ba4d53a-0183-4e2e-8977-1853272bef5e",
+      "name": "Structured Output Parser1"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.userMessage }}",
+        "hasOutputParser": true,
+        "options": {
+          "systemMessage": "={{ $json.systemMessage }}"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3,
+      "position": [
+        -3072,
+        416
+      ],
+      "id": "5801af59-f91d-4ff7-81c9-a14121a843a1",
+      "name": "Post Generator"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Analyze this Slack message and classify it into exactly one category.\n\nMessage: {{ $input.item.json.raw_text }}\n\nCategories:\n- recruitment: job postings, hiring needs, looking for candidates, talent search\n- showcase: project highlights, success stories, campaign results, portfolio items\n- engagement: team updates, general announcements, community posts, celebrations\n\nRespond with ONLY the category name (recruitment, showcase, or engagement). No explanation.",
+        "hasOutputParser": true,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3,
+      "position": [
+        -4752,
+        176
+      ],
+      "id": "9f8ca540-093b-440c-b951-85f120016af2",
+      "name": "Classify Message Type"
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "={{ $json.output.category }}_conversation"
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.3,
+      "position": [
+        -3024,
+        640
+      ],
+      "id": "8b76ce86-cd93-4cdf-94f9-f35992385c7c",
+      "name": "Simple Memory"
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\nconst data = items[0].json;\n\n// Get image data from Gemini\nconst inlineDataPart = data.candidates?.[0]?.content?.parts?.find(part => part.inlineData);\nconst base64Data = inlineDataPart?.inlineData?.data;\nif (!base64Data) {\n  throw new Error('No image data found in Gemini response');\n}\n\n// Get metadata from Format Airtable Data\nconst formatData = $('Format Airtable Data').first().json.output;\n\nreturn [{\n  json: {\n    ...formatData,           // Passa todos os dados do Airtable\n    inlineData: base64Data,  // Adiciona a imagem\n    public_id: `${formatData.post_type}_${Date.now()}`\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -2800,
+        144
+      ],
+      "id": "8a50de2e-ab76-4598-849d-4ab9154978a7",
+      "name": "Extract Image and Metadata"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "66ac56bd-ebde-4eb3-9577-ecaa9e096e76",
+              "leftValue": "={{ $('Parser: Extract Slack Content').isExecuted && $('Parser: Extract Slack Content').first()?.json?.hasImage }}",
+              "rightValue": "0",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "1e219b02-901b-42dc-afdf-f4e9dbe7acc1",
+              "leftValue": "={{ $('Format Airtable Data').isExecuted && $('Format Airtable Data').first().json.hasImage }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "or"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -3216,
+        -16
+      ],
+      "id": "6c989308-26e6-4092-b77b-bd60178db9e2",
+      "name": "If: Image(s) attached",
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-image:generateContent",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googlePalmApi",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"contents\": [\n    {\n      \"parts\": [\n        {\n          \"text\": \"Generate a professional photo: {{ $json.output.visual_prompt }}\"\n        }\n      ]\n    }\n  ]\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -2992,
+        144
+      ],
+      "id": "624312f1-9170-42dc-9a69-1cc91399599e",
+      "name": "Image Generator3",
+      "credentials": {}
+    },
+    {
+      "parameters": {
+        "mode": "expression",
+        "numberOutputs": 2,
+        "output": "={{ \n$json.output.status === \"text_approved\" || \n$json.output.status === \"image_regenerated\" ||\n$json.output.status\n? 0 : 1 \n}}"
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.3,
+      "position": [
+        -3376,
+        160
+      ],
+      "id": "214b2d33-d13e-4d5e-8139-e32b746d5723",
+      "name": "Switch1"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://slack.com/api/chat.postMessage",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "slackOAuth2Api",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "channel",
+              "value": "C05HQFGMRC2"
+            },
+            {
+              "name": "text",
+              "value": "={{ $json.text }}"
+            },
+            {
+              "name": "blocks",
+              "value": "={{ $json.blocks }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        -2336,
+        416
+      ],
+      "id": "91a2686e-33eb-4e93-9cbc-ccb199ee5b9f",
+      "name": "HTTP Request",
+      "credentials": {}
+    },
+    {
+      "parameters": {
+        "operation": "create",
+        "base": "AIRTABLE_BASE_ID",
+        "table": {
+          "__rl": true,
+          "value": "tblEiOX76m3Cs3Vso",
+          "mode": "list",
+          "cachedResultName": "Posts",
+          "cachedResultUrl": "https://airtable.com/app5qL48JQ0kv3Ybv/tblEiOX76m3Cs3Vso"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "status": "pending_text",
+            "post_type": "={{ $json.output.post_type }}",
+            "topic": "={{ $json.output.topic }}",
+            "sub_topic": "={{ $json.output.sub_topic }}",
+            "Name": "=",
+            "post_text": "={{ $json.output.post_text }}",
+            "visual_prompt": "={{ $json.output.visual_prompt }}",
+            "banner_layout": "={{ JSON.stringify($json.output.banner_layout) }}",
+            "hashtags": "={{ Array.isArray($json.output.hashtags) ? $json.output.hashtags.join(', ') : $json.output.hashtags }}",
+            "audience": "={{ $json.output.audience }}",
+            "tone": "={{ $json.output.tone }}",
+            "user_input": "={{ $('Parser: Extract Slack Content').isExecuted ? $('Parser: Extract Slack Content').item.json.raw_text : $('Parser: Extract Webhook Content').item.json.raw_text }}",
+            "image_url": "={{ $if($('Slack Trigger').isExecuted, $('Slack Trigger').first().json.files[0]?.url_private_download, '') }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Name",
+              "displayName": "Name",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "status",
+              "displayName": "status",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "options",
+              "options": [
+                {
+                  "name": "pending_text",
+                  "value": "pending_text"
+                },
+                {
+                  "name": "text_approved",
+                  "value": "text_approved"
+                },
+                {
+                  "name": "pending_image",
+                  "value": "pending_image"
+                },
+                {
+                  "name": "image_approved",
+                  "value": "image_approved"
+                },
+                {
+                  "name": "published",
+                  "value": "published"
+                },
+                {
+                  "name": "rejected",
+                  "value": "rejected"
+                }
+              ],
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "post_type",
+              "displayName": "post_type",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "options",
+              "options": [
+                {
+                  "name": "showcase",
+                  "value": "showcase"
+                },
+                {
+                  "name": "recruitment",
+                  "value": "recruitment"
+                },
+                {
+                  "name": "engagement",
+                  "value": "engagement"
+                }
+              ],
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "user_input",
+              "displayName": "user_input",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "topic",
+              "displayName": "topic",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "sub_topic",
+              "displayName": "sub_topic",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "post_text",
+              "displayName": "post_text",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "visual_prompt",
+              "displayName": "visual_prompt",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "banner_layout",
+              "displayName": "banner_layout",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "hashtags",
+              "displayName": "hashtags",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "audience",
+              "displayName": "audience",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "tone",
+              "displayName": "tone",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "image_url",
+              "displayName": "image_url",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "slack_message_ts",
+              "displayName": "slack_message_ts",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "created_at",
+              "displayName": "created_at",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": true,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {
+          "typecast": false
+        }
+      },
+      "type": "n8n-nodes-base.airtable",
+      "typeVersion": 2.1,
+      "position": [
+        -2720,
+        416
+      ],
+      "id": "f517b793-6acd-4b2c-8464-5cb6c47e1ee4",
+      "name": "Create a record",
+      "credentials": {}
+    },
+    {
+      "parameters": {
+        "jsCode": "const airtableRecord = $input.first().json;\n\n// Pega o record_id que o Airtable acabou de criar\nconst recordId = airtableRecord.id;\n\n// Pega os dados do record\nconst fields = airtableRecord.fields;\n\n// Valores dos botões (agora SÓ tem o record_id!)\nconst approveValue = JSON.stringify({\n  action: 'approve_text',\n  record_id: recordId\n});\n\nconst editValue = JSON.stringify({\n  action: 'edit_text',\n  record_id: recordId\n});\n\nconst regenerateValue = JSON.stringify({\n  action: 'regenerate_text',\n  record_id: recordId\n});\n\nconst rejectValue = JSON.stringify({\n  action: 'reject_text',\n  record_id: recordId\n});\n\n// Blocos do Slack\nconst slackBlocks = [\n  {\n    type: \"header\",\n    text: {\n      type: \"plain_text\",\n      text: \"🎯 New Post for Approval - LinkedIn\"\n    }\n  },\n  {\n    type: \"section\",\n    text: {\n      type: \"mrkdwn\",\n      text: `*Content Type:* ${fields.post_type}\\n*Topic:* ${fields.topic}\\n*Subtopic:* ${fields.sub_topic}\\n*Audience:* ${fields.audience}\\n*Tone:* ${fields.tone}\\n*Status:* ${fields.status}\\n*Record ID:* ${recordId}`\n    }\n  },\n  {\n    type: \"divider\"\n  },\n  {\n    type: \"section\",\n    text: {\n      type: \"mrkdwn\",\n      text: `*Post Content:*\\n\\n${fields.post_text}\\n\\n${fields.hashtags}`\n    }\n  },\n  {\n    type: \"divider\"\n  },\n  {\n    type: \"actions\",\n    block_id: \"post_actions\",\n    elements: [\n      {\n        type: \"button\",\n        text: {\n          type: \"plain_text\",\n          text: \"✅ Approve\"\n        },\n        style: \"primary\",\n        value: approveValue,\n        action_id: \"approve_text\"\n      },\n      {\n        type: \"button\",\n        text: {\n          type: \"plain_text\",\n          text: \"✏️ Edit Content\"\n        },\n        value: editValue,\n        action_id: \"edit_text\"\n      },\n      {\n        type: \"button\",\n        text: {\n          type: \"plain_text\",\n          text: \"🔄 Regenerate\"\n        },\n        value: regenerateValue,\n        action_id: \"regenerate_text\"\n      },\n      {\n        type: \"button\",\n        text: {\n          type: \"plain_text\",\n          text: \"❌ Reject & Archive\"\n        },\n        style: \"danger\",\n        value: rejectValue,\n        action_id: \"reject_text\"\n      }\n    ]\n  },\n  {\n    type: \"context\",\n    elements: [\n      {\n        type: \"mrkdwn\",\n        text: \"💡 *Tip:* Click Approve to proceed or Regenerate for a new version\"\n      }\n    ]\n  }\n];\n\nreturn [{\n  json: {\n    record_id: recordId,\n    channel: \"C05HQFGMRC2\",\n    text: `New post for approval: ${fields.topic}`,\n    blocks: slackBlocks  // ← já vem como array\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -2528,
+        416
+      ],
+      "id": "5d04a30b-06ad-46cc-95e1-7ab12cb87314",
+      "name": "Format Slack Message"
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "workflow1-callback",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -6096,
+        656
+      ],
+      "id": "c3006c4f-4a0d-4786-81ea-1d18d6ded689",
+      "name": "Webhook",
+      "webhookId": "7004bb2f-31b3-4c46-9230-b1ecdd4ef160"
+    },
+    {
+      "parameters": {
+        "mode": "expression",
+        "numberOutputs": 2,
+        "output": "={{ $json.type === \"app_mention\" ? 0 : 1 }}"
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.3,
+      "position": [
+        -5824,
+        544
+      ],
+      "id": "cac7c2e0-2356-47fc-a7dc-4a30d357c0ea",
+      "name": "Switch"
+    },
+    {
+      "parameters": {
+        "mode": "expression",
+        "output": "={{\n  $json.body.stage === \"text_approved\" ? 0 :\n  $json.body.stage === \"regenerate_text\" ? 1 :\n  $json.body.stage === \"edit_text\" ? 2 :\n  $json.body.stage === \"reject_text\" ? 3 :\n  0\n}}"
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.3,
+      "position": [
+        -5552,
+        688
+      ],
+      "id": "e9853213-a3e6-485d-9fb2-ebeeb87aaf50",
+      "name": "Switch: Callback Type"
+    },
+    {
+      "parameters": {
+        "base": "AIRTABLE_BASE_ID",
+        "table": {
+          "__rl": true,
+          "value": "tblEiOX76m3Cs3Vso",
+          "mode": "list",
+          "cachedResultName": "Posts",
+          "cachedResultUrl": "https://airtable.com/app5qL48JQ0kv3Ybv/tblEiOX76m3Cs3Vso"
+        },
+        "id": "={{ $('Webhook').item.json.body.record_id }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.airtable",
+      "typeVersion": 2.1,
+      "position": [
+        -4848,
+        672
+      ],
+      "id": "4646b9d8-a626-4ce0-b580-6191af0d5049",
+      "name": "Get Record from Airtable",
+      "credentials": {}
+    },
+    {
+      "parameters": {
+        "jsCode": "const record = $input.first().json;\nconst hasImage = !!$input.first().json.image_url\nreturn [{\n  json: {\n    output: {\n      status: record.status,\n      post_type: record.post_type,\n      topic: record.topic,\n      sub_topic: record.sub_topic,\n      post_text: record.post_text,\n      visual_prompt: record.visual_prompt,\n      banner_layout: typeof record.banner_layout === 'string' \n        ? JSON.parse(record.banner_layout) \n        : record.banner_layout,\n      hashtags: record.hashtags,\n      audience: record.audience,\n      tone: record.tone\n    },\n    hasImage,\n    record_id: record.id\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -4672,
+        672
+      ],
+      "id": "4dbc0651-0992-4579-a801-b6f49156d9b3",
+      "name": "Format Airtable Data"
+    },
+    {
+      "parameters": {
+        "authentication": "oAuth2",
+        "resource": "file",
+        "binaryPropertyName": "image",
+        "options": {
+          "fileName": "=linkedin-post-{{ $now.format('yyyy-MM-dd-HHmmss') }}.png"
+        }
+      },
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2.3,
+      "position": [
+        -1376,
+        -48
+      ],
+      "id": "ec5918a1-3fea-40af-a8de-6b2887431729",
+      "name": "LinkedIn Post Image",
+      "webhookId": "c024e382-ccca-42dd-b79a-c95f60a3b744",
+      "credentials": {}
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "b6099e51-75de-4a8e-a9fe-752869bb81d4",
+              "leftValue": "={{ $('Extract Image and Metadata').first().json.post_type && ['recruitment', 'showcase'].includes($('Extract Image and Metadata').first().json.post_type) }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -2352,
+        144
+      ],
+      "id": "99234c77-dd8d-433b-a23b-3517f2268f73",
+      "name": "If: Has banner_layout?1"
+    },
+    {
+      "parameters": {
+        "operation": "toBinary",
+        "sourceProperty": "inlineData",
+        "options": {
+          "mimeType": "=image/png"
+        }
+      },
+      "type": "n8n-nodes-base.convertToFile",
+      "typeVersion": 1.1,
+      "position": [
+        -2576,
+        144
+      ],
+      "id": "52fe617a-c915-4294-ba3a-5ee4a99c7df1",
+      "name": "Convert to Image File1"
+    },
+    {
+      "parameters": {
+        "jsCode": "// 1) Get metadata + content\nconst metadata = $('Extract Image and Metadata').first()?.json;\nconst content = metadata?.output;\n\n// 3) Return payload com a imagem PNG original\nreturn [\n  {\n    json: {\n      post_type: content?.post_type || 'showcase',\n      topic: content?.topic || 'LinkedIn Post',\n      sub_topic: content?.sub_topic,\n      post_text: content?.post_text || '',\n      hashtags: Array.isArray(content?.hashtags)\n        ? content.hashtags.join(', ')\n        : (content?.hashtags || ''),\n      visual_prompt: content?.visual_prompt || '',\n      banner_layout: content?.banner_layout,\n      public_id: metadata?.public_id || 'generated'\n    },\n    binary: {\n      image: $('CloudConvert').first().binary.data\n    },\n  }\n];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1584,
+        -48
+      ],
+      "id": "cfb51630-508a-49b8-b26c-dcb1e830e653",
+      "name": "Prepare Approval Payload (Generated Image)1",
+      "alwaysOutputData": false
+    },
+    {
+      "parameters": {
+        "jsCode": "// 1. Pega a imagem do INPUT (binary)\nconst item = $input.first();  // ← ADICIONA ESSA LINHA!\nconst binaryData = item.binary.data;\nif (!binaryData) {\n  throw new Error('No binary image found in input');\n}\nconst imageData = binaryData.data; // Base64 da imagem\n\n// 2. Busca os metadados do Extract Image and Metadata\nconst extractData = $('Extract Image and Metadata').first().json;\nconst postType = extractData.post_type;\nconst metadata = extractData;\n\nconsole.log('POST TYPE:', postType);\nconsole.log('HAS IMAGE DATA:', !!imageData);\nconsole.log('IMAGE DATA LENGTH:', imageData ? imageData.length : 0);\n\n// ... resto do código\nconst actualData = metadata;\nconst bannerLayout = actualData.banner_layout || {};\n\n// --- 4) SHARED VARIABLES AND HELPERS ---\n// =============================================================================\n\n// *** Logo (Base64) - placeholder, add full value later\nconst CompanyLogo = 'YOUR_COMPANY_LOGO_BASE64_HERE';\n\n// Shared helper functions\nconst escapeXml = (str = '') => {\n  if (!str) return '';\n  return String(str)\n    .replace(/&/g, '&amp;')\n    .replace(/</g, '&lt;')\n    .replace(/>/g, '&gt;')\n    .replace(/\"/g, '&quot;')\n    .replace(/'/g, '&apos;');\n};\n\nconst capitalizeFirst = (str = '') => {\n  if (!str) return '';\n  return str.charAt(0).toUpperCase() + str.slice(1);\n};\n\nconst wrapText = (text, maxCharsPerLine) => {\n  const words = text.split(' ');\n  const lines = [];\n  let currentLine = '';\n\n  words.forEach(word => {\n    if ((currentLine + ' ' + word).trim().length <= maxCharsPerLine) {\n      currentLine = (currentLine ? currentLine + ' ' : '') + word;\n    } else {\n      if (currentLine) lines.push(currentLine);\n      currentLine = word;\n    }\n  });\n\n  if (currentLine) lines.push(currentLine);\n  return lines;\n};\n\n// Shared background color\nconst backgroundColor = bannerLayout.background_color || '#F2F4F3';\n\n// =============================================================================\n// --- 5) GENERATE SVG BASED ON POST_TYPE ---\n// =============================================================================\n\nlet svgContent = '';\n\nif (postType === 'showcase') {\n  // SHOWCASE-SPECIFIC VARIABLES\n  const topic = capitalizeFirst(escapeXml(actualData.topic || bannerLayout.title_text || 'Default Topic'));\n  const subTopic = capitalizeFirst(escapeXml(actualData.sub_topic || ''));\n  \n  // Get client logo\n  let clientLogo = bannerLayout.client_logo || '';\n  if (clientLogo && (clientLogo.includes('http') || clientLogo.includes('www.') || clientLogo.includes('://'))) {\n    clientLogo = '';\n  }\n  clientLogo = escapeXml(clientLogo);\n  \n  const topicLines = wrapText(topic, 20);\n  const subtitleLines = wrapText(subTopic, 35);\n\n  const titleStartY = 280;\n  const subtitleStartY = titleStartY + (topicLines.length * 85) + 120;\n\n  // Showcase capsule settings\n  const capsule = {\n    x: 900,\n    y: 240,\n    w: 980,\n    h: 520,\n    angle: -10,   \n  };\n\n  const capsuleRx = capsule.h / 2;\n  const imageScale = 1.18; \n\n  const imgW = capsule.w * imageScale;\n  const imgH = capsule.h * imageScale;\n  const imgX = capsule.x - (imgW - capsule.w) / 2;\n  const imgY = capsule.y - (imgH - capsule.h) / 2;\n\n  svgContent = `\n  <!-- Background -->\n  <rect width=\"1920\" height=\"1080\" fill=\"${backgroundColor}\"/>\n\n  <!-- Client Logo -->\n  ${clientLogo ? `\n  <text x=\"60\" y=\"100\" font-family=\"Arial, sans-serif\" font-size=\"36\" font-weight=\"600\" fill=\"#000000\">\n    ${clientLogo}\n  </text>\n  ` : ''}\n\n  <!-- Title -->\n  <text x=\"60\" y=\"${titleStartY}\" font-family=\"Arial, sans-serif\" font-size=\"76\" font-weight=\"500\" fill=\"#000000\">\n    ${topicLines\n      .map((line, i) => `<tspan x=\"60\" dy=\"${i === 0 ? 0 : 85}\">${line}</tspan>`)\n      .join('\\n    ')}\n  </text>\n\n  <!-- Subtitle -->\n  ${subTopic ? `\n  <text x=\"60\" y=\"${subtitleStartY}\" font-family=\"Arial, sans-serif\" font-size=\"45\" font-weight=\"400\" fill=\"#000000\">\n    ${subtitleLines\n      .map((line, i) => `<tspan x=\"60\" dy=\"${i === 0 ? 0 : 60}\">${line}</tspan>`)\n      .join('\\n    ')}\n  </text>\n  ` : ''}\n\n  <!-- Right-side capsule image (overscanned to avoid edge gaps) -->\n  <image\n    x=\"${imgX}\"\n    y=\"${imgY}\"\n    width=\"${imgW}\"\n    height=\"${imgH}\"\n    xlink:href=\"data:image/png;base64,${imageData}\"\n    clip-path=\"url(#showcaseCapsuleClip)\"\n    preserveAspectRatio=\"xMidYMid slice\"\n  />\n`;\n\n} else if (postType === 'recruitment') {\n  // RECRUITMENT-SPECIFIC VARIABLES\n  const title = escapeXml(\n    bannerLayout.title_text ||\n    actualData.role ||\n    actualData.topic ||\n    'Senior Frontend Engineer (m/f/d)'\n  );\n\n  const titleLines = wrapText(title, 18);\n\n  // Recruitment backgrounds\n  const leftBg = '#FFFFFF';\n  const rightBg = '#EAF7FB';\n\n  // Recruitment capsule geometry (WIDE CAPSULE)\n  const capsule = {\n    x: 1200,\n    y: 140,\n    w: 520,\n    h: 760\n  };\n\n  const capsuleRadius = capsule.w / 2;\n  const imageScale = 1.12;\n\n  const imgW = capsule.w * imageScale;\n  const imgH = capsule.h * imageScale;\n  const imgX = capsule.x - (imgW - capsule.w) / 2;\n  const imgY = capsule.y - (imgH - capsule.h) / 2;\n\n  svgContent = `\n  <!-- Left background -->\n  <rect x=\"0\" y=\"0\" width=\"1056\" height=\"1080\" fill=\"${leftBg}\"/>\n  \n  <!-- Right background -->\n  <rect x=\"1056\" y=\"0\" width=\"864\" height=\"1080\" fill=\"${rightBg}\"/>\n  \n  <!-- Eyebrow -->\n  <text x=\"80\" y=\"160\" font-family=\"Arial, sans-serif\" font-size=\"32\" fill=\"#000000\">\n    We're hiring!\n  </text>\n  \n  <!-- Job title -->\n  <text x=\"80\" y=\"260\" font-family=\"Arial, sans-serif\" font-size=\"96\" font-weight=\"bold\" fill=\"#000000\">\n    ${titleLines\n      .map((l, i) => `<tspan x=\"80\" dy=\"${i === 0 ? 0 : 110}\">${l}</tspan>`)\n      .join('')}\n  </text>\n  \n  <!-- CTA -->\n  <text x=\"80\" y=\"560\" font-family=\"Arial, sans-serif\" font-size=\"36\" font-weight=\"bold\" text-decoration=\"underline\" fill=\"#000000\">\n    Apply now →\n  </text>\n  \n  <!-- Divider -->\n  <line x1=\"80\" y1=\"610\" x2=\"820\" y2=\"610\" stroke=\"#999\" stroke-width=\"2\"/>\n  \n  <!-- Meta -->\n  <text x=\"80\" y=\"680\" font-size=\"28\" font-family=\"Arial\">Based in</text>\n  <text x=\"80\" y=\"720\" font-size=\"32\" font-weight=\"bold\" font-family=\"Arial\">Munich, Berlin</text>\n  \n  <text x=\"420\" y=\"680\" font-size=\"28\" font-family=\"Arial\">Working hours</text>\n  <text x=\"420\" y=\"720\" font-size=\"32\" font-weight=\"bold\" font-family=\"Arial\">Full-Time</text>\n  \n  <!-- Wide capsule image -->\n  <image\n    x=\"${imgX}\"\n    y=\"${imgY}\"\n    width=\"${imgW}\"\n    height=\"${imgH}\"\n    xlink:href=\"data:image/png;base64,${imageData}\"\n    clip-path=\"url(#recruitmentCapsuleClip)\"\n    preserveAspectRatio=\"xMidYMid slice\"\n  />\n`;\n\n} else {\n  throw new Error(`Unexpected post_type: ${postType}`);\n}\n\n// =============================================================================\n// --- 6) COMMON FOOTER SECTION (USED BY ALL POST TYPES) ---\n// =============================================================================\n\nconst footerSection = `\n  <!-- Footer -->\n  <rect y=\"980\" width=\"1920\" height=\"100\" fill=\"#000000\"/>\n\n  <text x=\"80\" y=\"1040\" font-family=\"Arial, sans-serif\" font-size=\"20\" fill=\"#FFFFFF\">\n    Destinations for Decisions.\n  </text>\n\n  <image\n    x=\"1720\"\n    y=\"1005\"\n    width=\"140\"\n    height=\"50\"\n    xlink:href=\"data:image/png;base64,${***Logo}\"\n    preserveAspectRatio=\"xMidYMid meet\"\n  />\n`;\n\n// =============================================================================\n// --- 7) COMBINE EVERYTHING INTO FINAL SVG ---\n// =============================================================================\n\nconst svg = `\n<svg width=\"1920\" height=\"1080\" xmlns=\"http://www.w3.org/2000/svg\" xmlns:xlink=\"http://www.w3.org/1999/xlink\">\n\n  <defs>\n    <!-- Showcase capsule clip path (WITH rotation) -->\n    <clipPath id=\"showcaseCapsuleClip\" clipPathUnits=\"userSpaceOnUse\">\n      <rect\n        x=\"900\"\n        y=\"240\"\n        width=\"980\"\n        height=\"520\"\n        rx=\"260\"\n        ry=\"260\"\n        transform=\"rotate(-10 1390 500)\"\n      />\n    </clipPath>\n\n    <!-- Recruitment capsule clip path (NO rotation) -->\n    <clipPath id=\"recruitmentCapsuleClip\">\n      <rect\n        x=\"1200\"\n        y=\"140\"\n        width=\"520\"\n        height=\"760\"\n        rx=\"260\"\n        ry=\"260\"\n      />\n    </clipPath>\n  </defs>\n\n${svgContent}\n\n${footerSection}\n\n</svg>\n`;\n\n// =============================================================================\n// --- 8) RETURN RESULT ---\n// =============================================================================\n\nreturn [{\n  json: {\n    ...metadata,\n    svg,\n    svg_base64: Buffer.from(svg).toString('base64'),\n    mime_type: 'image/svg+xml',\n    svgFileName: `${postType}_banner_${Date.now()}.svg`,\n    banner_layout: bannerLayout\n  },\n  binary: {\n    image: binaryData  // ← ADICIONA ISSO! Passa a imagem adiante\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -2128,
+        -48
+      ],
+      "id": "06685053-6ae6-40fb-8b9c-807d661e6c7a",
+      "name": "Generate SVG Banner1"
+    },
+    {
+      "parameters": {
+        "operation": "toBinary",
+        "sourceProperty": "svg_base64",
+        "options": {
+          "fileName": "banner.svg",
+          "mimeType": "=image/svg+xml"
+        }
+      },
+      "type": "n8n-nodes-base.convertToFile",
+      "typeVersion": 1.1,
+      "position": [
+        -1936,
+        -48
+      ],
+      "id": "43e9c19f-4be3-4c69-9a00-9c09c781e5b4",
+      "name": "Convert to Image File2"
+    },
+    {
+      "parameters": {
+        "trigger": [
+          "app_mention"
+        ],
+        "channelId": "SLACK_CHANNEL_ID",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.slackTrigger",
+      "typeVersion": 1,
+      "position": [
+        -6096,
+        400
+      ],
+      "id": "afe146b6-ca2e-4bcc-a668-bd1430a371b8",
+      "name": "Slack Trigger",
+      "webhookId": "fc701257-344c-40e9-acff-cb678b6d0bc8",
+      "credentials": {}
+    },
+    {
+      "parameters": {
+        "authentication": "apiKey",
+        "outputFormat": "png",
+        "additionalOptions": "{}"
+      },
+      "type": "@cloudconvert/n8n-nodes-cloudconvert.cloudConvert",
+      "typeVersion": 1,
+      "position": [
+        -1760,
+        -48
+      ],
+      "id": "8f4efa91-626c-47dd-b867-b6b132739137",
+      "name": "CloudConvert",
+      "credentials": {}
+    },
+    {
+      "parameters": {
+        "amount": 10
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        -1008,
+        -48
+      ],
+      "id": "c2d6fd9f-bff8-4f41-89e8-67611f20fd38",
+      "name": "Wait",
+      "webhookId": "17f7bfc7-e9f5-467a-8319-e8f88300cfef"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "base": "AIRTABLE_BASE_ID",
+        "table": {
+          "__rl": true,
+          "value": "tblEiOX76m3Cs3Vso",
+          "mode": "list",
+          "cachedResultName": "Posts",
+          "cachedResultUrl": "https://airtable.com/app5qL48JQ0kv3Ybv/tblEiOX76m3Cs3Vso"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Name": "={{ $('Webhook').item.json.body.record_id }}",
+            "image_url": "={{ $json.url_private_download }}"
+          },
+          "matchingColumns": [
+            "Name"
+          ],
+          "schema": [
+            {
+              "id": "Name",
+              "displayName": "Name",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "status",
+              "displayName": "status",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "options",
+              "options": [
+                {
+                  "name": "pending_text",
+                  "value": "pending_text"
+                },
+                {
+                  "name": "text_approved",
+                  "value": "text_approved"
+                },
+                {
+                  "name": "pending_image",
+                  "value": "pending_image"
+                },
+                {
+                  "name": "image_approved",
+                  "value": "image_approved"
+                },
+                {
+                  "name": "published",
+                  "value": "published"
+                },
+                {
+                  "name": "rejected",
+                  "value": "rejected"
+                }
+              ],
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "post_type",
+              "displayName": "post_type",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "options",
+              "options": [
+                {
+                  "name": "showcase",
+                  "value": "showcase"
+                },
+                {
+                  "name": "recruitment",
+                  "value": "recruitment"
+                },
+                {
+                  "name": "engagement",
+                  "value": "engagement"
+                }
+              ],
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "topic",
+              "displayName": "topic",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "sub_topic",
+              "displayName": "sub_topic",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "post_text",
+              "displayName": "post_text",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "visual_prompt",
+              "displayName": "visual_prompt",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "banner_layout",
+              "displayName": "banner_layout",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "hashtags",
+              "displayName": "hashtags",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "audience",
+              "displayName": "audience",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "tone",
+              "displayName": "tone",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "image_url",
+              "displayName": "image_url",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "slack_message_ts",
+              "displayName": "slack_message_ts",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "created_at",
+              "displayName": "created_at",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": true,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.airtable",
+      "typeVersion": 2.1,
+      "position": [
+        -1184,
+        -48
+      ],
+      "id": "0a42e01f-0919-42fb-9e0f-52932d52b877",
+      "name": "Update record",
+      "credentials": {}
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://slack.com/api/chat.postMessage",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "slackOAuth2Api",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"channel\": \"C05HQFGMRC2\",\n  \"text\": \"🖼️ Image Ready for Approval\",\n  \"blocks\": [\n    {\n      \"type\": \"header\",\n      \"text\": {\n        \"type\": \"plain_text\",\n        \"text\": \"🖼️ Image Ready for Approval - LinkedIn\"\n      }\n    },\n    {\n      \"type\": \"image\",\n      \"image_url\": \"{{ $('Get Record from Airtable').first().json.image_url }}\",\n      \"alt_text\": \"Recieved image\"\n    },\n    {\n      \"type\": \"divider\"\n    },\n    {\n      \"type\": \"actions\",\n      \"block_id\": \"image_actions\",\n      \"elements\": [\n        {\n          \"type\": \"button\",\n          \"text\": { \"type\": \"plain_text\", \"text\": \"✅ Approve\" },\n          \"style\": \"primary\",\n          \"value\": \"approve\",\n          \"action_id\": \"approve_image\"\n        },\n        {\n          \"type\": \"button\",\n          \"text\": { \"type\": \"plain_text\", \"text\": \"🔄 Regenerate\" },\n          \"value\": \"regenerate\",\n          \"action_id\": \"regenerate_image\"\n        },\n        {\n          \"type\": \"button\",\n          \"text\": { \"type\": \"plain_text\", \"text\": \"❌ Reject\" },\n          \"style\": \"danger\",\n          \"value\": \"reject\",\n          \"action_id\": \"reject_image\"\n        },\n        {\n          \"type\": \"button\",\n          \"text\": { \"type\": \"plain_text\", \"text\": \"📥 Archive\" },\n          \"value\": \"archive\",\n          \"action_id\": \"archive_image\"\n        }\n      ]\n    }\n  ]\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        -2976,
+        -144
+      ],
+      "id": "c8778f9d-8481-456f-b56f-3ead0185cbf1",
+      "name": "HTTP Request4",
+      "executeOnce": false,
+      "alwaysOutputData": false,
+      "credentials": {},
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "jsCode": "return [\n  {\n    \"id\": \"F0A7WH5G28M\",\n    \"created\": 1768094046,\n    \"timestamp\": 1768094046,\n    \"name\": \"linkedin-post-2026-01-10-201405.png\",\n    \"title\": \"banner.svg\",\n    \"mimetype\": \"\",\n    \"filetype\": \"\",\n    \"pretty_type\": \"\",\n    \"user\": \"U09UR962VLY\",\n    \"user_team\": \"T05HMHMPU5T\",\n    \"editable\": false,\n    \"size\": 1914325,\n    \"mode\": \"hosted\",\n    \"is_external\": false,\n    \"external_type\": \"\",\n    \"is_public\": false,\n    \"public_url_shared\": false,\n    \"display_as_bot\": false,\n    \"username\": \"\",\n    \"url_private\": \"https://neuerworkspac-fpe9108.slack.com/files/U09UR962VLY/F0A7XMNJAMC/linkedin-post-2026-01-10-180524.png\",\n    \"url_private_download\": \"https://neuerworkspac-fpe9108.slack.com/files/U09UR962VLY/F0A7XMNJAMC/linkedin-post-2026-01-10-180524.png\",\n    \"media_display_type\": \"unknown\",\n    \"permalink\": \"https://neuerworkspac-fpe9108.slack.com/files/U09UR962VLY/F0A7XMNJAMC/linkedin-post-2026-01-10-180524.png\",\n    \"permalink_public\": \"https://slack-files.com/T05HMHMPU5T-F0A7WH5G28M-65a96cb0eb\",\n    \"comments_count\": 0,\n    \"is_starred\": false,\n    \"shares\": {},\n    \"channels\": [],\n    \"groups\": [],\n    \"ims\": [],\n    \"has_more_shares\": false,\n    \"has_rich_preview\": false,\n    \"file_access\": \"visible\"\n  }\n]"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -800,
+        -48
+      ],
+      "id": "707250e7-9641-4098-b76f-86c0ee5e9e2f",
+      "name": "Code in JavaScript",
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "authentication": "oAuth2",
+        "resource": "file",
+        "binaryPropertyName": "image",
+        "options": {
+          "fileName": "=linkedin-post-{{ $now.format('yyyy-MM-dd-HHmmss') }}.png"
+        }
+      },
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2.3,
+      "position": [
+        -1952,
+        160
+      ],
+      "id": "43f5a9ab-0f7d-4736-ab4e-76fb9efedc10",
+      "name": "LinkedIn Post Image1",
+      "webhookId": "c024e382-ccca-42dd-b79a-c95f60a3b744",
+      "credentials": {}
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://slack.com/api/chat.postMessage",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "slackOAuth2Api",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"channel\": \"C05HQFGMRC2\",\n  \"text\": \"🖼️ Image Ready for Approval\",\n  \"blocks\": [\n    {\n      \"type\": \"header\",\n      \"text\": {\n        \"type\": \"plain_text\",\n        \"text\": \"🖼️ Image Ready for Approval - LinkedIn\"\n      }\n    },\n    {\n      \"type\": \"section\",\n      \"text\": {\n        \"type\": \"mrkdwn\",\n        \"text\": \"*Content Type:* {{ $('Image Generator3').first().json.candidates[0].content.parts[1].inlineData.mimeType }}\\n*Topic:* {{ $('If: Image(s) attached').item.json.output.topic }}\"\n      }\n    },\n    {\n      \"type\": \"image\",\n      \"image_url\": \"{{ $json.fields.image_url }}\",\n      \"alt_text\": \"Generated image for  {{ $('If: Image(s) attached').item.json.output.topic }}\"\n    },\n    {\n      \"type\": \"divider\"\n    },\n    {\n      \"type\": \"actions\",\n      \"block_id\": \"image_actions\",\n      \"elements\": [\n        {\n          \"type\": \"button\",\n          \"text\": { \"type\": \"plain_text\", \"text\": \"✅ Approve\" },\n          \"style\": \"primary\",\n          \"value\": \"{\\\"action\\\":\\\"approve_image\\\",\\\"record_id\\\":\\\"{{ $json.id }}\\\"}\",\n          \"action_id\": \"approve_image\"\n        },\n        {\n          \"type\": \"button\",\n          \"text\": { \"type\": \"plain_text\", \"text\": \"🔄 Regenerate\" },\n          \"value\": \"{\\\"action\\\":\\\"regenerate_image\\\",\\\"record_id\\\":\\\"{{ $json.id }}\\\"}\",\n          \"action_id\": \"regenerate_image\"\n        },\n        {\n          \"type\": \"button\",\n          \"text\": { \"type\": \"plain_text\", \"text\": \"❌ Reject & Archive\" },\n          \"style\": \"danger\",\n          \"value\": \"{\\\"action\\\":\\\"reject_image\\\",\\\"record_id\\\":\\\"{{ $json.id }}\\\"}\",\n          \"action_id\": \"reject_image\"\n        }\n      ]\n    }\n  ]\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        -1168,
+        160
+      ],
+      "id": "656ca894-f797-421e-8bfd-77f1c0328ab1",
+      "name": "HTTP Request5",
+      "executeOnce": false,
+      "alwaysOutputData": false,
+      "credentials": {}
+    },
+    {
+      "parameters": {
+        "amount": 10
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        -1584,
+        160
+      ],
+      "id": "495114b9-0b2b-4ff0-b981-a76b26b3cfcf",
+      "name": "Wait1",
+      "webhookId": "17f7bfc7-e9f5-467a-8319-e8f88300cfef"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "base": "AIRTABLE_BASE_ID",
+        "table": {
+          "__rl": true,
+          "value": "tblEiOX76m3Cs3Vso",
+          "mode": "list",
+          "cachedResultName": "Posts",
+          "cachedResultUrl": "https://airtable.com/app5qL48JQ0kv3Ybv/tblEiOX76m3Cs3Vso"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Name": "={{ $('Webhook').item.json.body.record_id }}",
+            "image_url": "={{ $json.url_private_download }}"
+          },
+          "matchingColumns": [
+            "Name"
+          ],
+          "schema": [
+            {
+              "id": "Name",
+              "displayName": "Name",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "status",
+              "displayName": "status",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "options",
+              "options": [
+                {
+                  "name": "pending_text",
+                  "value": "pending_text"
+                },
+                {
+                  "name": "text_approved",
+                  "value": "text_approved"
+                },
+                {
+                  "name": "pending_image",
+                  "value": "pending_image"
+                },
+                {
+                  "name": "image_approved",
+                  "value": "image_approved"
+                },
+                {
+                  "name": "published",
+                  "value": "published"
+                },
+                {
+                  "name": "rejected",
+                  "value": "rejected"
+                }
+              ],
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "post_type",
+              "displayName": "post_type",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "options",
+              "options": [
+                {
+                  "name": "showcase",
+                  "value": "showcase"
+                },
+                {
+                  "name": "recruitment",
+                  "value": "recruitment"
+                },
+                {
+                  "name": "employee",
+                  "value": "employee"
+                }
+              ],
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "topic",
+              "displayName": "topic",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "sub_topic",
+              "displayName": "sub_topic",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "post_text",
+              "displayName": "post_text",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "visual_prompt",
+              "displayName": "visual_prompt",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "banner_layout",
+              "displayName": "banner_layout",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "hashtags",
+              "displayName": "hashtags",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "audience",
+              "displayName": "audience",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "tone",
+              "displayName": "tone",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "image_url",
+              "displayName": "image_url",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "slack_message_ts",
+              "displayName": "slack_message_ts",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "created_at",
+              "displayName": "created_at",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": true,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.airtable",
+      "typeVersion": 2.1,
+      "position": [
+        -1760,
+        160
+      ],
+      "id": "4dfb35a8-c794-4eac-83de-a55cb540e99d",
+      "name": "Update record1",
+      "credentials": {}
+    },
+    {
+      "parameters": {
+        "authentication": "apiKey",
+        "outputFormat": "png",
+        "additionalOptions": "{}"
+      },
+      "type": "@cloudconvert/n8n-nodes-cloudconvert.cloudConvert",
+      "typeVersion": 1,
+      "position": [
+        -2128,
+        160
+      ],
+      "id": "c7edd1bd-4b1a-4a03-bbe8-cfa548a3cd55",
+      "name": "CloudConvert1",
+      "credentials": {}
+    },
+    {
+      "parameters": {
+        "jsCode": "return [\n  {\n    \"id\": \"F0A7WH5G28M\",\n    \"created\": 1768094046,\n    \"timestamp\": 1768094046,\n    \"name\": \"linkedin-post-2026-01-10-201405.png\",\n    \"title\": \"banner.svg\",\n    \"mimetype\": \"\",\n    \"filetype\": \"\",\n    \"pretty_type\": \"\",\n    \"user\": \"U09UR962VLY\",\n    \"user_team\": \"T05HMHMPU5T\",\n    \"editable\": false,\n    \"size\": 1914325,\n    \"mode\": \"hosted\",\n    \"is_external\": false,\n    \"external_type\": \"\",\n    \"is_public\": false,\n    \"public_url_shared\": false,\n    \"display_as_bot\": false,\n    \"username\": \"\",\n    \"url_private\": \"https://neuerworkspac-fpe9108.slack.com/files/U09UR962VLY/F0A7XMNJAMC/linkedin-post-2026-01-10-180524.png\",\n    \"url_private_download\": \"https://neuerworkspac-fpe9108.slack.com/files/U09UR962VLY/F0A7XMNJAMC/linkedin-post-2026-01-10-180524.png\",\n    \"media_display_type\": \"unknown\",\n    \"permalink\": \"https://neuerworkspac-fpe9108.slack.com/files/U09UR962VLY/F0A7XMNJAMC/linkedin-post-2026-01-10-180524.png\",\n    \"permalink_public\": \"https://slack-files.com/T05HMHMPU5T-F0A7WH5G28M-65a96cb0eb\",\n    \"comments_count\": 0,\n    \"is_starred\": false,\n    \"shares\": {},\n    \"channels\": [],\n    \"groups\": [],\n    \"ims\": [],\n    \"has_more_shares\": false,\n    \"has_rich_preview\": false,\n    \"file_access\": \"visible\"\n  }\n]"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1376,
+        160
+      ],
+      "id": "4112e8c5-b259-430b-8304-1b6f04f171dc",
+      "name": "Code in JavaScript1",
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://slack.com/api/chat.postMessage",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "slackOAuth2Api",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"channel\": \"C05HQFGMRC2\",\n  \"text\": \"🖼️ Image Ready for Approval\",\n  \"blocks\": [\n    {\n      \"type\": \"header\",\n      \"text\": {\n        \"type\": \"plain_text\",\n        \"text\": \"🖼️ Image Ready for Approval - LinkedIn\"\n      }\n    },\n    {\n      \"type\": \"section\",\n      \"text\": {\n        \"type\": \"mrkdwn\",\n        \"text\": \"*Content Type:* {{ $json.fields.post_type }}\\n*Topic:* {{ $json.fields.topic }}\"\n      }\n    },\n    {\n      \"type\": \"divider\"\n    },\n    {\n      \"type\": \"actions\",\n      \"block_id\": \"image_actions\",\n      \"elements\": [\n        {\n          \"type\": \"button\",\n          \"text\": { \"type\": \"plain_text\", \"text\": \"✅ Approve\" },\n          \"style\": \"primary\",\n          \"value\": \"{\\\"action\\\":\\\"approve_image\\\",\\\"record_id\\\":\\\"{{ $json.id }}\\\"}\",\n          \"action_id\": \"approve_image\"\n        },\n        {\n          \"type\": \"button\",\n          \"text\": { \"type\": \"plain_text\", \"text\": \"🔄 Regenerate\" },\n          \"value\": \"{\\\"action\\\":\\\"regenerate_image\\\",\\\"record_id\\\":\\\"{{ $json.id }}\\\"}\",\n          \"action_id\": \"regenerate_image\"\n        },\n        {\n          \"type\": \"button\",\n          \"text\": { \"type\": \"plain_text\", \"text\": \"❌ Reject & Archive\" },\n          \"style\": \"danger\",\n          \"value\": \"{\\\"action\\\":\\\"reject_image\\\",\\\"record_id\\\":\\\"{{ $json.id }}\\\"}\",\n          \"action_id\": \"reject_image\"\n        }\n      ]\n    }\n  ]\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        -1168,
+        336
+      ],
+      "id": "e731f580-da69-4540-a49a-be85c90e7d38",
+      "name": "HTTP Request6",
+      "executeOnce": false,
+      "alwaysOutputData": false,
+      "credentials": {},
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://slack.com/api/chat.postMessage",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "slackOAuth2Api",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"channel\": \"C05HQFGMRC2\",\n  \"text\": \"🖼️ Image Ready for Approval\",\n  \"blocks\": [\n    {\n      \"type\": \"header\",\n      \"text\": {\n        \"type\": \"plain_text\",\n        \"text\": \"🖼️ Image Ready for Approval - LinkedIn\"\n      }\n    },\n    {\n      \"type\": \"section\",\n      \"text\": {\n        \"type\": \"mrkdwn\",\n        \"text\": \"*Content Type:* {{ $('Image Generator3').first().json.candidates[0].content.parts[1].inlineData.mimeType }}\\n*Topic:* {{ $('Generate SVG Banner1').first().json.topic }}\"\n      }\n    },\n    {\n      \"type\": \"image\",\n      \"image_url\": \"{{ $json.fields.image_url }}\",\n      \"alt_text\": \"Generated image for {{ $('Generate SVG Banner1').first().json.topic }}\"\n    },\n    {\n      \"type\": \"divider\"\n    },\n    {\n      \"type\": \"actions\",\n      \"block_id\": \"image_actions\",\n      \"elements\": [\n        {\n          \"type\": \"button\",\n          \"text\": { \"type\": \"plain_text\", \"text\": \"✅ Approve\" },\n          \"style\": \"primary\",\n          \"value\": \"{\\\"action\\\":\\\"approve_image\\\",\\\"record_id\\\":\\\"{{ $json.id }}\\\"}\",\n          \"action_id\": \"approve_image\"\n        },\n        {\n          \"type\": \"button\",\n          \"text\": { \"type\": \"plain_text\", \"text\": \"🔄 Regenerate\" },\n          \"value\": \"{\\\"action\\\":\\\"regenerate_image\\\",\\\"record_id\\\":\\\"{{ $json.id }}\\\"}\",\n          \"action_id\": \"regenerate_image\"\n        },\n        {\n          \"type\": \"button\",\n          \"text\": { \"type\": \"plain_text\", \"text\": \"❌ Reject & Archive\" },\n          \"style\": \"danger\",\n          \"value\": \"{\\\"action\\\":\\\"reject_image\\\",\\\"record_id\\\":\\\"{{ $json.id }}\\\"}\",\n          \"action_id\": \"reject_image\"\n        }\n      ]\n    }\n  ]\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        -608,
+        -48
+      ],
+      "id": "a9e70f06-c75a-4629-af9b-7493476901d9",
+      "name": "HTTP Request3",
+      "executeOnce": false,
+      "alwaysOutputData": false,
+      "credentials": {}
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://slack.com/api/chat.postMessage",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "slackOAuth2Api",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"channel\": \"C05HQFGMRC2\",\n  \"text\": \"🖼️ Image Ready for Approval\",\n  \"blocks\": [\n    {\n      \"type\": \"header\",\n      \"text\": {\n        \"type\": \"plain_text\",\n        \"text\": \"🖼️ Image Ready for Approval - LinkedIn\"\n      }\n    },\n    {\n      \"type\": \"section\",\n      \"text\": {\n        \"type\": \"mrkdwn\",\n        \"text\": \"*Content Type:* {{ $json.fields.post_type }}\\n*Topic:* {{ $json.fields.topic }}\"\n      }\n    },\n    {\n      \"type\": \"divider\"\n    },\n    {\n      \"type\": \"actions\",\n      \"block_id\": \"image_actions\",\n      \"elements\": [\n        {\n          \"type\": \"button\",\n          \"text\": { \"type\": \"plain_text\", \"text\": \"✅ Approve\" },\n          \"style\": \"primary\",\n          \"value\": \"{\\\"action\\\":\\\"approve_image\\\",\\\"record_id\\\":\\\"{{ $json.id }}\\\"}\",\n          \"action_id\": \"approve_image\"\n        },\n        {\n          \"type\": \"button\",\n          \"text\": { \"type\": \"plain_text\", \"text\": \"🔄 Regenerate\" },\n          \"value\": \"{\\\"action\\\":\\\"regenerate_image\\\",\\\"record_id\\\":\\\"{{ $json.id }}\\\"}\",\n          \"action_id\": \"regenerate_image\"\n        },\n        {\n          \"type\": \"button\",\n          \"text\": { \"type\": \"plain_text\", \"text\": \"❌ Reject & Archive\" },\n          \"style\": \"danger\",\n          \"value\": \"{\\\"action\\\":\\\"reject_image\\\",\\\"record_id\\\":\\\"{{ $json.id }}\\\"}\",\n          \"action_id\": \"reject_image\"\n        }\n      ]\n    }\n  ]\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        -608,
+        -224
+      ],
+      "id": "7f44744b-ffd5-4d90-8a31-6ba7feaaa248",
+      "name": "HTTP Request7",
+      "executeOnce": false,
+      "alwaysOutputData": false,
+      "credentials": {},
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "base": "AIRTABLE_BASE_ID",
+        "id": "={{ $('Webhook').item.json.body.record_id }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.airtable",
+      "typeVersion": 2.1,
+      "position": [
+        -5312,
+        704
+      ],
+      "id": "47f9784a-f832-4d77-a0e4-fa485cf24fc4",
+      "name": "Get Record from Airtable1",
+      "credentials": {}
+    },
+    {
+      "parameters": {
+        "jsCode": "// Pega todos os records do Airtable\nconst records = $input.all();\n\n// Se não tem records, retorna erro\nif (records.length === 0) {\n  throw new Error('Nenhum record encontrado no Airtable');\n}\n\n// Ordena por created_at (mais recente primeiro) e pega o primeiro\nconst sortedRecords = records.sort((a, b) => {\n  const dateA = new Date(a.json.created_at || a.json.createdTime);\n  const dateB = new Date(b.json.created_at || b.json.createdTime);\n  return dateB - dateA; // DESC (mais recente primeiro)\n});\n\n// Pega apenas o mais recente\nconst mostRecent = sortedRecords[0].json;\n\n// Verifica se tem user_input válido\nif (!mostRecent.user_input) {\n  throw new Error('Record mais recente não tem user_input. Record ID: ' + mostRecent.id);\n}\n\n// Retorna no formato esperado pelo Classify Message Type\nreturn [{\n  json: {\n    raw_text: mostRecent.user_input,\n    files: [],\n    channel_id: mostRecent.channel_id || '',\n    user_id: mostRecent.Name || mostRecent.user_id || ''\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -5120,
+        704
+      ],
+      "id": "e159ffab-cd6d-4a6a-b7fb-8687a589b144",
+      "name": "Parser: Extract Webhook Content"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "base": "AIRTABLE_BASE_ID",
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "id": "={{ $('Create a record').first().json.id }}",
+            "Name": "={{ $('Create a record').first().json.id }}"
+          },
+          "matchingColumns": [
+            "id"
+          ],
+          "schema": [
+            {
+              "id": "id",
+              "displayName": "id",
+              "required": false,
+              "defaultMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": true,
+              "removed": false
+            },
+            {
+              "id": "Name",
+              "displayName": "Name",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "status",
+              "displayName": "status",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "options",
+              "options": [
+                {
+                  "name": "pending_text",
+                  "value": "pending_text"
+                },
+                {
+                  "name": "text_approved",
+                  "value": "text_approved"
+                },
+                {
+                  "name": "pending_image",
+                  "value": "pending_image"
+                },
+                {
+                  "name": "image_approved",
+                  "value": "image_approved"
+                },
+                {
+                  "name": "published",
+                  "value": "published"
+                },
+                {
+                  "name": "rejected",
+                  "value": "rejected"
+                },
+                {
+                  "name": "superseded",
+                  "value": "superseded"
+                }
+              ],
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "post_type",
+              "displayName": "post_type",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "options",
+              "options": [
+                {
+                  "name": "showcase",
+                  "value": "showcase"
+                },
+                {
+                  "name": "recruitment",
+                  "value": "recruitment"
+                },
+                {
+                  "name": "engagement",
+                  "value": "engagement"
+                }
+              ],
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "user_input",
+              "displayName": "user_input",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "topic",
+              "displayName": "topic",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "sub_topic",
+              "displayName": "sub_topic",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "post_text",
+              "displayName": "post_text",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "visual_prompt",
+              "displayName": "visual_prompt",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "banner_layout",
+              "displayName": "banner_layout",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "hashtags",
+              "displayName": "hashtags",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "audience",
+              "displayName": "audience",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "tone",
+              "displayName": "tone",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "image_url",
+              "displayName": "image_url",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "slack_message_ts",
+              "displayName": "slack_message_ts",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "created_at",
+              "displayName": "created_at",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": true,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.airtable",
+      "typeVersion": 2.1,
+      "position": [
+        -2160,
+        416
+      ],
+      "id": "5b41e856-3e79-4095-bf23-e0bcd654e0fd",
+      "name": "Update record2",
+      "credentials": {}
+    }
+  ],
+  "pinData": {
+    "Classify Message Type1": [
+      {
+        "json": {
+          "output": {
+            "category": "showcase"
+          }
+        }
+      }
+    ],
+    "Webhook1": [
+      {
+        "json": {
+          "headers": {
+            "host": "n8n-barbara.lwproducoes.com",
+            "user-agent": "axios/1.12.0",
+            "content-length": "78",
+            "accept": "application/json,text/html,application/xhtml+xml,application/xml,text/*;q=0.9, image/*;q=0.8, */*;q=0.7",
+            "accept-encoding": "gzip, br",
+            "cdn-loop": "cloudflare; loops=1",
+            "cf-connecting-ip": "138.246.3.70",
+            "cf-ipcountry": "DE",
+            "cf-ray": "9bc17fe26c071dd2-DUS",
+            "cf-visitor": "{\"scheme\":\"https\"}",
+            "cf-warp-tag-id": "71cda736-a5d9-4c91-bd90-ec2fc8d926a9",
+            "connection": "keep-alive",
+            "content-type": "application/json",
+            "x-forwarded-for": "138.246.3.70",
+            "x-forwarded-proto": "https"
+          },
+          "params": {},
+          "query": {},
+          "body": {
+            "stage": "text_approved",
+            "record_id": "recYMRb6smMp45eb0",
+            "user": "U0A80863A0J"
+          },
+          "webhookUrl": "https://nonheuristic-joselyn-autogenously.ngrok-free.dev/webhook/workflow1-callback",
+          "executionMode": "production"
+        }
+      }
+    ]
+  },
+  "connections": {
+    "Parser: Extract Slack Content": {
+      "main": [
+        [
+          {
+            "node": "Classify Message Type",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Router: Detect Post Type": {
+      "main": [
+        [
+          {
+            "node": "Prepare Recruitment Data",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Prepare Showcase Data",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Prepare Engagement Data",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Edit Fields1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields1": {
+      "main": [
+        [
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Recruitment Data": {
+      "main": [
+        [
+          {
+            "node": "Switch1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Showcase Data": {
+      "main": [
+        [
+          {
+            "node": "Switch1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Engagement Data": {
+      "main": [
+        [
+          {
+            "node": "Switch1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model4": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Post Generator",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Structured Output Parser",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "Post Generator",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Classify Message Type",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser1": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "Classify Message Type",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Post Generator": {
+      "main": [
+        [
+          {
+            "node": "Create a record",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Classify Message Type": {
+      "main": [
+        [
+          {
+            "node": "Router: Detect Post Type",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Simple Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "Post Generator",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract Image and Metadata": {
+      "main": [
+        [
+          {
+            "node": "Convert to Image File1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If: Image(s) attached": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Image Generator3": {
+      "main": [
+        [
+          {
+            "node": "Extract Image and Metadata",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch1": {
+      "main": [
+        [
+          {
+            "node": "Image Generator3",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Post Generator",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create a record": {
+      "main": [
+        [
+          {
+            "node": "Format Slack Message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format Slack Message": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Switch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch": {
+      "main": [
+        [
+          {
+            "node": "Parser: Extract Slack Content",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Switch: Callback Type",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch: Callback Type": {
+      "main": [
+        [
+          {
+            "node": "Get Record from Airtable",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Get Record from Airtable1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Record from Airtable": {
+      "main": [
+        [
+          {
+            "node": "Format Airtable Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format Airtable Data": {
+      "main": [
+        [
+          {
+            "node": "Router: Detect Post Type",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If: Has banner_layout?1": {
+      "main": [
+        [
+          {
+            "node": "Generate SVG Banner1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "CloudConvert1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Convert to Image File1": {
+      "main": [
+        [
+          {
+            "node": "If: Has banner_layout?1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Approval Payload (Generated Image)1": {
+      "main": [
+        [
+          {
+            "node": "LinkedIn Post Image",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generate SVG Banner1": {
+      "main": [
+        [
+          {
+            "node": "Convert to Image File2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Convert to Image File2": {
+      "main": [
+        [
+          {
+            "node": "CloudConvert",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Slack Trigger": {
+      "main": [
+        [
+          {
+            "node": "Switch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "CloudConvert": {
+      "main": [
+        [
+          {
+            "node": "Prepare Approval Payload (Generated Image)1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update record": {
+      "main": [
+        [
+          {
+            "node": "Wait",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "LinkedIn Post Image": {
+      "main": [
+        [
+          {
+            "node": "Update record",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "LinkedIn Post Image1": {
+      "main": [
+        [
+          {
+            "node": "Update record1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait1": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update record1": {
+      "main": [
+        [
+          {
+            "node": "Wait1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "CloudConvert1": {
+      "main": [
+        [
+          {
+            "node": "LinkedIn Post Image1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript1": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request5",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Record from Airtable1": {
+      "main": [
+        [
+          {
+            "node": "Parser: Extract Webhook Content",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parser: Extract Webhook Content": {
+      "main": [
+        [
+          {
+            "node": "Classify Message Type",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "Update record2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "42c885a3-123e-4ab5-b6ed-acbefb2a426b",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "988ec785f8f66143b61268383fb5c2424060187d6db5211c7f676c4bd62e1062"
+  },
+  "id": "UP6e8f1rNOreroLd",
+  "tags": []
+}

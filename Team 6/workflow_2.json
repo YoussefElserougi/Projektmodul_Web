@@ -1,0 +1,3512 @@
+{
+  "name": "Workflow 2 - Final",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "slack-approval",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "b66fedaa-246c-4ccf-ab08-5e2aebb9b48c",
+      "name": "Webhook - Slack Interactions1",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -2192,
+        768
+      ],
+      "webhookId": "slack-approval-handler",
+      "executeOnce": false
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://n8n-barbara.lwproducoes.com/webhook/workflow1-callback",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "stage",
+              "value": "text_approved"
+            },
+            {
+              "name": "record_id",
+              "value": "={{ $('Parse Slack Payload').item.json.record_id }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "ad798998-2b51-442a-a3ae-4449adbedcb2",
+      "name": "Callback: Text Approved1",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        464,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://slack.com/api/chat.postMessage",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"replace_original\": true,\n  \"text\": \"✅ Post text approved! Generating image...\"\n}",
+        "options": {}
+      },
+      "id": "96722de7-a00b-4b50-b35d-e9b23fe70026",
+      "name": "Slack: Update Message (Approved)1",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        240,
+        0
+      ],
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.action_id }}",
+                    "rightValue": "approve_text",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "d462882a-bdb4-464b-8193-c83f37399d0c"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "approve_text "
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "692c9a41-8ed3-4ad3-9bd9-5e8feeceac3a",
+                    "leftValue": "={{ $json.action_id }}",
+                    "rightValue": "regenerate_text",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "regenerate_text"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "fd9b9c4d-2bb9-407b-b71a-4fba5c3aea3e",
+                    "leftValue": "={{ $json.action_id }}",
+                    "rightValue": "edit_text",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "edit_text"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "f4d129c6-bade-4655-ab52-8ba5f37caf18",
+                    "leftValue": "={{ $json.action_id }}",
+                    "rightValue": "reject_text",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "reject_text"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "d89d3d10-8a67-4253-913e-3297ba0eeeba",
+                    "leftValue": "={{ $json.action_id }}",
+                    "rightValue": "approve_image",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "approve_image"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "4e6d87f2-0d4e-44d5-9c4e-e09718d360e6",
+                    "leftValue": "={{ $json.action_id }}",
+                    "rightValue": "reject_image",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "reject_image"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "f4ea164b-200a-41f0-93ea-fde1014d0784",
+                    "leftValue": "={{ $json.action_id }}",
+                    "rightValue": "regenerate_image",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "regenerate_image"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.3,
+      "position": [
+        -1296,
+        448
+      ],
+      "id": "1252d29d-440e-414f-8abc-b5c69a8c353d",
+      "name": "Action Router"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://n8n-barbara.lwproducoes.com/webhook/workflow1-callback",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "stage",
+              "value": "regenerate_text"
+            },
+            {
+              "name": "record_id",
+              "value": "={{ $('Action Router').item.json.record_id }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "21704c2a-2b13-4f74-9a45-5d0d63cea6fe",
+      "name": "Callback: Regenerate Text",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        0,
+        160
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "base": "AIRTABLE_BASE_ID",
+        "table": {
+          "__rl": true,
+          "value": "tblEiOX76m3Cs3Vso",
+          "mode": "list",
+          "cachedResultName": "Posts",
+          "cachedResultUrl": "https://airtable.com/app5qL48JQ0kv3Ybv/tblEiOX76m3Cs3Vso"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "status": "text_approved",
+            "Name": "={{ $json.record_id }}",
+            "id": "={{ $json.record_id }}"
+          },
+          "matchingColumns": [
+            "id"
+          ],
+          "schema": [
+            {
+              "id": "id",
+              "displayName": "id",
+              "required": false,
+              "defaultMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": true,
+              "removed": false
+            },
+            {
+              "id": "Name",
+              "displayName": "Name",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "status",
+              "displayName": "status",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "options",
+              "options": [
+                {
+                  "name": "pending_text",
+                  "value": "pending_text"
+                },
+                {
+                  "name": "text_approved",
+                  "value": "text_approved"
+                },
+                {
+                  "name": "pending_image",
+                  "value": "pending_image"
+                },
+                {
+                  "name": "image_approved",
+                  "value": "image_approved"
+                },
+                {
+                  "name": "published",
+                  "value": "published"
+                },
+                {
+                  "name": "rejected",
+                  "value": "rejected"
+                }
+              ],
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "post_type",
+              "displayName": "post_type",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "options",
+              "options": [
+                {
+                  "name": "showcase",
+                  "value": "showcase"
+                },
+                {
+                  "name": "recruitment",
+                  "value": "recruitment"
+                },
+                {
+                  "name": "engagement",
+                  "value": "engagement"
+                }
+              ],
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "user_input",
+              "displayName": "user_input",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "topic",
+              "displayName": "topic",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "sub_topic",
+              "displayName": "sub_topic",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "post_text",
+              "displayName": "post_text",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "visual_prompt",
+              "displayName": "visual_prompt",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "banner_layout",
+              "displayName": "banner_layout",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "hashtags",
+              "displayName": "hashtags",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "audience",
+              "displayName": "audience",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "tone",
+              "displayName": "tone",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "image_url",
+              "displayName": "image_url",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "slack_message_ts",
+              "displayName": "slack_message_ts",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "created_at",
+              "displayName": "created_at",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": true,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.airtable",
+      "typeVersion": 2.1,
+      "position": [
+        -416,
+        -16
+      ],
+      "id": "0ebb928a-8b9b-4c3b-ad23-cf223341a65c",
+      "name": "Update record - Approve Text",
+      "credentials": {}
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "base": "AIRTABLE_BASE_ID",
+        "table": {
+          "__rl": true,
+          "value": "tblEiOX76m3Cs3Vso",
+          "mode": "list",
+          "cachedResultName": "Posts",
+          "cachedResultUrl": "https://airtable.com/app5qL48JQ0kv3Ybv/tblEiOX76m3Cs3Vso"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "status": "published",
+            "Name": "={{ $json.record_id }}"
+          },
+          "matchingColumns": [
+            "Name"
+          ],
+          "schema": [
+            {
+              "id": "id",
+              "displayName": "id",
+              "required": false,
+              "defaultMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": true,
+              "removed": true
+            },
+            {
+              "id": "Name",
+              "displayName": "Name",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "status",
+              "displayName": "status",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "options",
+              "options": [
+                {
+                  "name": "pending_text",
+                  "value": "pending_text"
+                },
+                {
+                  "name": "text_approved",
+                  "value": "text_approved"
+                },
+                {
+                  "name": "pending_image",
+                  "value": "pending_image"
+                },
+                {
+                  "name": "image_approved",
+                  "value": "image_approved"
+                },
+                {
+                  "name": "published",
+                  "value": "published"
+                },
+                {
+                  "name": "rejected",
+                  "value": "rejected"
+                }
+              ],
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "post_type",
+              "displayName": "post_type",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "options",
+              "options": [
+                {
+                  "name": "showcase",
+                  "value": "showcase"
+                },
+                {
+                  "name": "recruitment",
+                  "value": "recruitment"
+                },
+                {
+                  "name": "employee",
+                  "value": "employee"
+                }
+              ],
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "topic",
+              "displayName": "topic",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "sub_topic",
+              "displayName": "sub_topic",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "post_text",
+              "displayName": "post_text",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "visual_prompt",
+              "displayName": "visual_prompt",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "banner_layout",
+              "displayName": "banner_layout",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "hashtags",
+              "displayName": "hashtags",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "audience",
+              "displayName": "audience",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "tone",
+              "displayName": "tone",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "image_url",
+              "displayName": "image_url",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "slack_message_ts",
+              "displayName": "slack_message_ts",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "created_at",
+              "displayName": "created_at",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": true,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.airtable",
+      "typeVersion": 2.1,
+      "position": [
+        -416,
+        704
+      ],
+      "id": "25909451-e011-4019-9fdc-210d402a288d",
+      "name": "Update record - Regenerate Text1",
+      "credentials": {}
+    },
+    {
+      "parameters": {
+        "person": "GN8SzV0p9D",
+        "text": "={{ $json.postText }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.linkedIn",
+      "typeVersion": 1,
+      "position": [
+        144,
+        704
+      ],
+      "id": "c9f9cc5f-a50f-4a97-a8c6-d752ac9782cb",
+      "name": "Create a post",
+      "credentials": {},
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "base": "AIRTABLE_BASE_ID",
+        "table": {
+          "__rl": true,
+          "value": "tblEiOX76m3Cs3Vso",
+          "mode": "list",
+          "cachedResultName": "Posts",
+          "cachedResultUrl": "https://airtable.com/app5qL48JQ0kv3Ybv/tblEiOX76m3Cs3Vso"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "status": "rejected",
+            "Name": "={{ $json.record_id }}"
+          },
+          "matchingColumns": [
+            "Name"
+          ],
+          "schema": [
+            {
+              "id": "id",
+              "displayName": "id",
+              "required": false,
+              "defaultMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": true,
+              "removed": true
+            },
+            {
+              "id": "Name",
+              "displayName": "Name",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "status",
+              "displayName": "status",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "options",
+              "options": [
+                {
+                  "name": "pending_text",
+                  "value": "pending_text"
+                },
+                {
+                  "name": "text_approved",
+                  "value": "text_approved"
+                },
+                {
+                  "name": "pending_image",
+                  "value": "pending_image"
+                },
+                {
+                  "name": "image_approved",
+                  "value": "image_approved"
+                },
+                {
+                  "name": "published",
+                  "value": "published"
+                },
+                {
+                  "name": "rejected",
+                  "value": "rejected"
+                }
+              ],
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "post_type",
+              "displayName": "post_type",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "options",
+              "options": [
+                {
+                  "name": "showcase",
+                  "value": "showcase"
+                },
+                {
+                  "name": "recruitment",
+                  "value": "recruitment"
+                },
+                {
+                  "name": "employee",
+                  "value": "employee"
+                }
+              ],
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "topic",
+              "displayName": "topic",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "sub_topic",
+              "displayName": "sub_topic",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "post_text",
+              "displayName": "post_text",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "visual_prompt",
+              "displayName": "visual_prompt",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "banner_layout",
+              "displayName": "banner_layout",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "hashtags",
+              "displayName": "hashtags",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "audience",
+              "displayName": "audience",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "tone",
+              "displayName": "tone",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "image_url",
+              "displayName": "image_url",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "slack_message_ts",
+              "displayName": "slack_message_ts",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "created_at",
+              "displayName": "created_at",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": true,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.airtable",
+      "typeVersion": 2.1,
+      "position": [
+        -416,
+        528
+      ],
+      "id": "9582582c-ea5a-4c2b-b12d-5f9af0cc78fa",
+      "name": "Update record - Regenerate Text2",
+      "credentials": {}
+    },
+    {
+      "parameters": {
+        "base": "AIRTABLE_BASE_ID",
+        "table": {
+          "__rl": true,
+          "value": "tblEiOX76m3Cs3Vso",
+          "mode": "list",
+          "cachedResultName": "Posts",
+          "cachedResultUrl": "https://airtable.com/app5qL48JQ0kv3Ybv/tblEiOX76m3Cs3Vso"
+        },
+        "id": "={{ $('Action Router').item.json.record_id }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.airtable",
+      "typeVersion": 2.1,
+      "position": [
+        -208,
+        -16
+      ],
+      "id": "f5d022fa-68ef-4746-a4bf-8eb1259aa0ce",
+      "name": "Get a record",
+      "credentials": {}
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $('Get a record').item.json.image_url }}",
+                    "rightValue": "",
+                    "operator": {
+                      "type": "string",
+                      "operation": "notEmpty",
+                      "singleValue": true
+                    },
+                    "id": "2bb9a9cd-f8de-4369-8b64-295f1eaf1734"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Not empty"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "6a0d7f44-813b-422a-8dac-048fd07121e3",
+                    "leftValue": "={{ $('Get a record').item.json.image_url }}",
+                    "rightValue": "",
+                    "operator": {
+                      "type": "string",
+                      "operation": "empty",
+                      "singleValue": true
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Empty"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.3,
+      "position": [
+        0,
+        -16
+      ],
+      "id": "2d4a9a5c-abb8-4a72-8a2b-16cf331a05dd",
+      "name": "Has image?"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://slack.com/api/chat.postMessage",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "slackOAuth2Api",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"channel\": \"C05HQFGMRC2\",\n  \"text\": \"🎉 Post Approved!\",\n  \"blocks\": [\n    {\n      \"type\": \"header\",\n      \"text\": {\n        \"type\": \"plain_text\",\n        \"text\": \"🎉 Congratulations! Your post is approved!\"\n      }\n    },\n    {\n      \"type\": \"divider\"\n    },\n    {\n      \"type\": \"section\",\n      \"text\": {\n        \"type\": \"mrkdwn\",\n        \"text\": \"*{{ $json.topic }}*\\n\\n{{ $json.post_text }}\\n\\n{{ $json.hashtags }}\"\n      }\n    },\n    {\n      \"type\": \"image\",\n      \"image_url\": \"{{ $('Get a record').first().json.image_url }}\",\n      \"alt_text\": \"Received image\"\n    },\n    {\n      \"type\": \"context\",\n      \"elements\": [\n        {\n          \"type\": \"mrkdwn\",\n          \"text\": \"📝 *Type:* {{ $json.post_type }} | 🎯 *Audience:* {{ $json.audience }}\"\n        }\n      ]\n    }\n  ]\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        240,
+        -160
+      ],
+      "id": "199cb33d-d3f3-4226-afc1-0dea3de30e0d",
+      "name": "Slack: Approved Post",
+      "executeOnce": false,
+      "alwaysOutputData": false,
+      "credentials": {}
+    },
+    {
+      "parameters": {
+        "base": "AIRTABLE_BASE_ID",
+        "table": {
+          "__rl": true,
+          "value": "tblEiOX76m3Cs3Vso",
+          "mode": "list",
+          "cachedResultName": "Posts",
+          "cachedResultUrl": "https://airtable.com/app5qL48JQ0kv3Ybv/tblEiOX76m3Cs3Vso"
+        },
+        "id": "={{ $('Action Router').item.json.record_id }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.airtable",
+      "typeVersion": 2.1,
+      "position": [
+        -224,
+        704
+      ],
+      "id": "94fc6bf1-cf64-4bd9-99de-0752ea88827f",
+      "name": "Get a record1",
+      "credentials": {}
+    },
+    {
+      "parameters": {
+        "base": "AIRTABLE_BASE_ID",
+        "table": {
+          "__rl": true,
+          "value": "tblEiOX76m3Cs3Vso",
+          "mode": "list",
+          "cachedResultName": "Posts",
+          "cachedResultUrl": "https://airtable.com/app5qL48JQ0kv3Ybv/tblEiOX76m3Cs3Vso"
+        },
+        "id": "={{ $('Action Router').item.json.record_id }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.airtable",
+      "typeVersion": 2.1,
+      "position": [
+        -416,
+        368
+      ],
+      "id": "03b05c34-6f54-4afc-8e49-b6f3ecac59c9",
+      "name": "Get a record2",
+      "credentials": {}
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://slack.com/api/views.open",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "slackOAuth2Api",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"trigger_id\": \"{{ $('Action Router').item.json.trigger_id }}\",\n  \"view\": {\n    \"type\": \"modal\",\n    \"callback_id\": \"edit_post_modal\",\n    \"title\": {\n      \"type\": \"plain_text\",\n      \"text\": \"Edit Post\"\n    },\n    \"submit\": {\n      \"type\": \"plain_text\",\n      \"text\": \"Save Changes\"\n    },\n    \"close\": {\n      \"type\": \"plain_text\",\n      \"text\": \"Cancel\"\n    },\n    \"blocks\": [\n      {\n        \"type\": \"input\",\n        \"block_id\": \"post_text_block\",\n        \"label\": {\n          \"type\": \"plain_text\",\n          \"text\": \"Post Text\"\n        },\n        \"element\": {\n          \"type\": \"plain_text_input\",\n          \"action_id\": \"post_text_input\",\n          \"multiline\": true,\n          \"initial_value\": \"{{ $('Get a record2').first().json.post_text }}\"\n        }\n      }\n    ],\n    \"private_metadata\": \"{{ $('Get a record2').first().json.id }}\"\n  }\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        -224,
+        368
+      ],
+      "id": "11d65a1a-9532-4086-ac39-0306d6842b96",
+      "name": "Slack: Open Modal",
+      "executeOnce": false,
+      "alwaysOutputData": false,
+      "credentials": {}
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.body.payload.includes('block_actions') }}",
+                    "rightValue": "",
+                    "operator": {
+                      "type": "boolean",
+                      "operation": "true",
+                      "singleValue": true
+                    },
+                    "id": "af6576b9-a52a-425d-87d3-a38b98514f68"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Button Actions"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "ced67f88-44d4-4d25-8b48-2f36d1ac786f",
+                    "leftValue": "={{ $json.body.payload.includes('view_submission') }}",
+                    "rightValue": "",
+                    "operator": {
+                      "type": "boolean",
+                      "operation": "true",
+                      "singleValue": true
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Modal Submit"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.3,
+      "position": [
+        -1952,
+        768
+      ],
+      "id": "d68657b6-8d1f-4cb5-8265-c3f25c52ef12",
+      "name": "Type Router"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Get all input items\nconst items = $input.all();\n\n// Parse the modal submission payload\nconst payload = JSON.parse(items[0].json.body.payload);\n\n// Extract the values from the modal\nconst postText = payload.view.state.values.post_text_block.post_text_input.value;\nconst recordId = payload.view.private_metadata;\n\nreturn items.map(item => ({\n  json: {\n    post_text: postText,\n    record_id: recordId,\n    user_id: payload.user.id,\n    team_id: payload.team.id\n  }\n}));"
+      },
+      "id": "aef39bb5-473d-4c12-b22d-ba451f75984d",
+      "name": "Parse Modal Submission",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1712,
+        992
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "base": "AIRTABLE_BASE_ID",
+        "table": {
+          "__rl": true,
+          "value": "tblEiOX76m3Cs3Vso",
+          "mode": "list",
+          "cachedResultName": "Posts",
+          "cachedResultUrl": "https://airtable.com/app5qL48JQ0kv3Ybv/tblEiOX76m3Cs3Vso"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Name": "={{ $json.record_id }}",
+            "post_text": "={{ $json.post_text }}",
+            "status": "text_approved",
+            "id": "={{ $json.record_id }}"
+          },
+          "matchingColumns": [
+            "id"
+          ],
+          "schema": [
+            {
+              "id": "id",
+              "displayName": "id",
+              "required": false,
+              "defaultMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": true,
+              "removed": false
+            },
+            {
+              "id": "Name",
+              "displayName": "Name",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "status",
+              "displayName": "status",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "options",
+              "options": [
+                {
+                  "name": "pending_text",
+                  "value": "pending_text"
+                },
+                {
+                  "name": "text_approved",
+                  "value": "text_approved"
+                },
+                {
+                  "name": "pending_image",
+                  "value": "pending_image"
+                },
+                {
+                  "name": "image_approved",
+                  "value": "image_approved"
+                },
+                {
+                  "name": "published",
+                  "value": "published"
+                },
+                {
+                  "name": "rejected",
+                  "value": "rejected"
+                },
+                {
+                  "name": "superseded",
+                  "value": "superseded"
+                }
+              ],
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "post_type",
+              "displayName": "post_type",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "options",
+              "options": [
+                {
+                  "name": "showcase",
+                  "value": "showcase"
+                },
+                {
+                  "name": "recruitment",
+                  "value": "recruitment"
+                },
+                {
+                  "name": "engagement",
+                  "value": "engagement"
+                }
+              ],
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "user_input",
+              "displayName": "user_input",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "topic",
+              "displayName": "topic",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "sub_topic",
+              "displayName": "sub_topic",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "post_text",
+              "displayName": "post_text",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "visual_prompt",
+              "displayName": "visual_prompt",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "banner_layout",
+              "displayName": "banner_layout",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "hashtags",
+              "displayName": "hashtags",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "audience",
+              "displayName": "audience",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "tone",
+              "displayName": "tone",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "image_url",
+              "displayName": "image_url",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "slack_message_ts",
+              "displayName": "slack_message_ts",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "created_at",
+              "displayName": "created_at",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": true,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.airtable",
+      "typeVersion": 2.1,
+      "position": [
+        -1520,
+        992
+      ],
+      "id": "d049b4e7-4ec3-438e-a9b4-19c433cfb543",
+      "name": "Update record - Regenerate Text3",
+      "credentials": {}
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://n8n-barbara.lwproducoes.com/webhook/workflow1-callback",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "stage",
+              "value": "text_approved"
+            },
+            {
+              "name": "record_id",
+              "value": "={{ $('Parse Modal Submission').item.json.record_id }}"
+            },
+            {
+              "name": "user",
+              "value": "={{ $('Parse Modal Submission').item.json.user_id }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "71972689-61af-4d6a-8e1c-33881826bba1",
+      "name": "Callback: Text Approved2",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -1344,
+        992
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Parse Slack payload\nconst payload = JSON.parse($input.first().json.body.payload);\nconst action = payload.actions[0];\nconst message = payload.message;\nconst user = payload.user;\n\n// Parse action value if it exists (comes as JSON string)\nlet actionData = {};\ntry {\n  actionData = JSON.parse(action.value);\n} catch (e) {\n  console.log('Could not parse action_value');\n}\n\n// Extract data from message blocks\nconst blocks = message.blocks;\nlet postData = {};\nlet visual_prompt = '';\n\n// Try to extract all fields from blocks\nfor (const block of blocks) {\n  if (block.type === 'section' && block.text && block.text.text) {\n    const text = block.text.text;\n    \n    // Extract post type\n    const typeMatch = text.match(/\\*Content Type:\\*\\s*([^\\n]+)/);\n    if (typeMatch) postData.post_type = typeMatch[1].trim();\n    \n    // Extract topic\n    const topicMatch = text.match(/\\*Topic:\\*\\s*([^\\n]+)/);\n    if (topicMatch) postData.topic = topicMatch[1].trim();\n    \n    // Extract audience\n    const audienceMatch = text.match(/\\*Audience:\\*\\s*([^\\n]+)/);\n    if (audienceMatch) postData.audience = audienceMatch[1].trim();\n    \n    // Extract tone\n    const toneMatch = text.match(/\\*Tone:\\*\\s*([^\\n]+)/);\n    if (toneMatch) postData.tone = toneMatch[1].trim();\n    \n    // Extract post content (everything after \"Post Content:\")\n    const contentMatch = text.match(/\\*Post Content:\\*\\n\\n([\\s\\S]+)/);\n    if (contentMatch) {\n      const fullContent = contentMatch[1].trim();\n      // Separate hashtags from text\n      const lines = fullContent.split('\\n');\n      const lastLine = lines[lines.length - 1];\n      \n      if (lastLine.includes('#')) {\n        postData.hashtags = lastLine.trim();\n        postData.post_text = lines.slice(0, -1).join('\\n').trim();\n      } else {\n        postData.post_text = fullContent;\n        postData.hashtags = '';\n      }\n    }\n  }\n  \n  // Extract visual_prompt from context block\n  if (block.type === 'context' && block.elements) {\n    for (const element of block.elements) {\n      if (element.type === 'mrkdwn' && element.text.includes('visual_prompt=')) {\n        const vpMatch = element.text.match(/visual_prompt=(.+?)-->/);\n        if (vpMatch) visual_prompt = vpMatch[1].trim();\n      }\n    }\n  }\n}\n\nreturn [{\n  json: {\n    action_id: action.action_id,\n    action_value: action.value,\n    user_id: user.id,\n    user_name: user.username,\n    response_url: payload.response_url,\n    trigger_id: payload.trigger_id,\n    channel_id: payload.channel.id,\n    message_ts: message.ts,\n    hasImage: false,\n    // Merged data from action value\n    action: actionData.action || '',\n    record_id: actionData.record_id || '', \n    sub_topic: actionData.sub_topic || '',\n    visual_prompt: actionData.visual_prompt || visual_prompt || '',\n    // Post data from message blocks\n    ...postData\n  }\n}];"
+      },
+      "id": "f092117f-0eff-4e79-b28e-dc0e79ca6207",
+      "name": "Parse Slack Payload",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1584,
+        528
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"response_action\": \"clear\"\n}",
+        "options": {
+          "responseCode": 200
+        }
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        -944,
+        992
+      ],
+      "id": "5b8e8584-93d5-406d-bf28-9c84145e7450",
+      "name": "Respond to Webhook"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "base": "AIRTABLE_BASE_ID",
+        "table": {
+          "__rl": true,
+          "value": "tblEiOX76m3Cs3Vso",
+          "mode": "list",
+          "cachedResultName": "Posts",
+          "cachedResultUrl": "https://airtable.com/app5qL48JQ0kv3Ybv/tblEiOX76m3Cs3Vso"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "id": "={{ $('Action Router').item.json.record_id }}",
+            "status": "superseded",
+            "Name": "={{ $('Action Router').item.json.record_id }}"
+          },
+          "matchingColumns": [
+            "id"
+          ],
+          "schema": [
+            {
+              "id": "id",
+              "displayName": "id",
+              "required": false,
+              "defaultMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": true,
+              "removed": false
+            },
+            {
+              "id": "Name",
+              "displayName": "Name",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "status",
+              "displayName": "status",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "options",
+              "options": [
+                {
+                  "name": "pending_text",
+                  "value": "pending_text"
+                },
+                {
+                  "name": "text_approved",
+                  "value": "text_approved"
+                },
+                {
+                  "name": "pending_image",
+                  "value": "pending_image"
+                },
+                {
+                  "name": "image_approved",
+                  "value": "image_approved"
+                },
+                {
+                  "name": "published",
+                  "value": "published"
+                },
+                {
+                  "name": "rejected",
+                  "value": "rejected"
+                },
+                {
+                  "name": "superseded",
+                  "value": "superseded"
+                }
+              ],
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "post_type",
+              "displayName": "post_type",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "options",
+              "options": [
+                {
+                  "name": "showcase",
+                  "value": "showcase"
+                },
+                {
+                  "name": "recruitment",
+                  "value": "recruitment"
+                },
+                {
+                  "name": "engagement",
+                  "value": "engagement"
+                }
+              ],
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "user_input",
+              "displayName": "user_input",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "topic",
+              "displayName": "topic",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "sub_topic",
+              "displayName": "sub_topic",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "post_text",
+              "displayName": "post_text",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "visual_prompt",
+              "displayName": "visual_prompt",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "banner_layout",
+              "displayName": "banner_layout",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "hashtags",
+              "displayName": "hashtags",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "audience",
+              "displayName": "audience",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "tone",
+              "displayName": "tone",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "image_url",
+              "displayName": "image_url",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "slack_message_ts",
+              "displayName": "slack_message_ts",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "created_at",
+              "displayName": "created_at",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": true,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.airtable",
+      "typeVersion": 2.1,
+      "position": [
+        -416,
+        160
+      ],
+      "id": "6e3d960f-faff-4b98-8aed-bb8fb9e00393",
+      "name": "Update record - Approve Text1",
+      "credentials": {}
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"response_action\": \"clear\"\n}",
+        "options": {
+          "responseCode": 200
+        }
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        928,
+        528
+      ],
+      "id": "16afba12-b415-4a52-b8dd-6c0f027c2d65",
+      "name": "Respond to Webhook1"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://slack.com/api/chat.postMessage",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"channel\": \"{{ $json.channel_id }}\",\n  \"ts\": \"{{ $json.message_ts }}\",\n  \"text\": \"🔄 Regenerating text... Please wait.\",\n  \"blocks\": []\n}",
+        "options": {}
+      },
+      "id": "0725de35-2696-469f-a4b5-ac7cd086d9ed",
+      "name": "Slack: Send Message (Regenerating Text)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -224,
+        160
+      ],
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://slack.com/api/chat.postMessage",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "slackOAuth2Api",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"channel\": \"C05HQFGMRC2\",\n  \"text\": \"✏️ Text Edited - Ready for Review\",\n  \"blocks\": [\n    {\n      \"type\": \"header\",\n      \"text\": {\n        \"type\": \"plain_text\",\n        \"text\": \"✏️ Text Edited - Ready for Review\"\n      }\n    },\n    {\n      \"type\": \"section\",\n      \"text\": {\n        \"type\": \"mrkdwn\",\n        \"text\": \"*Content Type:* {{ $('Update record - Regenerate Text3').first().json.fields.post_type }}\\n*Topic:* {{ $('Update record - Regenerate Text3').first().json.fields.topic }}\\n*Subtopic:* {{ $('Update record - Regenerate Text3').first().json.fields.sub_topic }}\\n*Audience:* {{ $('Update record - Regenerate Text3').first().json.fields.audience }}\\n*Tone:* {{ $('Update record - Regenerate Text3').first().json.fields.tone }}\\n*Status:* {{ $('Update record - Regenerate Text3').first().json.fields.status }}\\n*Record ID:* {{ $('Update record - Regenerate Text3').first().json.id }}\"\n      }\n    },\n    {\n      \"type\": \"divider\"\n    },\n    {\n      \"type\": \"section\",\n      \"text\": {\n        \"type\": \"mrkdwn\",\n        \"text\": \"*Post Content (EDITED):*\\n\\n{{ $('Update record - Regenerate Text3').first().json.fields.post_text }}\\n\\n{{ $('Update record - Regenerate Text3').first().json.fields.hashtags }}\"\n      }\n    },\n    {\n      \"type\": \"divider\"\n    },\n    {\n      \"type\": \"actions\",\n      \"block_id\": \"post_actions\",\n      \"elements\": [\n        {\n          \"type\": \"button\",\n          \"text\": {\n            \"type\": \"plain_text\",\n            \"text\": \"✅ Approve\"\n          },\n          \"style\": \"primary\",\n          \"value\": \"{\\\"action\\\":\\\"approve_text\\\",\\\"record_id\\\":\\\"{{ $('Update record - Regenerate Text3').first().json.id }}\\\"}\",\n          \"action_id\": \"approve_text\"\n        },\n        {\n          \"type\": \"button\",\n          \"text\": {\n            \"type\": \"plain_text\",\n            \"text\": \"✏️ Edit Content\"\n          },\n          \"value\": \"{\\\"action\\\":\\\"edit_text\\\",\\\"record_id\\\":\\\"{{ $('Update record - Regenerate Text3').first().json.id }}\\\"}\",\n          \"action_id\": \"edit_text\"\n        },\n        {\n          \"type\": \"button\",\n          \"text\": {\n            \"type\": \"plain_text\",\n            \"text\": \"🔄 Regenerate\"\n          },\n          \"value\": \"{\\\"action\\\":\\\"regenerate_text\\\",\\\"record_id\\\":\\\"{{ $('Update record - Regenerate Text3').first().json.id }}\\\"}\",\n          \"action_id\": \"regenerate_text\"\n        },\n        {\n          \"type\": \"button\",\n          \"text\": {\n            \"type\": \"plain_text\",\n            \"text\": \"❌ Reject & Archive\"\n          },\n          \"style\": \"danger\",\n          \"value\": \"{\\\"action\\\":\\\"reject_text\\\",\\\"record_id\\\":\\\"{{ $('Update record - Regenerate Text3').first().json.id }}\\\"}\",\n          \"action_id\": \"reject_text\"\n        }\n      ]\n    },\n    {\n      \"type\": \"context\",\n      \"elements\": [\n        {\n          \"type\": \"mrkdwn\",\n          \"text\": \"✏️ *Text was edited* - Review and approve or make further changes\"\n        }\n      ]\n    }\n  ]\n}",
+        "options": {}
+      },
+      "id": "54c9ce70-9ea3-4ad1-bc68-54a44707e747",
+      "name": "Slack: Regenerate Message",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -1152,
+        992
+      ],
+      "credentials": {}
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "base": "AIRTABLE_BASE_ID",
+        "table": {
+          "__rl": true,
+          "value": "tblEiOX76m3Cs3Vso",
+          "mode": "list",
+          "cachedResultName": "Posts",
+          "cachedResultUrl": "https://airtable.com/app5qL48JQ0kv3Ybv/tblEiOX76m3Cs3Vso"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "status": "rejected",
+            "Name": "={{ $json.record_id }}"
+          },
+          "matchingColumns": [
+            "Name"
+          ],
+          "schema": [
+            {
+              "id": "id",
+              "displayName": "id",
+              "required": false,
+              "defaultMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": true,
+              "removed": true
+            },
+            {
+              "id": "Name",
+              "displayName": "Name",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "status",
+              "displayName": "status",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "options",
+              "options": [
+                {
+                  "name": "pending_text",
+                  "value": "pending_text"
+                },
+                {
+                  "name": "text_approved",
+                  "value": "text_approved"
+                },
+                {
+                  "name": "pending_image",
+                  "value": "pending_image"
+                },
+                {
+                  "name": "image_approved",
+                  "value": "image_approved"
+                },
+                {
+                  "name": "published",
+                  "value": "published"
+                },
+                {
+                  "name": "rejected",
+                  "value": "rejected"
+                }
+              ],
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "post_type",
+              "displayName": "post_type",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "options",
+              "options": [
+                {
+                  "name": "showcase",
+                  "value": "showcase"
+                },
+                {
+                  "name": "recruitment",
+                  "value": "recruitment"
+                },
+                {
+                  "name": "employee",
+                  "value": "employee"
+                }
+              ],
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "topic",
+              "displayName": "topic",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "sub_topic",
+              "displayName": "sub_topic",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "post_text",
+              "displayName": "post_text",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "visual_prompt",
+              "displayName": "visual_prompt",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "banner_layout",
+              "displayName": "banner_layout",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "hashtags",
+              "displayName": "hashtags",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "audience",
+              "displayName": "audience",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "tone",
+              "displayName": "tone",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "image_url",
+              "displayName": "image_url",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "slack_message_ts",
+              "displayName": "slack_message_ts",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "created_at",
+              "displayName": "created_at",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": true,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.airtable",
+      "typeVersion": 2.1,
+      "position": [
+        -416,
+        880
+      ],
+      "id": "57b2ce43-c5b2-4a4e-a881-68dfbb1808ea",
+      "name": "Update record - Regenerate Text",
+      "credentials": {}
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://slack.com/api/chat.postMessage",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "slackOAuth2Api",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"channel\": \"C05HQFGMRC2\",\n  \"user\": \"{{ $('Parse Slack Payload').first().json.user_id }}\",\n  \"text\": \"Post rejected and archived\",\n  \"blocks\": [\n    {\n      \"type\": \"section\",\n      \"text\": {\n        \"type\": \"mrkdwn\",\n        \"text\": \"❌ *Post Rejected*\\n\\nThe post about *{{ $json.fields.topic }}* has been rejected and archived.\\n\\nYou can access it anytime in Airtable if needed.\"\n      }\n    },\n    {\n      \"type\": \"actions\",\n      \"elements\": [\n        {\n          \"type\": \"button\",\n          \"text\": {\n            \"type\": \"plain_text\",\n            \"text\": \"📊 View in Airtable\"\n          },\n          \"url\": \"https://airtable.com/app5qL48JQ0kv3Ybv/tblEiOX76m3Cs3Vso/viwIYhIOZRq5WAfZU/{{ $json.id }}\"\n        }\n      ]\n    }\n  ]\n}",
+        "options": {}
+      },
+      "id": "3920b755-283b-4d1b-9971-db05d206708f",
+      "name": "Slack: Reject Text",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -224,
+        528
+      ],
+      "credentials": {}
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://slack.com/api/chat.postMessage",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "slackOAuth2Api",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"channel\": \"C05HQFGMRC2\",\n  \"text\": \"Image rejected and archived\",\n  \"blocks\": [\n    {\n      \"type\": \"section\",\n      \"text\": {\n        \"type\": \"mrkdwn\",\n        \"text\": \"❌ *Image Rejected*\\n\\nThe image for *{{ $json.fields.topic }}* has been rejected and archived.\\n\\nYou can access it anytime in Airtable if needed.\"\n      }\n    },\n    {\n      \"type\": \"actions\",\n      \"elements\": [\n        {\n          \"type\": \"button\",\n          \"text\": {\n            \"type\": \"plain_text\",\n            \"text\": \"📊 View in Airtable\"\n          },\n          \"url\": \"https://airtable.com/app5qL48JQ0kv3Ybv/tblEiOX76m3Cs3Vso/viwIYhIOZRq5WAfZU/{{ $json.id }}\"\n        }\n      ]\n    }\n  ]\n}",
+        "options": {}
+      },
+      "id": "8123aa16-cfae-417b-96d6-4f5a166f816f",
+      "name": "Slack: Reject Image",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -224,
+        880
+      ],
+      "credentials": {}
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://slack.com/api/chat.postMessage",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "slackOAuth2Api",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"channel\": \"C05HQFGMRC2\",\n  \"text\": \"🎉 Post Approved!\",\n  \"blocks\": [\n    {\n      \"type\": \"header\",\n      \"text\": {\n        \"type\": \"plain_text\",\n        \"text\": \"🎉 Congratulations! Your post is approved!\"\n      }\n    },\n    {\n      \"type\": \"divider\"\n    },\n    {\n      \"type\": \"section\",\n      \"text\": {\n        \"type\": \"mrkdwn\",\n        \"text\": \"*{{ $json.topic }}*\\n\\n{{ $json.post_text }}\\n\\n{{ $json.hashtags }}\"\n      }\n    },\n    {\n      \"type\": \"image\",\n      \"image_url\": \"{{ $json.image_url }}\",\n      \"alt_text\": \"Received image\"\n    },\n    {\n      \"type\": \"context\",\n      \"elements\": [\n        {\n          \"type\": \"mrkdwn\",\n          \"text\": \"📝 *Type:* {{ $json.post_type }} | 🎯 *Audience:* {{ $json.audience }}\"\n        }\n      ]\n    }\n  ]\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        -48,
+        704
+      ],
+      "id": "2bf8d9bb-c6c3-40f2-ba4e-e655b391bbe5",
+      "name": "Slack: Message Approved Post",
+      "executeOnce": false,
+      "alwaysOutputData": false,
+      "credentials": {}
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "base": "AIRTABLE_BASE_ID",
+        "table": {
+          "__rl": true,
+          "value": "tblEiOX76m3Cs3Vso",
+          "mode": "list",
+          "cachedResultName": "Posts",
+          "cachedResultUrl": "https://airtable.com/app5qL48JQ0kv3Ybv/tblEiOX76m3Cs3Vso"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "id": "={{ $('Action Router').item.json.record_id }}",
+            "status": "superseded",
+            "Name": "={{ $('Action Router').item.json.record_id }}"
+          },
+          "matchingColumns": [
+            "id"
+          ],
+          "schema": [
+            {
+              "id": "id",
+              "displayName": "id",
+              "required": false,
+              "defaultMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": true,
+              "removed": false
+            },
+            {
+              "id": "Name",
+              "displayName": "Name",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "status",
+              "displayName": "status",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "options",
+              "options": [
+                {
+                  "name": "pending_text",
+                  "value": "pending_text"
+                },
+                {
+                  "name": "text_approved",
+                  "value": "text_approved"
+                },
+                {
+                  "name": "pending_image",
+                  "value": "pending_image"
+                },
+                {
+                  "name": "image_approved",
+                  "value": "image_approved"
+                },
+                {
+                  "name": "published",
+                  "value": "published"
+                },
+                {
+                  "name": "rejected",
+                  "value": "rejected"
+                },
+                {
+                  "name": "superseded",
+                  "value": "superseded"
+                }
+              ],
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "post_type",
+              "displayName": "post_type",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "options",
+              "options": [
+                {
+                  "name": "showcase",
+                  "value": "showcase"
+                },
+                {
+                  "name": "recruitment",
+                  "value": "recruitment"
+                },
+                {
+                  "name": "engagement",
+                  "value": "engagement"
+                }
+              ],
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "user_input",
+              "displayName": "user_input",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "topic",
+              "displayName": "topic",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "sub_topic",
+              "displayName": "sub_topic",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "post_text",
+              "displayName": "post_text",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "visual_prompt",
+              "displayName": "visual_prompt",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "banner_layout",
+              "displayName": "banner_layout",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "hashtags",
+              "displayName": "hashtags",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "audience",
+              "displayName": "audience",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "tone",
+              "displayName": "tone",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "image_url",
+              "displayName": "image_url",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "slack_message_ts",
+              "displayName": "slack_message_ts",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "created_at",
+              "displayName": "created_at",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": true,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.airtable",
+      "typeVersion": 2.1,
+      "position": [
+        -48,
+        1040
+      ],
+      "id": "e059b3a5-413e-4938-a23a-568949daa890",
+      "name": "Update record - Approve Text3",
+      "credentials": {}
+    },
+    {
+      "parameters": {
+        "base": "AIRTABLE_BASE_ID",
+        "table": {
+          "__rl": true,
+          "value": "tblEiOX76m3Cs3Vso",
+          "mode": "list",
+          "cachedResultName": "Posts",
+          "cachedResultUrl": "https://airtable.com/app5qL48JQ0kv3Ybv/tblEiOX76m3Cs3Vso"
+        },
+        "id": "={{ $json.record_id }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.airtable",
+      "typeVersion": 2.1,
+      "position": [
+        -416,
+        1040
+      ],
+      "id": "5f71d2d3-6153-472e-be71-2e26b0d192a1",
+      "name": "Get record - Regenerate Image",
+      "credentials": {}
+    },
+    {
+      "parameters": {
+        "operation": "create",
+        "base": "AIRTABLE_BASE_ID",
+        "table": {
+          "__rl": true,
+          "value": "tblEiOX76m3Cs3Vso",
+          "mode": "list",
+          "cachedResultName": "Posts",
+          "cachedResultUrl": "https://airtable.com/app5qL48JQ0kv3Ybv/tblEiOX76m3Cs3Vso"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "status": "pending_image",
+            "post_type": "={{ $json.post_type }}",
+            "topic": "={{ $json.topic }}",
+            "sub_topic": "={{ $json.sub_topic }}",
+            "post_text": "={{ $json.post_text }}",
+            "visual_prompt": "={{ $json.visual_prompt }}",
+            "banner_layout": "={{ $json.banner_layout }}",
+            "hashtags": "={{ $json.hashtags}}",
+            "audience": "={{ $json.audience }}",
+            "tone": "={{ $json.tone }}",
+            "user_input": "={{ $json.user_input }}",
+            "image_url": "={{ $json.url_private_download }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Name",
+              "displayName": "Name",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "status",
+              "displayName": "status",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "options",
+              "options": [
+                {
+                  "name": "pending_text",
+                  "value": "pending_text"
+                },
+                {
+                  "name": "text_approved",
+                  "value": "text_approved"
+                },
+                {
+                  "name": "pending_image",
+                  "value": "pending_image"
+                },
+                {
+                  "name": "image_approved",
+                  "value": "image_approved"
+                },
+                {
+                  "name": "published",
+                  "value": "published"
+                },
+                {
+                  "name": "rejected",
+                  "value": "rejected"
+                }
+              ],
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "post_type",
+              "displayName": "post_type",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "options",
+              "options": [
+                {
+                  "name": "showcase",
+                  "value": "showcase"
+                },
+                {
+                  "name": "recruitment",
+                  "value": "recruitment"
+                },
+                {
+                  "name": "engagement",
+                  "value": "engagement"
+                }
+              ],
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "user_input",
+              "displayName": "user_input",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "topic",
+              "displayName": "topic",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "sub_topic",
+              "displayName": "sub_topic",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "post_text",
+              "displayName": "post_text",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "visual_prompt",
+              "displayName": "visual_prompt",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "banner_layout",
+              "displayName": "banner_layout",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "hashtags",
+              "displayName": "hashtags",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "audience",
+              "displayName": "audience",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "tone",
+              "displayName": "tone",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "image_url",
+              "displayName": "image_url",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "slack_message_ts",
+              "displayName": "slack_message_ts",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "created_at",
+              "displayName": "created_at",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": true,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {
+          "typecast": false
+        }
+      },
+      "type": "n8n-nodes-base.airtable",
+      "typeVersion": 2.1,
+      "position": [
+        -224,
+        1040
+      ],
+      "id": "a03a9423-5303-45af-95d8-de3c72a0e46c",
+      "name": "Create a record - Regenerate Image",
+      "credentials": {}
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "base": "AIRTABLE_BASE_ID",
+        "table": {
+          "__rl": true,
+          "value": "tblEiOX76m3Cs3Vso",
+          "mode": "list",
+          "cachedResultName": "Posts",
+          "cachedResultUrl": "https://airtable.com/app5qL48JQ0kv3Ybv/tblEiOX76m3Cs3Vso"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "id": "={{ $('Create a record - Regenerate Image').item.json.id }}",
+            "Name": "={{ $('Create a record - Regenerate Image').item.json.id }}"
+          },
+          "matchingColumns": [
+            "id"
+          ],
+          "schema": [
+            {
+              "id": "id",
+              "displayName": "id",
+              "required": false,
+              "defaultMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": true,
+              "removed": false
+            },
+            {
+              "id": "Name",
+              "displayName": "Name",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "status",
+              "displayName": "status",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "options",
+              "options": [
+                {
+                  "name": "pending_text",
+                  "value": "pending_text"
+                },
+                {
+                  "name": "text_approved",
+                  "value": "text_approved"
+                },
+                {
+                  "name": "pending_image",
+                  "value": "pending_image"
+                },
+                {
+                  "name": "image_approved",
+                  "value": "image_approved"
+                },
+                {
+                  "name": "published",
+                  "value": "published"
+                },
+                {
+                  "name": "rejected",
+                  "value": "rejected"
+                },
+                {
+                  "name": "superseded",
+                  "value": "superseded"
+                }
+              ],
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "post_type",
+              "displayName": "post_type",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "options",
+              "options": [
+                {
+                  "name": "showcase",
+                  "value": "showcase"
+                },
+                {
+                  "name": "recruitment",
+                  "value": "recruitment"
+                },
+                {
+                  "name": "engagement",
+                  "value": "engagement"
+                }
+              ],
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "user_input",
+              "displayName": "user_input",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "topic",
+              "displayName": "topic",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "sub_topic",
+              "displayName": "sub_topic",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "post_text",
+              "displayName": "post_text",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "visual_prompt",
+              "displayName": "visual_prompt",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "banner_layout",
+              "displayName": "banner_layout",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "hashtags",
+              "displayName": "hashtags",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "audience",
+              "displayName": "audience",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "tone",
+              "displayName": "tone",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "image_url",
+              "displayName": "image_url",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "slack_message_ts",
+              "displayName": "slack_message_ts",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "created_at",
+              "displayName": "created_at",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": true,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.airtable",
+      "typeVersion": 2.1,
+      "position": [
+        160,
+        1040
+      ],
+      "id": "9cb4ae48-ecac-4a1a-9c8c-8ed84c361996",
+      "name": "Update record - Approve Image",
+      "credentials": {}
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://n8n-barbara.lwproducoes.com/webhook/workflow1-callback",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "stage",
+              "value": "pending_image"
+            },
+            {
+              "name": "record_id",
+              "value": "={{ $('Update record - Approve Image').first().json.record_id }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "0e654815-0ac2-412b-b074-660d9f59a54f",
+      "name": "Callback: Text Approved3",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        352,
+        1040
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $('Parse Slack Payload').item.json.response_url }}",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"replace_original\": true,\n  \"text\": \"🔄 Regenerating image... Please wait.\"\n}",
+        "options": {}
+      },
+      "id": "74f32fa9-8a4a-4eeb-8be7-a28133d6b348",
+      "name": "Slack: Update Message (Image Approved)1",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        544,
+        1040
+      ],
+      "disabled": true
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook - Slack Interactions1": {
+      "main": [
+        [
+          {
+            "node": "Type Router",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Callback: Text Approved1": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Action Router": {
+      "main": [
+        [
+          {
+            "node": "Update record - Approve Text",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Update record - Approve Text1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Get a record2",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Update record - Regenerate Text2",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Update record - Regenerate Text1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Update record - Regenerate Text",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Get record - Regenerate Image",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Callback: Regenerate Text": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update record - Approve Text": {
+      "main": [
+        [
+          {
+            "node": "Get a record",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update record - Regenerate Text1": {
+      "main": [
+        [
+          {
+            "node": "Get a record1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update record - Regenerate Text2": {
+      "main": [
+        [
+          {
+            "node": "Slack: Reject Text",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get a record": {
+      "main": [
+        [
+          {
+            "node": "Has image?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Has image?": {
+      "main": [
+        [
+          {
+            "node": "Slack: Approved Post",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Slack: Update Message (Approved)1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get a record1": {
+      "main": [
+        [
+          {
+            "node": "Slack: Message Approved Post",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get a record2": {
+      "main": [
+        [
+          {
+            "node": "Slack: Open Modal",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Type Router": {
+      "main": [
+        [
+          {
+            "node": "Parse Slack Payload",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Parse Modal Submission",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Modal Submission": {
+      "main": [
+        [
+          {
+            "node": "Update record - Regenerate Text3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update record - Regenerate Text3": {
+      "main": [
+        [
+          {
+            "node": "Callback: Text Approved2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Callback: Text Approved2": {
+      "main": [
+        [
+          {
+            "node": "Slack: Regenerate Message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Slack Payload": {
+      "main": [
+        [
+          {
+            "node": "Action Router",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Slack: Update Message (Approved)1": {
+      "main": [
+        [
+          {
+            "node": "Callback: Text Approved1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update record - Approve Text1": {
+      "main": [
+        [
+          {
+            "node": "Slack: Send Message (Regenerating Text)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Slack: Approved Post": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Slack: Open Modal": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create a post": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Slack: Send Message (Regenerating Text)": {
+      "main": [
+        [
+          {
+            "node": "Callback: Regenerate Text",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Slack: Regenerate Message": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update record - Regenerate Text": {
+      "main": [
+        [
+          {
+            "node": "Slack: Reject Image",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Slack: Reject Text": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Slack: Reject Image": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Slack: Message Approved Post": {
+      "main": [
+        [
+          {
+            "node": "Create a post",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update record - Approve Text3": {
+      "main": [
+        [
+          {
+            "node": "Update record - Approve Image",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get record - Regenerate Image": {
+      "main": [
+        [
+          {
+            "node": "Create a record - Regenerate Image",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create a record - Regenerate Image": {
+      "main": [
+        [
+          {
+            "node": "Update record - Approve Text3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update record - Approve Image": {
+      "main": [
+        [
+          {
+            "node": "Callback: Text Approved3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Callback: Text Approved3": {
+      "main": [
+        [
+          {
+            "node": "Slack: Update Message (Image Approved)1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Slack: Update Message (Image Approved)1": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "7f7ed3a3-4620-41d8-86d4-e6dc490d5162",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "988ec785f8f66143b61268383fb5c2424060187d6db5211c7f676c4bd62e1062"
+  },
+  "id": "0jCrSFw1y6bYHlMF",
+  "tags": []
+}
