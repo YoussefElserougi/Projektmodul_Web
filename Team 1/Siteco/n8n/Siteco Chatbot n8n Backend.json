@@ -1,0 +1,1074 @@
+{
+  "name": "PDF Download Webhook",
+  "nodes": [
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.message }}",
+        "options": {
+          "systemMessage": "You are a helpful, friendly, internal AI assistant for Siteco.\nAnswer only questions related to Siteco, including company information, processes, and work instructions.\n\nYou must always respond in German.\n\nYou must answer strictly based on the information available in your provided dataset / retrieved context.\nDo not use general knowledge, assumptions, or external information.\n\nNever offer to create, draft, generate, write, or produce anything (e.g., emails, documents, templates, presentations, summaries, plans, code, or any other content).\nYou only provide factual information that is present in the dataset.\n\nIf the answer cannot be found in the dataset / retrieved context, respond clearly that you can´t answer this question.\n\nDo not answer general, unrelated, or external questions.",
+          "returnIntermediateSteps": true
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3,
+      "position": [
+        -896,
+        -512
+      ],
+      "id": "5987e87c-e912-464f-af6b-f96debf209a8",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.embeddingsOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        -704,
+        -96
+      ],
+      "id": "4ca3bec4-4af1-4baa-82ca-d1e7050fe82a",
+      "name": "Embeddings OpenAI",
+      "credentials": {
+        "openAiApi": {
+          "id": "nSOD8a07IN2MyXBZ",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-4.1-mini"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        -1024,
+        -304
+      ],
+      "id": "c8b29582-9145-45aa-9fd4-80ec10f23c77",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "nSOD8a07IN2MyXBZ",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "={{ $json.conversationId }}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryPostgresChat",
+      "typeVersion": 1.3,
+      "position": [
+        -880,
+        -304
+      ],
+      "id": "84343649-3028-4bf4-90a8-fd71f955a4b4",
+      "name": "Postgres Chat Memory",
+      "credentials": {
+        "postgres": {
+          "id": "asuf3WWKfsgfzMOU",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "retrieve-as-tool",
+        "toolDescription": "This tool provides access to internal knowledge about the copmany \"Siteco\", including general information, processes, and work instructions. It is used to answer company-related questions based solely on the available documentation. ",
+        "tableName": {
+          "__rl": true,
+          "value": "documents",
+          "mode": "list",
+          "cachedResultName": "documents"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.vectorStoreSupabase",
+      "typeVersion": 1.3,
+      "position": [
+        -704,
+        -304
+      ],
+      "id": "76b5acba-cd8f-403a-9b79-deab5596a444",
+      "name": "Supabase Vector Store1",
+      "credentials": {
+        "supabaseApi": {
+          "id": "FB4mqU8djLTsXQfE",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "## AI Agent 2\n#### Chatbot",
+        "height": 656,
+        "width": 848,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -1120,
+        -624
+      ],
+      "typeVersion": 1,
+      "id": "3e5fafd7-0acf-476a-949a-fab7c5d74ab1",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        -128,
+        -512
+      ],
+      "id": "43f8e22e-e205-445c-8ed7-c960c8b69992",
+      "name": "Respond to Webhook"
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "chat",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -1488,
+        -512
+      ],
+      "id": "28cbd1f9-0eb6-4066-8d96-69d6d442dce6",
+      "name": "Webhook",
+      "webhookId": "2ef28fcd-5637-4af7-9a8d-185e3a3271a6"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "17ecba10-81d3-4b1e-b607-11ff83ec52e7",
+              "name": "message",
+              "value": "={{ $json.body.message }}",
+              "type": "string"
+            },
+            {
+              "id": "d949e9c1-b84d-4d0c-8aec-dc9d960a2411",
+              "name": "conversationId",
+              "value": "={{ $json.body.conversationId }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -1264,
+        -512
+      ],
+      "id": "26f659a2-1074-4547-955f-93e90f8085ce",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "jsCode": "const output = $json.output;\nconst steps = $json.intermediateSteps || [];\nconst conversationId = $('Edit Fields').first().json.conversationId;\nconst sources = [];\n\nfor (const step of steps) {\n  if (step.observation) {\n    try {\n      const observation = JSON.parse(step.observation);\n      const responses = observation?.data?.ai_tool?.[0]?.[0]?.json?.response || [];\n      \n      for (const item of responses) {\n        if (item.text) {\n          try {\n            const textData = JSON.parse(item.text);\n            const filename = textData?.metadata?.filename || textData?.metadata?.source;\n            const pageContent = textData?.pageContent || '';\n            const lines = textData?.metadata?.loc?.lines || null;\n            \n            if (filename) {\n              const existingSource = sources.find(s => s.filename === filename);\n              \n              if (existingSource) {\n                existingSource.chunks.push({ text: pageContent, lines: lines });\n              } else {\n                sources.push({\n                  filename: filename,\n                  chunks: [{ text: pageContent, lines: lines }]\n                });\n              }\n            }\n          } catch (e) {}\n        }\n      }\n    } catch (e) {}\n  }\n}\n\nreturn {\n  json: {\n    response: output,\n    conversationId: conversationId,\n    sources: sources\n  }\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -416,
+        -512
+      ],
+      "id": "b7ad8eb7-8c74-4b21-8528-eda66a6ff5ed",
+      "name": "Extract Sources"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.embeddingsOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        -432,
+        -928
+      ],
+      "id": "12ffc9a5-5427-4387-8c09-84c230de9085",
+      "name": "Embeddings OpenAI2",
+      "credentials": {
+        "openAiApi": {
+          "id": "nSOD8a07IN2MyXBZ",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "fileSelector": "/data/pdfs/*",
+        "options": {
+          "fileExtension": "pdf"
+        }
+      },
+      "type": "n8n-nodes-base.readWriteFile",
+      "typeVersion": 1,
+      "position": [
+        -1392,
+        -1168
+      ],
+      "id": "9b9ce588-1083-43ec-ac58-ade022124b90",
+      "name": "Read/Write Files from Disk1"
+    },
+    {
+      "parameters": {
+        "dataType": "binary",
+        "options": {
+          "metadata": {
+            "metadataValues": [
+              {
+                "name": "filename",
+                "value": "={{ $binary.data.fileName }}"
+              },
+              {
+                "name": "source",
+                "value": "={{ $binary.data.fileName }}"
+              }
+            ]
+          }
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.documentDefaultDataLoader",
+      "typeVersion": 1.1,
+      "position": [
+        -272,
+        -928
+      ],
+      "id": "3ac25d14-996b-4d90-b1a7-646e7a30400c",
+      "name": "Default Data Loader3"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Extrahiere Filename & Hash aus den PDFs\nconst crypto = require('crypto');\nconst items = $('Read/Write Files from Disk1').all();\n\nreturn items.map(item => {\n  const binaryData = item.binary.data;\n  const buffer = Buffer.from(binaryData.data, 'base64');\n  const hash = crypto.createHash('md5').update(buffer).digest('hex');\n  \n  return {\n    json: {\n      filename: binaryData.fileName.toLowerCase(),\n      file_hash: hash,\n      updated_at: new Date().toISOString()\n    }\n  };\n});"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -32,
+        -1168
+      ],
+      "id": "7ed16a15-cc91-46fc-9788-a726ed11446d",
+      "name": "Extract Metadata + Hash"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "INSERT INTO pdf_tracking (filename, file_hash, updated_at)\nVALUES ('{{ $json.filename }}', '{{ $json.file_hash }}', '{{ $json.updated_at }}')\nON CONFLICT (filename) \nDO UPDATE SET \n  file_hash = EXCLUDED.file_hash,\n  updated_at = EXCLUDED.updated_at;",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        192,
+        -1168
+      ],
+      "id": "dc893fcd-259c-47f9-b2fc-4d880723508a",
+      "name": "Saving Meta in pdf_tracking table",
+      "credentials": {
+        "postgres": {
+          "id": "asuf3WWKfsgfzMOU",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Nur Filenames-Liste für Delete Removed\nconst items = $input.all();\n\nconst filenames = items.map(item => \n  item.binary.data.fileName.toLowerCase()\n);\n\nreturn [{\n  json: {\n    currentFiles: filenames\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1136,
+        -1168
+      ],
+      "id": "3cd16317-47da-46c2-a738-af699e99f38d",
+      "name": "List PDFs"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT array_agg(filename) as tracked_files FROM pdf_tracking;",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        -896,
+        -992
+      ],
+      "id": "660db336-f5c8-432e-b50f-c07e4e6565ef",
+      "name": "Get Tracked Files",
+      "executeOnce": false,
+      "credentials": {
+        "postgres": {
+          "id": "asuf3WWKfsgfzMOU",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "-- Lösche Chunks von PDFs, die nicht mehr im Ordner sind\nDELETE FROM documents \nWHERE LOWER(metadata->>'filename') NOT IN (\n  SELECT unnest(ARRAY[{{ $json.currentFiles.map(f => `'${f.toLowerCase()}'`).join(',') }}])\n);\n\n-- Lösche auch aus Tracking\nDELETE FROM pdf_tracking\nWHERE LOWER(filename) NOT IN (\n  SELECT unnest(ARRAY[{{ $json.currentFiles.map(f => `'${f.toLowerCase()}'`).join(',') }}])\n);",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        -896,
+        -1264
+      ],
+      "id": "94574401-1a8d-4295-bab3-f69db7e62eb7",
+      "name": "Delete Removed PDFs",
+      "credentials": {
+        "postgres": {
+          "id": "asuf3WWKfsgfzMOU",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Hole die Arrays\nconst currentFiles = $('List PDFs').first().json.currentFiles;\nconst trackedFiles = $('Get Tracked Files').first().json.tracked_files;\n\nconsole.log('Current files:', currentFiles);\nconsole.log('Tracked files:', trackedFiles);\n\n// Prüfe ob trackedFiles leer/nicht vorhanden ist\nconst hasNoTrackedFiles = !trackedFiles || !Array.isArray(trackedFiles) || trackedFiles.length === 0;\n\n// Finde neue Filenames (wenn nichts getrackt ist, sind alle neu)\nconst newFilenames = hasNoTrackedFiles \n  ? currentFiles \n  : currentFiles.filter(f => !trackedFiles.includes(f));\n\nconsole.log('New files:', newFilenames);\n\nif (newFilenames.length === 0) {\n  return [];\n}\n\n// WICHTIG: Hole die PDFs MIT Binary-Daten vom Read Files Node!\nconst allPdfs = $('Read/Write Files from Disk1').all();\nconsole.log('All PDFs count:', allPdfs.length);\n\n// Filtere nur die neuen PDFs (MIT Binary!)\nconst newPdfs = allPdfs.filter(item => {\n  const filename = item.binary.data.fileName.toLowerCase();\n  const isNew = newFilenames.includes(filename);\n  console.log(`${filename}: isNew = ${isNew}`);\n  return isNew;\n});\n\nconsole.log('New PDFs with binary:', newPdfs.length);\n\nreturn newPdfs;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -720,
+        -992
+      ],
+      "id": "558ea70c-1644-4128-8964-0d8f00a680c4",
+      "name": "Filter New PDFs"
+    },
+    {
+      "parameters": {
+        "mode": "insert",
+        "tableName": {
+          "__rl": true,
+          "value": "documents",
+          "mode": "list",
+          "cachedResultName": "documents"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.vectorStoreSupabase",
+      "typeVersion": 1.3,
+      "position": [
+        -400,
+        -1168
+      ],
+      "id": "2296e587-bc69-4637-94a8-8e847b78f502",
+      "name": "Supabase Vector Store3",
+      "credentials": {
+        "supabaseApi": {
+          "id": "FB4mqU8djLTsXQfE",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "## Database Agent V2\n#### Data Storing, Data Updating, Data Deletion",
+        "height": 688,
+        "width": 2096,
+        "color": 4
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -1536,
+        -1392
+      ],
+      "typeVersion": 1,
+      "id": "12cc07ad-d66a-49d1-9d22-1ce74b476eb6",
+      "name": "Sticky Note3"
+    },
+    {
+      "parameters": {
+        "path": "download",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        672,
+        -1280
+      ],
+      "id": "429b4195-51fb-438f-b7eb-63c7f13ce708",
+      "name": "Download Webhook",
+      "webhookId": "pdf-download-webhook"
+    },
+    {
+      "parameters": {
+        "jsCode": "const filename = $json.query.file;\n\n// Sicherheitscheck: Nur PDFs erlauben, keine Path-Traversal\nif (!filename || !filename.endsWith('.pdf') || filename.includes('..') || filename.includes('/')) {\n  throw new Error('Invalid filename');\n}\n\nreturn {\n  json: {\n    filename: filename,\n    filepath: `/data/pdfs/${filename}`\n  }\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        896,
+        -1280
+      ],
+      "id": "8b7d7437-8d3f-4e8a-8970-1a4f8d16eeac",
+      "name": "Validate Filename"
+    },
+    {
+      "parameters": {
+        "fileSelector": "={{ $json.filepath }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.readWriteFile",
+      "typeVersion": 1,
+      "position": [
+        1120,
+        -1280
+      ],
+      "id": "5ff97a20-8774-4de5-8911-6622052fd6b4",
+      "name": "Read PDF File"
+    },
+    {
+      "parameters": {
+        "respondWith": "binary",
+        "options": {
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Content-Disposition",
+                "value": "=attachment; filename=\"{{ $('Validate Filename').item.json.filename }}\""
+              },
+              {
+                "name": "Content-Type",
+                "value": "application/pdf"
+              }
+            ]
+          }
+        }
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        1344,
+        -1280
+      ],
+      "id": "5d1f2b39-d232-4d3b-98f9-6cf65b018166",
+      "name": "Send PDF"
+    },
+    {
+      "parameters": {
+        "content": "## Webhook for PDF Download\n\n",
+        "height": 320,
+        "width": 912,
+        "color": 4
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        592,
+        -1392
+      ],
+      "typeVersion": 1,
+      "id": "8987eaaf-b0db-44be-85a8-8160fe026d3e",
+      "name": "Sticky Note1"
+    },
+    {
+      "parameters": {
+        "content": "## Integration in Frontend",
+        "height": 752,
+        "width": 1632,
+        "color": 6
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -1536,
+        -672
+      ],
+      "typeVersion": 1,
+      "id": "44426705-ccd6-422b-b809-f3df8fc02015",
+      "name": "Sticky Note2"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -2048,
+        -1856
+      ],
+      "id": "baddf331-d11f-4e52-84b0-04d217027744",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "content": "## Manual Trigger for Testing",
+        "height": 240,
+        "width": 352,
+        "color": 3
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -2160,
+        -1936
+      ],
+      "typeVersion": 1,
+      "id": "9a633a47-b0ad-490b-b086-ec2ed296f6cd",
+      "name": "Sticky Note4"
+    },
+    {
+      "parameters": {
+        "content": "##  Clustering FAQ",
+        "height": 512,
+        "width": 1632,
+        "color": 4
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -1536,
+        -1936
+      ],
+      "typeVersion": 1,
+      "id": "20a1ccbb-2f3c-4de9-9350-04e815e3f6ed",
+      "name": "Sticky Note5"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT\n  session_id,\n  message\nFROM n8n_chat_histories\nWHERE message->>'type' = 'human';\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        -1456,
+        -1840
+      ],
+      "id": "e7cddffd-758f-47ba-9b6b-4fe058210efe",
+      "name": "Execute a SQL query",
+      "credentials": {
+        "postgres": {
+          "id": "asuf3WWKfsgfzMOU",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "return items.map(item => ({\n  json: {\n    question: item.json.message.content\n  }\n}));"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1248,
+        -1840
+      ],
+      "id": "f8f05c33-30f4-4fe0-8595-ea5ade2b9088",
+      "name": "Extract Question from JSON"
+    },
+    {
+      "parameters": {
+        "jsCode": "const questions = items\n  .map((i, idx) => `${idx + 1}. ${i.json.question}`)\n  .join('\\n');\n\nreturn [{\n  json: { questions }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1040,
+        -1840
+      ],
+      "id": "709710ff-ad41-4b8f-9e3a-7b4f744224fa",
+      "name": "Bundle for Prompt"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Cluster die folgenden Nutzerfragen nach Themen.\n\n{{ $json.questions }}\n\nAntworte exakt in diesem Format:\n\n{\n  \"topics\": [\n    {\n      \"topic\": \"Themenname\",\n      \"questions\": [\"Frage 1\", \"Frage 2\"]\n    }\n  ]\n}",
+        "options": {
+          "systemMessage": "Du bist ein Analyse-Assistent.\n\nAntworte AUSSCHLIESSLICH mit gültigem JSON.\n- KEIN Markdown\n- KEINE ```json Blöcke\n- KEIN erklärender Text\n- NUR das JSON-Objekt"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3,
+      "position": [
+        -832,
+        -1840
+      ],
+      "id": "8ed08168-ee5a-447b-8e99-d89e0aaa7a8c",
+      "name": "AI Agent1"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-4.1-mini"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        -832,
+        -1600
+      ],
+      "id": "bb648fd6-eca6-438e-aa8c-21a11dfcb2cf",
+      "name": "OpenAI Chat Model1",
+      "credentials": {
+        "openAiApi": {
+          "id": "nSOD8a07IN2MyXBZ",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const topics = $json.topics || [];\n\nlet html = `\n<div style=\"font-family: Arial, sans-serif; line-height: 1.5;\">\n  <h2 style=\"margin:0 0 12px;\">📊 Chatbot-Auswertung – Themencluster</h2>\n`;\n\nfor (const t of topics) {\n  html += `<h3 style=\"margin:16px 0 8px;\">${escapeHtml(t.topic)}</h3>`;\n  html += `<ul style=\"margin:6px 0 12px 18px;\">`;\n  for (const q of (t.questions || [])) {\n    html += `<li>${escapeHtml(q)}</li>`;\n  }\n  html += `</ul>`;\n}\n\nhtml += `</div>`;\n\nfunction escapeHtml(s) {\n  return String(s ?? '')\n    .replace(/&/g, '&amp;')\n    .replace(/</g, '&lt;')\n    .replace(/>/g, '&gt;')\n    .replace(/\"/g, '&quot;')\n    .replace(/'/g, '&#039;');\n}\n\nreturn [{ json: { html } }];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -304,
+        -1840
+      ],
+      "id": "c275d5d7-c387-43d2-b558-ae4e215c6e4b",
+      "name": "Create Mail Text"
+    },
+    {
+      "parameters": {
+        "jsCode": "let raw = $json.output;\n\n// ```json ``` entfernen\nraw = raw.replace(/```json/g, '').replace(/```/g, '').trim();\n\n// JSON parsen\nconst parsed = JSON.parse(raw);\n\n// Rückgabe so, dass topics direkt verfügbar sind\nreturn [\n  {\n    json: parsed\n  }\n];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -496,
+        -1840
+      ],
+      "id": "51ca3657-ece6-4dbe-8356-e5ce9caa9ebe",
+      "name": "Parse AI JSON"
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "update-database",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -1728,
+        -1168
+      ],
+      "id": "4472a122-3c2d-484c-b4ce-b0df2c968210",
+      "name": "Webhook DB",
+      "webhookId": "f615113f-cd73-458b-ad17-c1941635be74"
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "faq-auswertung",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -1728,
+        -1840
+      ],
+      "id": "d84dc655-16fa-4ea3-84ec-07169feff1d9",
+      "name": "Webhook Mail",
+      "webhookId": "f615113f-cd73-458b-ad17-c1941635be74"
+    },
+    {
+      "parameters": {
+        "content": "## Trigger with Control Panel",
+        "height": 1232,
+        "color": 3
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -1792,
+        -1936
+      ],
+      "typeVersion": 1,
+      "id": "b310fe3a-d01e-40e9-a1c1-93e986423fac",
+      "name": "Sticky Note6"
+    },
+    {
+      "parameters": {
+        "sendTo": "leonbrack@kabelmail.de",
+        "subject": "FAQ Chatbot Auswertung - KW 04",
+        "message": "={{ $json.html }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        -80,
+        -1840
+      ],
+      "id": "bd657c65-80b9-47c7-864f-90775fac1a09",
+      "name": "Send a message",
+      "webhookId": "2b5d246e-0d5d-4da9-967c-9a9a69239d7e",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "O3DVwmryYlcmyvTS",
+          "name": "Gmail account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Embeddings OpenAI": {
+      "ai_embedding": [
+        [
+          {
+            "node": "Supabase Vector Store1",
+            "type": "ai_embedding",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Postgres Chat Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Supabase Vector Store1": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Extract Sources",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Respond to Webhook": {
+      "main": [
+        []
+      ]
+    },
+    "Extract Sources": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Embeddings OpenAI2": {
+      "ai_embedding": [
+        [
+          {
+            "node": "Supabase Vector Store3",
+            "type": "ai_embedding",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read/Write Files from Disk1": {
+      "main": [
+        [
+          {
+            "node": "List PDFs",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Default Data Loader3": {
+      "ai_document": [
+        [
+          {
+            "node": "Supabase Vector Store3",
+            "type": "ai_document",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract Metadata + Hash": {
+      "main": [
+        [
+          {
+            "node": "Saving Meta in pdf_tracking table",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "List PDFs": {
+      "main": [
+        [
+          {
+            "node": "Delete Removed PDFs",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Get Tracked Files",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Tracked Files": {
+      "main": [
+        [
+          {
+            "node": "Filter New PDFs",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Filter New PDFs": {
+      "main": [
+        [
+          {
+            "node": "Supabase Vector Store3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Supabase Vector Store3": {
+      "main": [
+        [
+          {
+            "node": "Extract Metadata + Hash",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Download Webhook": {
+      "main": [
+        [
+          {
+            "node": "Validate Filename",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validate Filename": {
+      "main": [
+        [
+          {
+            "node": "Read PDF File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read PDF File": {
+      "main": [
+        [
+          {
+            "node": "Send PDF",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        []
+      ]
+    },
+    "Execute a SQL query": {
+      "main": [
+        [
+          {
+            "node": "Extract Question from JSON",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract Question from JSON": {
+      "main": [
+        [
+          {
+            "node": "Bundle for Prompt",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Bundle for Prompt": {
+      "main": [
+        [
+          {
+            "node": "AI Agent1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent1",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent1": {
+      "main": [
+        [
+          {
+            "node": "Parse AI JSON",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse AI JSON": {
+      "main": [
+        [
+          {
+            "node": "Create Mail Text",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create Mail Text": {
+      "main": [
+        [
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook Mail": {
+      "main": [
+        [
+          {
+            "node": "Execute a SQL query",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook DB": {
+      "main": [
+        [
+          {
+            "node": "Read/Write Files from Disk1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "c464a942-94c9-4d9b-a6b5-3f670a386346",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "cc145cc963a9208d2129165b427ec555832eb1bb530e3080bf1ac1aa53f53902"
+  },
+  "id": "asksDcktw4eljun2",
+  "tags": []
+}

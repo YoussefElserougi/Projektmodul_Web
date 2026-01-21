@@ -1,0 +1,237 @@
+{
+  "name": "Landau_Krisen_sub_picture",
+  "nodes": [
+    {
+      "parameters": {
+        "workflowInputs": {
+          "values": [
+            {
+              "name": "instagramCaption"
+            },
+            {
+              "name": "linkedinCaption"
+            },
+            {
+              "name": "facebookCaption"
+            },
+            {
+              "name": "pressemitteilungCaption"
+            },
+            {
+              "name": "interneEmailCaption"
+            },
+            {
+              "name": "generatePicture",
+              "type": "boolean"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        -544,
+        128
+      ],
+      "id": "892a1891-8f36-47b0-85f3-a8f7dee8006a",
+      "name": "When Executed by Another Workflow"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "picture-check",
+              "leftValue": "={{ $json.generatePicture }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -256,
+        128
+      ],
+      "id": "a9aec1a6-0382-4c50-adf3-179517255b08",
+      "name": "Should Generate Picture?"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You are an image prompt generator for AI image generation.\n\nBased on this social media post topic and caption, create a detailed image generation prompt.\n\nTopic: {{ $json.topic }}\n\nCaption for reference:\n{{ $json.instagramCaption || $json.linkedinCaption || $json.facebookCaption }}\n\nCreate a prompt that would generate a professional, engaging image suitable for social media.\nThe image should be related to the city of Landau in der Pfalz, Germany.\n\nOutput ONLY the image prompt, nothing else. Keep it under 200 words.\nMake it vivid, descriptive, and suitable for photorealistic image generation.",
+        "options": {
+          "systemMessage": "You are an expert at creating image generation prompts. Output only the prompt text, no explanations or formatting."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3,
+      "position": [
+        0,
+        0
+      ],
+      "id": "e0b97a9a-3455-428e-b09c-851b540b55e5",
+      "name": "Generate Image Prompt"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        0,
+        208
+      ],
+      "id": "dc49bef5-c5a0-42d4-ba2d-762388b9e4ad",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "DSNyBmK7pQ4msEf9",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Get input data from workflow trigger\nconst triggerData = $('When Executed by Another Workflow').first().json;\n\n// Get the generated image binary data\nconst imageItems = $input.all();\nlet imageUrl = '';\nlet imageBinary = null;\n\n// Check if we have generated image data\nif (imageItems && imageItems.length > 0 && imageItems[0].binary) {\n  const binaryKeys = Object.keys(imageItems[0].binary);\n  if (binaryKeys.length > 0) {\n    imageBinary = imageItems[0].binary[binaryKeys[0]];\n    // Convert binary to base64 data URL for frontend display\n    if (imageBinary.data) {\n      const mimeType = imageBinary.mimeType || 'image/png';\n      imageUrl = `data:${mimeType};base64,${imageBinary.data}`;\n    }\n  }\n}\n\nreturn [{\n  json: {\n    instagramCaption: triggerData.instagramCaption || '',\n    linkedinCaption: triggerData.linkedinCaption || '',\n    facebookCaption: triggerData.facebookCaption || '',\n    pressemitteilungCaption: triggerData.pressemitteilungCaption || '',\n    interneEmailCaption: triggerData.interneEmailCaption || '',\n    imageUrl: imageUrl,\n    imageGenerated: true\n  },\n  binary: imageBinary ? { 'generated_image': imageBinary } : {}\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        560,
+        0
+      ],
+      "id": "ad06fe58-05b0-44d5-acbc-1bd15aaf435f",
+      "name": "Combine Data with Image"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Pass through the original data without image\nconst triggerData = $('When Executed by Another Workflow').first().json;\n\nreturn [{\n  json: {\n    instagramCaption: triggerData.instagramCaption || '',\n    linkedinCaption: triggerData.linkedinCaption || '',\n    facebookCaption: triggerData.facebookCaption || '',\n    pressemitteilungCaption: triggerData.pressemitteilungCaption || '',\n    interneEmailCaption: triggerData.interneEmailCaption || '',\n    imageUrl: '',\n    imageGenerated: false\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        0,
+        304
+      ],
+      "id": "679a5187-d3b8-40fd-a1d9-1f27b74ab978",
+      "name": "Pass Through Without Image"
+    },
+    {
+      "parameters": {
+        "resource": "image",
+        "modelId": {
+          "__rl": true,
+          "value": "models/gemini-2.5-flash-image",
+          "mode": "list",
+          "cachedResultName": "models/gemini-2.5-flash-image (Nano Banana)"
+        },
+        "prompt": "={{ $json.output }}",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.googleGemini",
+      "typeVersion": 1,
+      "position": [
+        336,
+        0
+      ],
+      "id": "8a649b04-4a09-4ca9-ab28-3b429e9c7d9c",
+      "name": "Generate an image",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "DSNyBmK7pQ4msEf9",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When Executed by Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "Should Generate Picture?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Should Generate Picture?": {
+      "main": [
+        [
+          {
+            "node": "Generate Image Prompt",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Pass Through Without Image",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generate Image Prompt": {
+      "main": [
+        [
+          {
+            "node": "Generate an image",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Generate Image Prompt",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generate an image": {
+      "main": [
+        [
+          {
+            "node": "Combine Data with Image",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "0f48b123-3bf5-4cfc-bc45-6ed01ebd625b",
+  "meta": {
+    "instanceId": "242e16560be4b15ec48732e58bf97d190f82ae9479ec2d8855ef98e163c481dd"
+  },
+  "id": "lzZPXNY7rKEHpzdd",
+  "tags": []
+}

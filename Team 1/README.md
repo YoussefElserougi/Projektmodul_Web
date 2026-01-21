@@ -44,7 +44,7 @@ A **live, conversational dashboard** that continuously **monitors, analyzes, and
 - [Webflow Dashboard](https://celonis-test-dashboard.webflow.io/) 
 - [Webflow Access](https://comments.webflow.com/comment/celonis-test-dashboard?utm_medium=project_link&utm_source=designer&utm_content=celonis-test-dashboard&)
 - [Figma](https://www.figma.com/design/bRXdFpxVVUEnapiPfmkMaD/MUC.DAI-X-CELONIS---Competitor-Dashboard?node-id=0-1&t=t3i9R3FSSYi6OExH-1) 
-
+- [Google_Sheet](https://docs.google.com/spreadsheets/d/1i1sQ1SFxLjceR7di4Ji-U4JI4nBszTkC4fEfIF4BVoo/edit?usp=sharing)
 
 #### 1.2.2 Tech Stack & Tools
 
@@ -126,56 +126,3 @@ To test the chatbot, please follow the steps below.
 - to run the frontend start it with "npm run dev"
 - Additionally, the webhooks "database update" and "FAQ summary mail" can be triggered using the file "control-panel-small.html", so the automations do not have to be executed directly in n8n
   
-
-# Team 1 - Project Module Web
-
-This project consists of a React frontend and an n8n workflow automation server.
-
-## Prerequisites
-
-- [Docker](https://www.docker.com/) & Docker Compose
-- [Node.js](https://nodejs.org/)
-- [npm](https://www.npmjs.com/)
-
-## Getting Started
-
-### 1. Start the n8n Server
-
-The backend logic is handled by n8n. To start the server locally:
-
-```bash
-# Start n8n in the background
-docker compose -f docker-compose-local.yml up -d
-```
-
-- The n8n interface will be available at: `http://localhost:5678`
-- Default credentials may be required if configured in n8n.
-
-### 2. Start the Frontend Application
-
-The frontend is a React application located in the `form` directory.
-
-Before starting, you must configure the environment variables. Create a `.env` file inside the `form` directory and add the following line:
-
-```env
-VITE_API_BASE_URL=http://localhost:5678/webhook
-```
-
-```bash
-# Navigate to the frontend directory
-cd form
-
-# Install dependencies
-npm install
-
-# Start the development server
-npm run dev
-```
-
-- The frontend will typically run at: `http://localhost:5173` (check terminal output)
-
-## Project Structure
-
-- **`form/`**: The React frontend application (Vite + TypeScript + Shadcn UI).
-- **`workflows/`**: Contains exported n8n workflow JSON files (e.g., `Graf MVP (7).json`).
-- **`docker-compose-local.yml`**: Docker configuration for running the local n8n instance.

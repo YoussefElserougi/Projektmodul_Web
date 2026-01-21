@@ -8,44 +8,99 @@
     <link rel="stylesheet" href="style.css">
     <!-- PDF.js Library -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+    <!-- Marked.js for Markdown rendering -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/9.1.6/marked.min.js"></script>
 </head>
 <body>
-    <img src="/SITECO_Logo.jpg" alt="SITECO Logo" class="fixed-logo">
-    
-    <!-- Menubar -->
-    <nav class="menubar">
-        <button class="menu-btn active" data-page="chatbot">Chatbot</button>
-        <button class="menu-btn" data-page="about">Über Uns</button>
-        <button class="menu-btn" data-page="sustainability">Nachhaltigkeit</button>
-        <div class="menu-dropdown">
-            <button class="menu-btn" data-page="career">Karriere</button>
-            <div class="dropdown-content">
-                <button class="menu-btn" data-page="career-training">Ausbildung</button>
-                <button class="menu-btn" data-page="career-studies">Studium</button>
-                <button class="menu-btn" data-page="career-jobs">Stellenausschreibungen</button>
+    <!-- Sidebar Navigation -->
+    <aside class="sidebar">
+        <div class="sidebar-logo">
+            <img src="/SITECO_Logo.jpg" alt="SITECO Logo" class="logo-image">
+        </div>
+        <nav class="sidebar-nav">
+            <button class="nav-item active" data-page="chatbot">Chatbot</button>
+            <button class="nav-item" data-page="ansprechpartner">Ansprechpartner</button>
+            <a class="nav-item nav-link" href="https://siteco.freshservice.com/support/home" target="_blank" rel="noopener noreferrer">IT Helpdesk-Portal</a>
+            <a class="nav-item nav-link" href="https://app-eu.wrike.com/form/eyJhY2NvdW50SWQiOjU0NTMyMDQsInRhc2tGb3JtSWQiOjU5NDE0OX0JNDg1MzU3MjU2ODE2MAkxNjQyZjBiYzhkZmMyYTViN2UzNGNhNTk1OTc5OWM1MTRiZjJlZGUyOGRmNzNlMzc5NjgwNmZjNTI3NGRkODRi" target="_blank" rel="noopener noreferrer">IT Projektanfrage</a>
+            <button class="nav-item nav-item-multiline" id="fmTicketBtn">Facility-Management & Fertigungs-Instandhaltung Ticket-Anfrage</button>
+            <a class="nav-item nav-link" href="https://app-eu.wrike.com/form/eyJhY2NvdW50SWQiOjU0NTMyMDQsInRhc2tGb3JtSWQiOjU5NDQ5MX0JNDg2MDgxMjQ3Mzg4NAk0ZTIzYmE0YjFhMzFiMzc5MTkyMWY1YjQ2YmY0NDg3NzQ4NWYwZmZjZmU0MDI2MmIyMTEzOWU0NmQzNzNlZGZk" target="_blank" rel="noopener noreferrer">Anfrage Musterbauauftrag</a>
+            <a class="nav-item nav-link nav-item-multiline" href="https://app-eu.wrike.com/form/eyJhY2NvdW50SWQiOjU0NTMyMDQsInRhc2tGb3JtSWQiOjk2NDU2NH0JNDg3MTYxMjUwNTE4NQkzYzk5MWE5ZGI3YTYxYjY1NmY3ZGQ4YTg5M2Y4Yzg4YjVlOTViNjhkMjRhZTJjZjQ5ZGVhMzJiOGE0NGY0YTk4" target="_blank" rel="noopener noreferrer">Anfrage Maintenance-Aufgabe/ -Projekt</a>
+        </nav>
+        <div class="sidebar-footer">
+            <button class="nav-item admin-btn" id="adminPanelBtn">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="3"/>
+                    <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>
+                </svg>
+                Admin Funktionen
+            </button>
+        </div>
+    </aside>
+
+    <!-- FM Ticket Modal -->
+    <div id="fmTicketModal" class="fm-modal">
+        <div class="fm-modal-content">
+            <h3>FM- & FI- Ticket-Anfrage</h3>
+            <p>Facility Management und Fertigung-Instandhaltung Ticketanfrage</p>
+            <p class="fm-modal-warning"><strong>(NUR für Mitarbeiter ohne Wrike Zugang!)</strong></p>
+            <div class="fm-modal-buttons">
+                <button id="fmModalCancel" class="fm-modal-btn cancel">Abbrechen</button>
+                <button id="fmModalConfirm" class="fm-modal-btn confirm">Weiter zum Formular</button>
             </div>
         </div>
-    </nav>
-
-    <!-- Info Text -->
-    <div class="menubar-info-text">
-        "Der Siteco-Wissensassistent hilft dir bei Fragen zu verschiedenen Themen, wie Produktanleitungen, Fragen zur Überstundenregelung, etc. — Frag einfach nach!"
     </div>
+
+
 
     <!-- Main Content Area -->
     <div id="content">
         <!-- Chatbot Page -->
         <div id="chatbot-page" class="page active">
-            <div class="chatbot-title">CHATBOT</div>
-            <div class="chat-container">
-                <div class="chat-header">
-                    <div class="header-left">
-                        <span class="logo">siteco</span>
-                        <span class="header-divider"></span>
-                        <span class="header-title">Chatbot</span>
+            <h1 class="chat-title">Hi, ich bin der SITEC-BOT</h1>
+            <div class="chatbot-content-wrapper">
+                <!-- Admin Control Panel -->
+                <div id="adminPanel" class="admin-panel">
+                    <div class="admin-panel-header">
+                        <div class="admin-panel-title">
+                            <div class="admin-dot"></div>
+                            <strong>SITECO Control Panel</strong>
+                        </div>
+                        <button id="adminPanelClose" class="admin-panel-close">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <line x1="18" y1="6" x2="6" y2="18"/>
+                                <line x1="6" y1="6" x2="18" y2="18"/>
+                            </svg>
+                        </button>
                     </div>
-                    <span class="status-indicator" id="status"></span>
+                    <div class="admin-panel-content">
+                        <div class="admin-intro">
+                            Manuelle Steuerung interner Chatbot-Prozesse.
+                        </div>
+                        <div class="admin-action-card">
+                            <div>
+                                <strong>Datenbank aktualisieren</strong><br>
+                                <small>Synchronisiert die Wissensbasis</small>
+                            </div>
+                            <button class="admin-action-btn" data-webhook="update-database">Starten</button>
+                        </div>
+                        <div class="admin-action-card">
+                            <div>
+                                <strong>FAQ-Auswertung</strong><br>
+                                <small>Erstellt eine thematische Auswertung</small>
+                            </div>
+                            <button class="admin-action-btn" data-webhook="faq-auswertung">Starten</button>
+                        </div>
+                    </div>
+                    <div class="admin-toast" id="adminToast"></div>
                 </div>
+                
+                <div class="chat-container">
+                <button id="newChatBtn" class="new-chat-btn">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M12 5v14M5 12h14"/>
+                    </svg>
+                    Neuer Chat
+                </button>
                 
                 <div class="chat-messages" id="chatMessages">
                     <div class="message bot-message">
@@ -59,7 +114,7 @@
                             </svg>
                         </div>
                         <div class="message-content">
-                            Hallo! Ich bin dein SITECO Wissensassistent. Ich kann dir helfen, Informationen aus deinen internen Dokumenten zu finden. Frag mich alles über Arbeitsanweisungen, Prozesse oder Unternehmensrichtlinien.
+                            Ich kann dir helfen, Informationen aus deinen internen Dokumenten zu finden. Frag mich alles über Arbeitsanweisungen, Prozesse oder Unternehmensrichtlinien.
                         </div>
                     </div>
                 </div>
@@ -68,7 +123,7 @@
                     <div class="input-wrapper">
                         <textarea 
                             id="messageInput" 
-                            placeholder="Ask a question about your documents..."
+                            placeholder="Gib eine Frage zu Siteco ein..."
                             rows="1"
                         ></textarea>
                         <button id="sendButton">
@@ -83,96 +138,38 @@
                     </div>
                     <div class="input-hint">Press Enter to send, Shift+Enter for new line</div>
                 </div>
+            </div>            </div>        </div>
+
+        <!-- Ansprechpartner Page -->
+        <div id="ansprechpartner-page" class="page">
+            <div class="ansprechpartner-container">
+                <h1 class="ansprechpartner-title">Ansprechpartner</h1>
+                <p class="ansprechpartner-subtitle">Finden Sie den richtigen Ansprechpartner für Ihre Serienleuchte</p>
+                
+                <div class="filter-section">
+                    <div class="filter-group">
+                        <h3 class="filter-label">Kategorie</h3>
+                        <div id="kategorieFilter" class="filter-buttons"></div>
+                    </div>
+                    
+                    <div class="filter-group">
+                        <h3 class="filter-label">Serienleuchte</h3>
+                        <div id="serienleuchteFilter" class="filter-buttons"></div>
+                    </div>
+                </div>
+                
+                <div id="ansprechpartnerDetails" class="ansprechpartner-details">
+                    <div class="details-placeholder">
+                        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                            <circle cx="11" cy="11" r="8"/>
+                            <path d="M21 21l-4.35-4.35"/>
+                        </svg>
+                        <p>Geben Sie einen Suchbegriff ein, um Ansprechpartner zu finden</p>
+                    </div>
+                </div>
             </div>
         </div>
 
-        <!-- About Page -->
-        <div id="about-page" class="page">
-            <div class="page-title">ÜBER UNS</div>
-            <div class="page-content">
-                <div class="page-text">
-                    <p><strong>Innovation.<br>Nachhaltigkeit.<br>Made in Traunreut.</strong></p>
-                    <p>Seit über 160 Jahren entwickeln und fertigen wir zukunftsweisende Lichtlösungen, die neue Maßstäbe in Effizienz und Nachhaltigkeit setzen.</p>
-                    <p>Innovation ist unsere DNA: Bei uns trifft eine einzigartige, technologiegetriebene Wertschöpfungstiefe auf ein unvergleichbares Serviceangebot für unsere Kunden - alles aus einer Hand, Made in Traunreut, Deutschland.</p>
-                    <p>Wir gestalten wahrhaftig die Zukunft des Lichts. SITECO — Quantensprung Lichtlösung.</p>
-                    <p><strong>Wir gestalten die Zukunft des Lichts.</strong></p>
-                    <p>Unser Anspruch sind nicht nur die innovativsten und nachhaltigsten Leuchten der Welt zu schaffen, sondern ganzheitliche Lichtlösungen: Beleuchtung, Steuerung, Projekt und Betrieb - aus einer Hand. SITECO ist Komplettanbieter, wenn es um Beleuchtung geht, die modernste Technologie Made in Germany mit einem einzigartigen Serviceangebot nahtlos vereint.</p>
-                </div>
-                <button class="page-button">JETZT UNSERE FIRMENSTRATEGIE UND IDEOLOGIE ANSEHEN</button>
-            </div>
-        </div>
-
-        <!-- Sustainability Page -->
-        <div id="sustainability-page" class="page">
-            <div class="page-title" style="font-size: 100px;">NACHHALTIGKEIT</div>
-            <div class="page-content">
-                <div class="page-text">
-                    <p><strong>Nachhaltigkeit ist das Ergebnis einer ganzheitlichen Betrachtung ökonomischer, ökologischer und sozialer Aspekte - nur wer dies versteht und die notwendigen Schritte unternimmt, wird die Herausforderungen der Zukunft erfolgreich meistern.</strong><br>
-                        Unsere Unternehmensstrategie baut auf den wesentlichen Aspekten des nachhaltigen Wirtschaftens auf. Durch zertifizierte Umwelt- und Qualitätsmanagementsysteme setzen wir unsere nachhaltige Strategie Tag für Tag um.</p> 
-                    <p> 
-                        Jedes Jahr sparen unsere Beleuchtungslösungen weltweit etwa 3 Millionen Tonnen CO2 ein.</p>
-                    <p>
-                        Unser gesamter Produktentwicklungsprozess basiert auf der Prämisse, so wenig Ressourcen wie möglich zu verbrauchen: sowohl in der Produktion als auch im täglichen Betrieb unserer Produkte, 
-                        um so "Win-Win"-Vorteile zu schaffen - für unsere Kunden und die Gesellschaft sowie für die Natur und die Tierwelt.</p>
-                </div>
-                <button class="page-button">JETZT UNSERE NACHHALTIGKEITSSTRATEGIE ANSEHEN</button>
-            </div>
-        </div>
-
-        <!-- Career Training Page -->
-        <div id="career-training-page" class="page">
-            <div class="page-title">AUSBILDUNG</div>
-            <div class="page-content">
-                <div class="page-text">
-                    <p><strong>Du möchtest doch nochmal eine andere Ausbildung bei uns beginnen um dich persönlich und beruflich weiterzuentwickeln?</strong></p>
-                    <p>
-                    Eine Ausbildung bietet dir die ideale Möglichkeit, praktische Erfahrungen zu sammeln,
-                   neue Fähigkeiten zu erlernen und den Grundstein für deine berufliche Zukunft zu legen.
-                   Bei uns erwarten dich abwechslungsreiche Aufgaben, persönliche Betreuung
-                   und echte Entwicklungschancen.
-                   </p>
-                   <p>
-                   Informiere dich auf unserer Website über unsere aktuellen Ausbildungsangebote
-                   und finde heraus, welcher Weg am besten zu dir passt.
-                   </p>
-                </div>
-                <button class="page-button">Jetzt Ausbildung anzeigen</button>
-            </div>
-        </div>
-
-        <!-- Career Studies Page -->
-        <div id="career-studies-page" class="page">
-            <div class="page-title">STUDIUM</div>
-            <div class="page-content">
-                <div class="page-text">
-                    <p><strong>Du möchtest Theorie und Praxis verbinden und dein Wissen gezielt vertiefen?</strong></p>
-                    <p>
-                    Ein Studium oder duales Studium eröffnet dir vielfältige Möglichkeiten, dich fachlich
-                    und persönlich weiterzuentwickeln. Bei uns kannst du dein theoretisches Wissen
-                    direkt in der Praxis anwenden und wertvolle Einblicke in den Berufsalltag gewinnen.
-                    </p>
-                    <p>
-                    Entdecke auf unserer Website unsere Studienangebote und erfahre,
-                    wie du gemeinsam mit uns deine Zukunft gestalten kannst.
-                    </p>
-                </div>
-                <button class="page-button">Jetzt Studium anzeigen</button>
-            </div>
-        </div>
-
-        <!-- Career Jobs Page -->
-        <div id="career-jobs-page" class="page">
-            <div class="page-content">
-                <div class="page-text">
-                    <p><strong>Du spielst mit dem Gedanken, dich auch außerhalb deiner aktuellen Stelle umzusehen?</strong></p>
-                    <p>Wir möchten dich dabei unterstützen, deinen ganz eigenen Karriereweg zu gestalten. Auf unserer Website findest du alle aktuell ausgeschriebenen Positionen — übersichtlich, transparent und mit vielen spannenden Aufgaben.
-                    </p>
-                    <p>Lass dich inspirieren, informiere dich in Ruhe und finde heraus, wo deine nächsten beruflichen Schritte hinführen könnten.
-                    </p>
-                </div>
-                <button class="page-button">Jetzt Stellenausschreibungen anzeigen</button>
-            </div>
-        </div>
     </div>
 
     <!-- PDF Modal -->
@@ -203,12 +200,10 @@
                 </div>
                 <div class="modal-pdf">
                     <div class="pdf-controls">
-                        <button id="prevPage" class="pdf-nav-btn">← Zurück</button>
-                        <span id="pageInfo">Seite 1 / 1</span>
-                        <button id="nextPage" class="pdf-nav-btn">Weiter →</button>
+                        <span id="pageInfo">Dokument wird geladen...</span>
                     </div>
                     <div id="pdfContainer" class="pdf-container">
-                        <canvas id="pdfCanvas"></canvas>
+                        <!-- PDF pages will be rendered here dynamically -->
                     </div>
                 </div>
             </div>

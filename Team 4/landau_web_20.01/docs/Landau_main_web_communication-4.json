@@ -1,0 +1,275 @@
+{
+  "name": "Landau_main_web_communication",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "b9143924-6f48-4162-851d-d95a76606194",
+        "responseMode": "responseNode",
+        "options": {
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Access-Control-Allow-Origin",
+                "value": "*"
+              }
+            ]
+          }
+        }
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "506e744d-d586-472c-888d-8d7c5bd79c82",
+      "name": "Webhook submit",
+      "webhookId": "b9143924-6f48-4162-851d-d95a76606194"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        1376,
+        0
+      ],
+      "id": "2e862673-54bc-48f4-b634-24ab7a4af907",
+      "name": "Respond to Webhook"
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "6DgbpfDGmur90Ac5",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/6DgbpfDGmur90Ac5",
+          "cachedResultName": "Landau_sub_picture_generation"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "generatePicture": "={{ $json.generatePicture }}",
+            "instagramCaption": "={{ $json.instagram.caption }}",
+            "linkedinCaption": "={{ $json.linkedin.caption }}",
+            "facebookCaption": "={{ $json.facebook.caption }}",
+            "pressemitteilungCaption": "={{ $json.pressemitteilung.caption }}",
+            "interneEmailCaption": "={{ $json.interneemail.caption }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "instagramCaption",
+              "displayName": "instagramCaption",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "linkedinCaption",
+              "displayName": "linkedinCaption",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "facebookCaption",
+              "displayName": "facebookCaption",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "pressemitteilungCaption",
+              "displayName": "pressemitteilungCaption",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "interneEmailCaption",
+              "displayName": "interneEmailCaption",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "generatePicture",
+              "displayName": "generatePicture",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "boolean",
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        752,
+        0
+      ],
+      "id": "6531199c-0cf9-4683-aa4a-23a6d27bd660",
+      "name": "Picture sub workflow"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Extract picture generation flag from incoming webhook data\n// This node goes between the webhook and the picture generation sub-workflow\n\nconst items = $input.all();\nconst results = [];\n\nfor (const item of items) {\n  // Try to get the picture array from various possible locations\n  let pictureArray = $('Webhook submit').first().json.body.data.picture;\n  let shouldGeneratePicture = false;\n  \n  // Check all possible data structures\n  if (item.json?.data?.picture) {\n    pictureArray = item.json.data.picture;\n  } else if (item.json?.picture) {\n    pictureArray = item.json.picture;\n  } else if (item.json?.body?.data?.picture) {\n    pictureArray = item.json.body.data.picture;\n  }\n  \n  // Determine if we should generate a picture\n  if (Array.isArray(pictureArray)) {\n    shouldGeneratePicture = pictureArray.length > 0 && pictureArray.includes('generate');\n  } else if (typeof pictureArray === 'string') {\n    shouldGeneratePicture = pictureArray === 'generate' || pictureArray.toLowerCase() === 'true';\n  } else if (typeof pictureArray === 'boolean') {\n    shouldGeneratePicture = pictureArray;\n  }\n  \n  // Extract topic for image prompt\n  let topic = '';\n  if (item.json?.data?.Topic) {\n    topic = item.json.data.Topic;\n  } else if (item.json?.Topic) {\n    topic = item.json.Topic;\n  } else if (item.json?.body?.data?.Topic) {\n    topic = item.json.body.data.Topic;\n  }\n  \n  // Log for debugging\n  console.log('Picture array received:', pictureArray);\n  console.log('Should generate picture:', shouldGeneratePicture);\n  console.log('Topic for image:', topic);\n  \n  // Pass through all original data plus the parsed flag\n  results.push({\n    json: {\n      ...item.json,\n      generatePicture: shouldGeneratePicture,\n      picturePromptTopic: topic,\n      _debug: {\n        originalPictureValue: pictureArray,\n        parsedAsBoolean: shouldGeneratePicture\n      }\n    }\n  });\n}\n\nreturn results;"
+      },
+      "id": "1755d79e-919d-4f27-834a-67c9fc42caa7",
+      "name": "Parse Picture Toggle",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        512,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const input = $input.first().json;\n\n// Safely get captions, handling undefined\nconst instagramCaption = input.instagramCaption || '';\nconst linkedinCaption = input.linkedinCaption || '';\nconst facebookCaption = input.facebookCaption || '';\nconst pressemitteilungCaption = input.pressemitteilungCaption || '';\nconst interneEmailCaption = input.interneEmailCaption || '';\nconst imageUrl = input.imageUrl || '';\n\nreturn [{\n  json: {\n    instagram: {\n      caption: instagramCaption,\n      imageUrl: imageUrl\n    },\n    linkedin: {\n      caption: linkedinCaption,\n      imageUrl: imageUrl\n    },\n    facebook: {\n      caption: facebookCaption,\n      imageUrl: imageUrl\n    },\n    pressemitteilung: {\n      caption: pressemitteilungCaption,\n      imageUrl: imageUrl\n    },\n    interneemail: {\n      caption: interneEmailCaption,\n      imageUrl: imageUrl\n    },\n    imageUrl: imageUrl\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1056,
+        0
+      ],
+      "id": "5a2a3d48-b312-4291-96c6-ccd80f116ed2",
+      "name": "parse for web hook"
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "LygxNXu1c5baK3M0",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/LygxNXu1c5baK3M0",
+          "cachedResultName": "Landau_sub_content_creation"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [
+            ""
+          ],
+          "schema": [
+            {
+              "id": "",
+              "displayName": "",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        256,
+        0
+      ],
+      "id": "e9e63deb-4748-4ddc-ad5c-9de8855cfa7a",
+      "name": "content sub flow"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook submit": {
+      "main": [
+        [
+          {
+            "node": "content sub flow",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Picture sub workflow": {
+      "main": [
+        [
+          {
+            "node": "parse for web hook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Picture Toggle": {
+      "main": [
+        [
+          {
+            "node": "Picture sub workflow",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "parse for web hook": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "content sub flow": {
+      "main": [
+        [
+          {
+            "node": "Parse Picture Toggle",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "b9844760-5bc6-449e-bd2d-caf080215e7a",
+  "meta": {
+    "instanceId": "242e16560be4b15ec48732e58bf97d190f82ae9479ec2d8855ef98e163c481dd"
+  },
+  "id": "tf7cJYaRbJTseAZz",
+  "tags": []
+}

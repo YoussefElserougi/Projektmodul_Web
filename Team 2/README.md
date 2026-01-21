@@ -43,3 +43,43 @@ The project runs entirely inside **n8n** and the browser.
 - API keys, tokens, or passwords
 - Secret credentials or environment variables
 - Private system prompts containing sensitive data
+
+
+## Optional: PDF Upload (Knowledge Extension)
+
+Wil-Bot can optionally ingest **PDF documents** to extend its knowledge base.  
+This step is **not required** to run the prototype.
+
+### Overview
+- PDFs are read locally using the **Read Files from Disk** node in n8n.
+- The content is split, embedded, and stored in **Supabase Vector Store**.
+- No credentials are required for reading the files themselves.
+
+### Usage
+1. Place PDFs on the machine running n8n.
+2. Set the file path in the **File(s) Selector** field, e.g.:
+   ```
+   /home/node/.n8n-files/pdfs/your-file.pdf
+   ```
+3. Execute the workflow manually.
+
+### Docker Users
+If running n8n via Docker, you must mount a local folder containing the PDFs:
+
+```bash
+docker run -it --rm \
+  -p 5678:5678 \
+  -v ~/.n8n:/home/node/.n8n \
+  -v ~/n8n-pdfs:/home/node/.n8n-files/pdfs \
+  n8nio/n8n
+```
+
+Use the mounted path inside n8n:
+```
+/home/node/.n8n-files/pdfs/your-file.pdf
+```
+
+### Notes
+- Optional feature
+- No secrets or API keys involved
+- Required only if document-based responses are needed

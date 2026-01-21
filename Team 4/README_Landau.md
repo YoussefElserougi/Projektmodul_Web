@@ -1,6 +1,6 @@
 # Social Media Generator - City of Landau in der Pfalz
 
-The code and n8n workflows are in the folder named "landau_web" not "landau", to avoid merge conflicts with this second pull request.
+The code and n8n workflows are in the folder named "landau_web_20.01".
 
 ## n8n workflows
 

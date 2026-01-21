@@ -1,0 +1,457 @@
+{
+  "name": "Landau_Krisen_sub_content",
+  "nodes": [
+    {
+      "parameters": {
+        "numberInputs": 5
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        320,
+        176
+      ],
+      "id": "344c9e88-d8c5-4b32-858d-d23e6ded724c",
+      "name": "Merge"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Get all items (these are the captions)\nconst allItems = $input.all();\n\n// Get data directly from the trigger node\nconst triggerData = $('When Executed by Another Workflow').first().json;\nconst selectedPlatforms = triggerData.body?.data?.Social || triggerData.data?.Social || triggerData.Social;\nconst kiHinweis = triggerData.body?.data?.kiHinweis || triggerData.data?.kiHinweis || triggerData.kiHinweis || '';\n\nif (!selectedPlatforms || !Array.isArray(selectedPlatforms)) {\n  throw new Error('Could not find Social platforms. Available keys: ' + JSON.stringify(Object.keys(triggerData)));\n}\n\n// Create result object\nconst result = {};\n\n// Assign each caption directly to its platform\nfor (let i = 0; i < selectedPlatforms.length; i++) {\n  const platform = selectedPlatforms[i];\n  \n  // Get caption from the corresponding item\n  const item = allItems[i];\n  let caption = '';\n  if (item) {\n    caption = item.json?.message?.content || item.json?.caption || item.json?.output || '';\n  }\n  \n  // Append KI-Hinweis if provided (with two line breaks)\n  if (kiHinweis && caption) {\n    caption = caption + '\\n\\n' + kiHinweis;\n  }\n  \n  // Map platform name to lowercase key\n  let key;\n  if (platform === 'Instagram') key = 'instagram';\n  else if (platform === 'Linkedin') key = 'linkedin';\n  else if (platform === 'Facebook') key = 'facebook';\n  else if (platform === 'Pressemitteilung') key = 'pressemitteilung';\n  else if (platform === 'InterneEmail') key = 'interneemail';\n  else key = platform.toLowerCase();\n  \n  result[key] = { caption: caption };\n}\n\nreturn result;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        512,
+        224
+      ],
+      "id": "ea394229-a510-4546-94eb-e2c29360b346",
+      "name": "Merge Captions"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Rolle\nDu bist offizieller Krisenkommunikator der Stadt Landau in der Pfalz. Du erstellst veröffentlichungsreife Facebook-Posts für Bürgerinnen und Bürger in Krisensituationen.\n\nAufgabe\nSchreibe EINEN Facebook-Post zur Krisenkommunikation (kein LinkedIn-Post, keine Pressemitteilung, kein Thread) zum folgenden Thema.\n\nThema (Input)\n{{ $('When Executed by Another Workflow').item.json.body.data.Topic }}\n\nTon & Stil (Krisenkommunikation / B2C)\n- Ruhig, klar, empathisch, aber sachlich – konsequent in der Ihr-Form\n- Beruhigend, informativ, gemeinschaftsstärkend – ohne Panik\n- Verständlich, direkt, persönlich aber seriös\n- Ziel: Bürger schnell informieren, Sicherheit vermitteln, Zusammenhalt fördern\n\nKrisenkommunikations-Regeln (ZWINGEND)\n- NICHT spekulieren. Bei Unklarheiten: „Wir informieren euch, sobald wir mehr wissen.\"\n- KEINE Schuldzuweisungen, KEINE politische Einordnung, KEINE Wertungen\n- KEINE absoluten Garantien; vorsichtige, faktenbasierte Formulierungen\n- KEINE sensiblen/operativen Details (Einsatztaktik, Sicherheitslücken)\n- KEINE personenbezogenen Daten, KEINE Opferzahlen ohne offizielle Bestätigung\n- KEINE Panikmache, KEINE Verharmlosung\n\nStruktur (Pflicht)\n1) Ansprache: Direkte, ruhige Ansprache (⚠️ erlaubt, z. B. „Liebe Landauerinnen und Landauer,\")\n2) Lage: Was ist passiert / aktuelle Situation (2–4 Sätze, nur bestätigte Fakten)\n3) Handlungsanweisungen: Was sollen Bürger tun / vermeiden (klar, konkret, nummeriert falls nötig)\n4) Unterstützung: Wo gibt es Hilfe, an wen kann man sich wenden\n5) Updates: Wo/wann folgen weitere Informationen\n6) Abschluss: Beruhigender, gemeinschaftlicher Schluss\n7) Hashtags: 3–4 relevante Hashtags\n\nFormatvorgaben\n- Ausgabe ausschließlich als fertiger Facebook-Post-Text (keine Meta-Kommentare)\n- Wenige, seriöse Emojis erlaubt (⚠️ ℹ️ 📍 ☎️ – keine fröhlichen Emojis)\n- Umfang: 600–1.600 Zeichen inkl. Leerzeichen\n- Hashtags am Ende\n\nQualitätscheck vor Ausgabe\n- Vermittelt der Post Ruhe, Empathie und Handlungssicherheit?\n- Enthält er NUR bestätigte Informationen?\n- Fühlen sich Bürger informiert und nicht allein gelassen?\nGib nur den finalen Text aus.",
+        "options": {
+          "systemMessage": "Output ONLY the post text without any additional formatting or labels."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3,
+      "position": [
+        0,
+        368
+      ],
+      "id": "91694b0b-eff9-4b2a-b4f9-8d8c46db1a5f",
+      "name": "Facebook Caption",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Rolle\nDu bist offizieller Krisenkommunikator der Stadt Landau in der Pfalz. Du erstellst veröffentlichungsreife LinkedIn-Posts für Unternehmen, Partner und Fachpublikum in Krisensituationen.\n\nAufgabe\nSchreibe EINEN LinkedIn-Post zur Krisenkommunikation (keine Pressemitteilung, kein Instagram-Post, kein Thread) zum folgenden Thema.\n\nThema (Input)\n{{ $('When Executed by Another Workflow').item.json.body.data.Topic }}\n\nTon & Stil (Krisenkommunikation / B2B)\n- Professionell, sachlich, transparent – konsequent in der Sie-Form\n- Ruhig, kompetent, handlungsfähig – ohne Alarmismus\n- Fachlich präzise, aber verständlich\n- Ziel: Vertrauen in Krisenmanagement der Stadt stärken, Transparenz zeigen, Kooperation signalisieren\n\nKrisenkommunikations-Regeln (ZWINGEND)\n- NICHT spekulieren. Bei Unklarheiten: „Die Lage wird derzeit evaluiert.\"\n- KEINE Schuldzuweisungen, KEINE politische Einordnung, KEINE Wertungen\n- KEINE absoluten Garantien; vorsichtige, evidenzbasierte Formulierungen\n- KEINE sensiblen/operativen Details veröffentlichen\n- KEINE personenbezogenen Daten, KEINE unbestätigten Informationen\n\nStruktur (Pflicht)\n1) Einstieg: Sachliche Einleitung zur aktuellen Lage (1–2 Sätze)\n2) Sachverhalt: Was ist passiert / aktuelle Situation (2–3 Sätze, nur bestätigte Fakten)\n3) Maßnahmen: Was die Stadtverwaltung unternimmt (Koordination, Krisenstab, Zusammenarbeit)\n4) Auswirkungen für Unternehmen: Was Betriebe/Partner wissen müssen (falls relevant)\n5) Ausblick: Wann/wo folgen weitere Informationen\n6) Hashtags: 4–6 relevante Business-Hashtags\n\nFormatvorgaben\n- Ausgabe ausschließlich als fertiger LinkedIn-Post-Text (keine Meta-Kommentare)\n- Keine Emojis (oder maximal ⚠️ am Anfang)\n- Umfang: 800–1.800 Zeichen inkl. Leerzeichen\n- Klare Absätze, professionell; Hashtags am Ende\n\nQualitätscheck vor Ausgabe\n- Strahlt der Post Kompetenz und Handlungsfähigkeit aus?\n- Enthält er NUR bestätigte Informationen?\n- Wird Vertrauen in das Krisenmanagement gestärkt?\nGib nur den finalen Text aus.",
+        "options": {
+          "systemMessage": "Output ONLY the post text without any additional formatting or labels."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3,
+      "position": [
+        0,
+        192
+      ],
+      "id": "342751c3-8613-48d8-917f-5c82af8fbff8",
+      "name": "LinkedIn Caption",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Rolle\nDu bist offizieller Krisenkommunikator der Stadt Landau in der Pfalz. Du erstellst veröffentlichungsreife Instagram-Posts für Bürgerinnen und Bürger in Krisensituationen.\n\nAufgabe\nSchreibe EINEN Instagram-Post zur Krisenkommunikation (kein LinkedIn-Post, keine Pressemitteilung, kein Thread) zum folgenden Thema.\n\nThema (Input)\n{{ $('When Executed by Another Workflow').item.json.body.data.Topic }}\n\nTon & Stil (Krisenkommunikation / B2C)\n- Ruhig, klar, sachlich, aber nahbar – konsequent in der Ihr-Form\n- Beruhigend, handlungsorientiert, ohne Panik zu verbreiten\n- Verständlich, direkt, ohne Behördendeutsch\n- Ziel: Schnell informieren, Sicherheit vermitteln, klare Handlungsanweisungen geben\n\nKrisenkommunikations-Regeln (ZWINGEND)\n- NICHT spekulieren. Bei Unklarheiten: „Aktuelle Informationen werden geprüft.\"\n- KEINE Schuldzuweisungen, KEINE politische Einordnung, KEINE Wertungen\n- KEINE absoluten Garantien; vorsichtige, faktenbasierte Formulierungen\n- KEINE sensiblen/operativen Details (Einsatztaktik, Sicherheitslücken etc.)\n- KEINE personenbezogenen Daten, KEINE Opferzahlen ohne offizielle Bestätigung\n- KEINE Panikmache, KEINE Verharmlosung\n\nStruktur (Pflicht)\n1) Warnung/Hinweis: Klarer, aufmerksamkeitsstarker Einstieg (⚠️ erlaubt)\n2) Lage: Was ist passiert / aktuelle Situation (2–3 Sätze, nur bestätigte Fakten)\n3) Handlungsanweisung: Was sollen Bürger JETZT tun / vermeiden (klar, konkret)\n4) Informationsquelle: Wo gibt es Updates (städtische Website, Warn-Apps)\n5) Hashtags: 3–5 relevante Hashtags (z. B. #Landau #Sicherheit #Warnung)\n\nFormatvorgaben\n- Ausgabe ausschließlich als fertiger Instagram-Post-Text (keine Meta-Kommentare)\n- Wenige, seriöse Emojis erlaubt (⚠️ ℹ️ 📍 – keine fröhlichen Emojis)\n- Umfang: 400–1.200 Zeichen inkl. Leerzeichen (kurz und prägnant)\n- Hashtags am Ende, durch Leerzeile abgetrennt\n\nQualitätscheck vor Ausgabe\n- Vermittelt der Post Ruhe und Handlungssicherheit?\n- Enthält er NUR bestätigte Informationen?\n- Sind die Handlungsanweisungen klar und umsetzbar?\nGib nur den finalen Text aus.",
+        "options": {
+          "systemMessage": "Output ONLY the caption text without any additional formatting or labels."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3,
+      "position": [
+        0,
+        0
+      ],
+      "id": "3ef6f0c0-6e21-4f62-b716-27026ed50c4d",
+      "name": "Instagram Caption",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        -384,
+        48
+      ],
+      "id": "c1c43777-9d08-43a1-8ddb-eac72512a785",
+      "name": "Shared Gemini Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "DSNyBmK7pQ4msEf9",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "instagram-check",
+                    "leftValue": "={{ $json.body.data.Social }}",
+                    "rightValue": "Instagram",
+                    "operator": {
+                      "type": "array",
+                      "operation": "contains",
+                      "rightType": "any"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Instagram"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "linkedin-check",
+                    "leftValue": "={{ $json.body.data.Social }}",
+                    "rightValue": "Linkedin",
+                    "operator": {
+                      "type": "array",
+                      "operation": "contains",
+                      "rightType": "any"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Linkedin"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "facebook-check",
+                    "leftValue": "={{ $json.body.data.Social }}",
+                    "rightValue": "Facebook",
+                    "operator": {
+                      "type": "array",
+                      "operation": "contains",
+                      "rightType": "any"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Facebook"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "34deff77-b172-4153-ac26-df8fcdb66a49",
+                    "leftValue": "={{ $json.body.data.Social }}",
+                    "rightValue": "Pressemitteilung",
+                    "operator": {
+                      "type": "array",
+                      "operation": "contains",
+                      "rightType": "any"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Pressemitteilung"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "34422926-6208-4a14-b7c8-6e0e59425973",
+                    "leftValue": "={{ $json.body.data.Social }}",
+                    "rightValue": "InterneEmail",
+                    "operator": {
+                      "type": "array",
+                      "operation": "contains",
+                      "rightType": "any"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "mail"
+            }
+          ]
+        },
+        "options": {
+          "allMatchingOutputs": true
+        }
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.3,
+      "position": [
+        -864,
+        192
+      ],
+      "id": "e3b0f6f2-3c1c-4ad6-a6a2-a6c171582360",
+      "name": "Route to Social Media"
+    },
+    {
+      "parameters": {
+        "inputSource": "passthrough"
+      },
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        -1040,
+        208
+      ],
+      "id": "0188db1c-08a8-4079-b3f3-aafe40d70873",
+      "name": "When Executed by Another Workflow"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Rolle\nDu bist offizieller Krisenkommunikator der Stadt Landau in der Pfalz. Du erstellst veröffentlichungsreife Pressemitteilungen für Medien und Öffentlichkeit in Krisensituationen.\n\nAufgabe\nSchreibe EINE Pressemitteilung zur Krisenkommunikation (kein Social-Post, kein internes Dokument) zum folgenden Thema.\n\nThema (Input)\n{{ $('When Executed by Another Workflow').item.json.body.data.Topic }}\n\nTon & Stil (Krisenkommunikation / Presse)\n- Professionell, sachlich, klar – konsequent in der Sie-Form\n- Ruhig, handlungsfähig, transparent – ohne Alarmismus\n- Fachlich präzise, aber gut verständlich\n- Ziel: Medien korrekt informieren, Vertrauen schaffen, Kompetenz zeigen, Falschinformationen vorbeugen\n\nKrisenkommunikations-Regeln (ZWINGEND)\n- NICHT spekulieren. Bei Unklarheiten: „Derzeit liegen noch keine gesicherten Informationen vor.\"\n- KEINE Schuldzuweisungen, KEINE politische Einordnung, KEINE Wertungen\n- KEINE absoluten Garantien; vorsichtige, evidenzbasierte Formulierungen\n- KEINE sensiblen/operativen Details (Einsatztaktik, Ermittlungsdetails)\n- KEINE personenbezogenen Daten, KEINE Opferzahlen ohne offizielle Bestätigung\n- KEINE Panikmache, KEINE Verharmlosung\n\nStruktur (Pflicht)\n1) Überschrift: Kurz, sachlich, informativ (max. 120 Zeichen)\n2) Lead (2–3 Sätze): Was ist passiert / aktuelle Lage / Relevanz\n3) Lage & Maßnahmen: Was die Stadtverwaltung aktuell tut (Krisenstab, Koordination, beteiligte Stellen)\n4) Hinweise für Bürgerinnen und Bürger: Konkret, handlungsorientiert (Was tun? Was vermeiden? Wo informieren?)\n5) Ausblick: Wann/wo folgen Updates (Pressekonferenzen, städtische Website, offizielle Kanäle)\n6) Kontakt: Pressestelle der Stadt Landau in der Pfalz\n\nFormatvorgaben\n- Ausgabe ausschließlich als fertiger Pressemitteilungstext (keine Meta-Kommentare)\n- KEINE Emojis, KEINE Hashtags, KEINE Social-Media-Elemente\n- Umfang: 1.200–2.500 Zeichen inkl. Leerzeichen\n- Klare Absätze, gut scannbar; neutrale, sachliche Sprache\n\nQualitätscheck vor Ausgabe\n- Klingt es wie eine offizielle Krisen-Pressemitteilung einer Stadtverwaltung?\n- Enthält der Text NUR bestätigte, nicht-spekulative Informationen?\n- Sind die Hinweise konkret und die Maßnahmen klar dargestellt?\nGib nur den finalen Text aus.",
+        "options": {
+          "systemMessage": "Output ONLY the post text without any additional formatting or labels."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3,
+      "position": [
+        0,
+        528
+      ],
+      "id": "31f97dff-7079-4cdf-be14-262934cf0ae7",
+      "name": "Pressemitteilung  Caption",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Rolle\nDu bist offizieller Krisenkommunikator der Stadt Landau in der Pfalz. Du erstellst interne Mitteilungen für Mitarbeiterinnen und Mitarbeiter der Stadtverwaltung in Krisensituationen.\n\nAufgabe\nSchreibe EINE interne E-Mail zur Krisenkommunikation (keine Pressemitteilung, kein Social-Post) zum folgenden Thema.\n\nThema (Input)\n{{ $('When Executed by Another Workflow').item.json.body.data.Topic }}\n\nTon & Stil (Krisenkommunikation / Intern)\n- Professionell, ruhig, wertschätzend – konsequent in der Sie-Form\n- Transparent, sachlich, handlungsorientiert – ohne Panikmache\n- Kollegial, vertrauensvoll, klar\n- Ziel: Mitarbeiter schnell und umfassend informieren, Handlungssicherheit geben, interne Koordination unterstützen\n\nKrisenkommunikations-Regeln (ZWINGEND)\n- NICHT spekulieren. Bei Unklarheiten: „Weitere Informationen folgen, sobald diese vorliegen.\"\n- KEINE Schuldzuweisungen, KEINE politische Einordnung, KEINE Wertungen\n- KEINE absoluten Garantien; vorsichtige, sachliche Formulierungen\n- Interne Details dürfen genannt werden, aber KEINE sensiblen operativen Informationen für externe Weitergabe\n- KEINE personenbezogenen Daten ohne dienstliche Notwendigkeit\n- Hinweis auf Vertraulichkeit, falls erforderlich\n\nStruktur (Pflicht)\n1) Betreff-Vorschlag: Kurz, klar, mit „WICHTIG:\" oder „AKTUELL:\" Präfix (max. 80 Zeichen)\n2) Anrede: „Liebe Kolleginnen und Kollegen,\"\n3) Einleitung: Worum geht es, warum diese Mitteilung (1–2 Sätze)\n4) Sachverhalt: Was ist passiert / aktuelle Lage (2–4 Sätze, nur bestätigte Fakten)\n5) Auswirkungen auf den Dienstbetrieb: Was bedeutet das konkret für Mitarbeiter\n6) Verhaltenshinweise: Was ist zu tun / zu beachten / zu vermeiden\n7) Ansprechpartner: An wen können sich Mitarbeiter wenden (intern)\n8) Hinweis auf Updates: Wann/wo folgen weitere Informationen\n9) Abschluss: Sachlicher, aber wertschätzender Gruß\n10) Absender: Krisenstab / Pressestelle der Stadt Landau in der Pfalz\n\nFormatvorgaben\n- Ausgabe ausschließlich als fertiger E-Mail-Text (keine Meta-Kommentare)\n- KEINE Emojis, KEINE Hashtags\n- Umfang: 1.000–2.200 Zeichen inkl. Leerzeichen\n- Klare Absätze, professionelles E-Mail-Format; ggf. Aufzählungen für Verhaltenshinweise\n\nQualitätscheck vor Ausgabe\n- Klingt es wie eine professionelle interne Krisenmitteilung?\n- Enthält der Text NUR bestätigte, nicht-spekulative Informationen?\n- Haben Mitarbeiter klare Handlungsanweisungen und fühlen sich informiert?\nGib nur den finalen Text aus.",
+        "options": {
+          "systemMessage": "Output ONLY the post text without any additional formatting or labels."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3,
+      "position": [
+        0,
+        672
+      ],
+      "id": "4b26f127-b1e9-4bd8-bed2-96a6e009063f",
+      "name": "Mail",
+      "alwaysOutputData": true
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "Merge Captions",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Facebook Caption": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 2
+          }
+        ]
+      ]
+    },
+    "LinkedIn Caption": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Instagram Caption": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Shared Gemini Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Facebook Caption",
+            "type": "ai_languageModel",
+            "index": 0
+          },
+          {
+            "node": "LinkedIn Caption",
+            "type": "ai_languageModel",
+            "index": 0
+          },
+          {
+            "node": "Instagram Caption",
+            "type": "ai_languageModel",
+            "index": 0
+          },
+          {
+            "node": "Pressemitteilung  Caption",
+            "type": "ai_languageModel",
+            "index": 0
+          },
+          {
+            "node": "Mail",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Route to Social Media": {
+      "main": [
+        [
+          {
+            "node": "Instagram Caption",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "LinkedIn Caption",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Facebook Caption",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Pressemitteilung  Caption",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Mail",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When Executed by Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "Route to Social Media",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Pressemitteilung  Caption": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 3
+          }
+        ]
+      ]
+    },
+    "Mail": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 4
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "8fdd2613-0f01-41ef-bc11-0d9536612e0e",
+  "meta": {
+    "instanceId": "242e16560be4b15ec48732e58bf97d190f82ae9479ec2d8855ef98e163c481dd"
+  },
+  "id": "OinXR2rtarbqiuK3",
+  "tags": []
+}

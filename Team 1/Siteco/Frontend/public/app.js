@@ -5,64 +5,99 @@ class PageNavigator {
     }
 
     init() {
-        // Menu-Buttons Event-Listener
-        const menuBtns = document.querySelectorAll('.menu-btn');
-        menuBtns.forEach(btn => {
+        // Navigation Items Event-Listener (nur für interne Seiten mit data-page)
+        const navItems = document.querySelectorAll('.nav-item[data-page]');
+        navItems.forEach(btn => {
             btn.addEventListener('click', (e) => {
                 const page = btn.getAttribute('data-page');
-                this.navigateTo(page);
-            });
-        });
-
-        // Externe Links für externe Seiten
-        this.externalLinks = {
-            'about': 'https://www.siteco.de/unternehmen?catalogue=de_de',
-            'sustainability': 'https://www.siteco.de/nachhaltigkeit?catalogue=de_de',
-            'career': 'https://www.siteco.de/karriere?catalogue=de_de',
-            'career-training': 'https://www.siteco.de/karriere/ausbildung?catalogue=de_de',
-            'career-studies': 'https://www.siteco.de/karriere/studium?catalogue=de_de',
-            'career-jobs': 'https://www.siteco.de/karriere/stellenausschreibungen?catalogue=de_de'
-        };
-
-        // Page-Buttons (für die Info-Seiten)
-        const pageButtons = document.querySelectorAll('.page-button');
-        pageButtons.forEach(btn => {
-            btn.addEventListener('click', () => {
-                const pageContainer = btn.closest('.page');
-                let pageKey = null;
-                
-                // Versuche, die page-id zu nutzen
-                if (pageContainer) {
-                    const pageId = pageContainer.id;
-                    // Entferne "-page" Suffix um den Key zu bekommen
-                    pageKey = pageId.replace('-page', '');
-                }
-                
-                if (pageKey && this.externalLinks[pageKey]) {
-                    window.open(this.externalLinks[pageKey], '_blank');
+                if (page) {
+                    this.navigateTo(page);
                 }
             });
         });
+
+        // FM Ticket Modal Setup
+        this.setupFMTicketModal();
+        
+        // Admin Panel Setup
+        this.setupAdminPanel();
     }
 
-    getPageKey(pageTitle) {
-        const titleMap = {
-            'ÜBER UNS': 'about',
-            'NACHHALTIGKEIT': 'sustainability',
-            'KARRIERE': 'career',
-            'AUSBILDUNG': 'career-training',
-            'STUDIUM': 'career-studies',
-            'STELLENAUSSCHREIBUNGEN': 'career-jobs'
-        };
-        return titleMap[pageTitle] || 'chatbot';
+    setupAdminPanel() {
+        const adminBtn = document.getElementById('adminPanelBtn');
+        const adminPanel = document.getElementById('adminPanel');
+        const adminClose = document.getElementById('adminPanelClose');
+        const adminToast = document.getElementById('adminToast');
+        
+        if (adminBtn && adminPanel) {
+            adminBtn.addEventListener('click', () => {
+                adminPanel.classList.add('active');
+            });
+            
+            adminClose.addEventListener('click', () => {
+                adminPanel.classList.remove('active');
+            });
+            
+            // Webhook Buttons
+            adminPanel.querySelectorAll('.admin-action-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const webhook = btn.dataset.webhook;
+                    this.callAdminWebhook(webhook, adminToast);
+                });
+            });
+        }
+    }
+    
+    callAdminWebhook(path, toast) {
+        toast.textContent = 'Aktion wird ausgelöst …';
+        toast.classList.add('show');
+        
+        fetch(`http://localhost:5678/webhook/${path}`, {
+            method: 'POST'
+        })
+        .then(res => {
+            if (!res.ok) throw new Error('Webhook Fehler');
+            toast.textContent = 'Aktion erfolgreich ausgelöst';
+        })
+        .catch(() => {
+            toast.textContent = 'Fehler beim Aufruf des Webhooks';
+        });
+        
+        setTimeout(() => {
+            toast.classList.remove('show');
+        }, 3000);
+    }
+
+    setupFMTicketModal() {
+        const fmTicketBtn = document.getElementById('fmTicketBtn');
+        const fmTicketModal = document.getElementById('fmTicketModal');
+        const fmModalCancel = document.getElementById('fmModalCancel');
+        const fmModalConfirm = document.getElementById('fmModalConfirm');
+
+        if (fmTicketBtn && fmTicketModal) {
+            fmTicketBtn.addEventListener('click', () => {
+                fmTicketModal.classList.add('active');
+            });
+
+            fmModalCancel.addEventListener('click', () => {
+                fmTicketModal.classList.remove('active');
+            });
+
+            fmModalConfirm.addEventListener('click', () => {
+                window.open('https://app-eu.wrike.com/form/eyJhY2NvdW50SWQiOjU0NTMyMDQsInRhc2tGb3JtSWQiOjU5MjcyN30JNDgzMDIyMzM4MDE2MAk4YzJhMTc1Y2VlYWQwNGYzOGIyNDIxNDJhMDhmZTM0NzMxOGE4YzU3MjU4MWJhZDMwNTliZmU0MDc2MzJkZDRj', '_blank');
+                fmTicketModal.classList.remove('active');
+            });
+
+            // Schließe Modal bei Klick außerhalb
+            fmTicketModal.addEventListener('click', (e) => {
+                if (e.target === fmTicketModal) {
+                    fmTicketModal.classList.remove('active');
+                }
+            });
+        }
     }
 
     navigateTo(page) {
-        // Wenn Karriere angeklickt wird, nichts tun
-        if (page === 'career') {
-            return;
-        }
-
         // Verstecke alle Seiten
         document.querySelectorAll('.page').forEach(p => {
             p.classList.remove('active');
@@ -74,8 +109,8 @@ class PageNavigator {
             newPage.classList.add('active');
         }
 
-        // Aktualisiere aktiven Button
-        document.querySelectorAll('.menu-btn').forEach(btn => {
+        // Aktualisiere aktiven Navigation Item
+        document.querySelectorAll('.nav-item[data-page]').forEach(btn => {
             btn.classList.remove('active');
             if (btn.getAttribute('data-page') === page) {
                 btn.classList.add('active');
@@ -88,6 +123,228 @@ class PageNavigator {
         if (page === 'chatbot' && !window.chatApp) {
             window.chatApp = new ChatApp();
         }
+
+        // Initialisiere AnsprechpartnerApp wenn zu Ansprechpartner gewechselt wird
+        if (page === 'ansprechpartner' && !window.ansprechpartnerApp) {
+            window.ansprechpartnerApp = new AnsprechpartnerApp();
+        }
+    }
+}
+
+// ========================= //
+// Ansprechpartner App       //
+// ========================= //
+class AnsprechpartnerApp {
+    constructor() {
+        this.data = [];
+        this.kategorieFilter = document.getElementById('kategorieFilter');
+        this.serienleuchteFilter = document.getElementById('serienleuchteFilter');
+        this.detailsContainer = document.getElementById('ansprechpartnerDetails');
+        
+        this.selectedKategorie = null;
+        this.selectedSerienleuchte = null;
+        
+        this.roleLabels = {
+            'Mitarbeiter Optik': 'Optik',
+            'Mitarbeiter ET': 'Elektrotechnik',
+            'Mitarbeiter PM': 'Projektmanagement',
+            'Mitarbeiter SC': 'Supply Chain',
+            'Mitarbeiter AV': 'Arbeitsvorbereitung',
+            'Mitarbeiter VAL': 'Validierung',
+            'Mitarbeiter MT': 'Montagetechnik'
+        };
+        
+        this.init();
+    }
+
+    async init() {
+        await this.loadCSV();
+        this.renderKategorieFilter();
+        this.renderSerienleuchteFilter();
+    }
+
+    async loadCSV() {
+        try {
+            const response = await fetch('/Verantwortungsbereiche.csv');
+            const csvText = await response.text();
+            this.data = this.parseCSV(csvText);
+        } catch (error) {
+            console.error('Fehler beim Laden der CSV:', error);
+        }
+    }
+
+    parseCSV(csvText) {
+        const lines = csvText.split('\n');
+        const headers = this.parseCSVLine(lines[0]);
+        const data = [];
+        
+        let currentTitel = '';
+        
+        for (let i = 1; i < lines.length; i++) {
+            const line = lines[i].trim();
+            if (!line) continue;
+            
+            const values = this.parseCSVLine(line);
+            if (values.length < 2) continue;
+            
+            // Aktualisiere den Titel wenn vorhanden
+            if (values[0] && values[0].trim()) {
+                currentTitel = values[0].trim();
+            }
+            
+            const serienleuchte = values[1] ? values[1].trim() : '';
+            if (!serienleuchte) continue;
+            
+            const entry = {
+                titel: currentTitel,
+                serienleuchte: serienleuchte,
+                mitarbeiter: {}
+            };
+            
+            // Mitarbeiter zuordnen
+            for (let j = 2; j < headers.length && j < values.length; j++) {
+                const header = headers[j].trim();
+                const value = values[j] ? values[j].trim() : '';
+                entry.mitarbeiter[header] = value;
+            }
+            
+            data.push(entry);
+        }
+        
+        return data;
+    }
+
+    parseCSVLine(line) {
+        const result = [];
+        let current = '';
+        let inQuotes = false;
+        
+        for (let i = 0; i < line.length; i++) {
+            const char = line[i];
+            
+            if (char === '"') {
+                inQuotes = !inQuotes;
+            } else if (char === ',' && !inQuotes) {
+                result.push(current);
+                current = '';
+            } else {
+                current += char;
+            }
+        }
+        result.push(current);
+        
+        return result.map(v => v.replace(/^"|"$/g, '').trim());
+    }
+
+    getUniqueKategorien() {
+        const kategorien = [...new Set(this.data.map(item => item.titel))];
+        return kategorien.filter(k => k && k.trim());
+    }
+
+    getSerienleuchtenByKategorie(kategorie) {
+        if (!kategorie) return [];
+        return this.data
+            .filter(item => item.titel === kategorie)
+            .map(item => item.serienleuchte);
+    }
+
+    renderKategorieFilter() {
+        const kategorien = this.getUniqueKategorien();
+        
+        this.kategorieFilter.innerHTML = kategorien.map(kat => 
+            `<button class="filter-btn" data-kategorie="${kat}">${kat}</button>`
+        ).join('');
+
+        this.kategorieFilter.querySelectorAll('.filter-btn').forEach(btn => {
+            btn.addEventListener('click', () => this.selectKategorie(btn.dataset.kategorie));
+        });
+    }
+
+    renderSerienleuchteFilter() {
+        if (!this.selectedKategorie) {
+            this.serienleuchteFilter.innerHTML = '<span class="filter-placeholder">Bitte zuerst eine Kategorie wählen</span>';
+            return;
+        }
+
+        const serien = this.getSerienleuchtenByKategorie(this.selectedKategorie);
+        
+        this.serienleuchteFilter.innerHTML = serien.map(serie => 
+            `<button class="filter-btn" data-serie="${serie}">${serie}</button>`
+        ).join('');
+
+        this.serienleuchteFilter.querySelectorAll('.filter-btn').forEach(btn => {
+            btn.addEventListener('click', () => this.selectSerienleuchte(btn.dataset.serie));
+        });
+    }
+
+    selectKategorie(kategorie) {
+        this.selectedKategorie = kategorie;
+        this.selectedSerienleuchte = null;
+
+        // Update button states
+        this.kategorieFilter.querySelectorAll('.filter-btn').forEach(btn => {
+            btn.classList.toggle('active', btn.dataset.kategorie === kategorie);
+        });
+
+        // Re-render Serienleuchte filter
+        this.renderSerienleuchteFilter();
+        
+        // Clear details
+        this.showPlaceholder();
+    }
+
+    selectSerienleuchte(serie) {
+        this.selectedSerienleuchte = serie;
+
+        // Update button states
+        this.serienleuchteFilter.querySelectorAll('.filter-btn').forEach(btn => {
+            btn.classList.toggle('active', btn.dataset.serie === serie);
+        });
+
+        // Show details
+        const item = this.data.find(d => 
+            d.titel === this.selectedKategorie && d.serienleuchte === serie
+        );
+        
+        if (item) {
+            this.showDetails(item);
+        }
+    }
+
+    showPlaceholder() {
+        this.detailsContainer.innerHTML = `
+            <div class="details-placeholder">
+                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                    <circle cx="11" cy="11" r="8"/>
+                    <path d="M21 21l-4.35-4.35"/>
+                </svg>
+                <p>Wählen Sie eine Kategorie und Serienleuchte aus</p>
+            </div>
+        `;
+    }
+
+    showDetails(item) {
+        const mitarbeiterCards = Object.entries(item.mitarbeiter)
+            .map(([role, name]) => {
+                const displayRole = this.roleLabels[role] || role.replace('Mitarbeiter ', '');
+                const isEmpty = !name || name === ' ';
+                return `
+                    <div class="mitarbeiter-card ${isEmpty ? 'empty' : ''}">
+                        <div class="role">${displayRole}</div>
+                        <div class="name">${isEmpty ? 'Nicht besetzt' : name}</div>
+                    </div>
+                `;
+            }).join('');
+
+        this.detailsContainer.innerHTML = `
+            <div class="details-header">
+                <h2>${item.serienleuchte}</h2>
+                <div class="serie-name">${item.titel}</div>
+            </div>
+            <div class="mitarbeiter-grid">
+                ${mitarbeiterCards}
+            </div>
+        `;
     }
 }
 
@@ -96,6 +353,7 @@ class ChatApp {
         this.messagesContainer = document.getElementById('chatMessages');
         this.messageInput = document.getElementById('messageInput');
         this.sendButton = document.getElementById('sendButton');
+        this.newChatBtn = document.getElementById('newChatBtn');
         this.statusIndicator = document.getElementById('status');
         this.conversationId = this.generateConversationId();
         
@@ -105,14 +363,11 @@ class ChatApp {
         this.closeModalBtn = document.getElementById('closeModal');
         this.downloadBtn = document.getElementById('downloadBtn');
         this.chunksList = document.getElementById('chunksList');
-        this.pdfCanvas = document.getElementById('pdfCanvas');
+        this.pdfContainer = document.getElementById('pdfContainer');
         this.pageInfo = document.getElementById('pageInfo');
-        this.prevPageBtn = document.getElementById('prevPage');
-        this.nextPageBtn = document.getElementById('nextPage');
         
         // PDF.js State
         this.pdfDoc = null;
-        this.currentPage = 1;
         this.totalPages = 0;
         
         // PDF.js Worker konfigurieren
@@ -123,6 +378,7 @@ class ChatApp {
 
     init() {
         this.sendButton.addEventListener('click', () => this.sendMessage());
+        this.newChatBtn.addEventListener('click', () => this.startNewChat());
         
         // Enter sendet, Shift+Enter macht neue Zeile
         this.messageInput.addEventListener('keydown', (e) => {
@@ -146,16 +402,39 @@ class ChatApp {
         document.addEventListener('keydown', (e) => {
             if (e.key === 'Escape') this.closeModal();
         });
-        
-        // PDF Navigation
-        this.prevPageBtn.addEventListener('click', () => this.changePage(-1));
-        this.nextPageBtn.addEventListener('click', () => this.changePage(1));
 
         this.checkServerStatus();
     }
 
     generateConversationId() {
         return 'conv_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+    }
+
+    startNewChat() {
+        // Neue Conversation ID generieren
+        this.conversationId = this.generateConversationId();
+        
+        // Chat-Nachrichten zurücksetzen mit Willkommensnachricht
+        this.messagesContainer.innerHTML = `
+            <div class="message bot-message">
+                <div class="bot-icon">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <rect x="3" y="11" width="18" height="10" rx="2"/>
+                        <circle cx="12" cy="5" r="2"/>
+                        <path d="M12 7v4"/>
+                        <line x1="8" y1="16" x2="8" y2="16"/>
+                        <line x1="16" y1="16" x2="16" y2="16"/>
+                    </svg>
+                </div>
+                <div class="message-content">
+                    Ich kann dir helfen, Informationen aus deinen internen Dokumenten zu finden. Frag mich alles über Arbeitsanweisungen, Prozesse oder Unternehmensrichtlinien.
+                </div>
+            </div>
+        `;
+        
+        // Input leeren und fokussieren
+        this.messageInput.value = '';
+        this.messageInput.focus();
     }
 
     async checkServerStatus() {
@@ -254,7 +533,13 @@ class ChatApp {
         
         const contentDiv = document.createElement('div');
         contentDiv.className = 'message-content';
-        contentDiv.textContent = text;
+        
+        // Bot-Nachrichten als Markdown rendern, User-Nachrichten als Plain Text
+        if (type === 'bot') {
+            contentDiv.innerHTML = marked.parse(text);
+        } else {
+            contentDiv.textContent = text;
+        }
         
         // Sources hinzufügen (nur bei Bot-Nachrichten mit Quellen)
         if (type === 'bot' && sources.length > 0) {
@@ -298,6 +583,13 @@ class ChatApp {
         
         // Chunks anzeigen
         this.chunksList.innerHTML = '';
+        
+        // Erklärungstext hinzufügen
+        const explanationDiv = document.createElement('div');
+        explanationDiv.className = 'chunks-explanation';
+        explanationDiv.innerHTML = 'Diese Textabschnitte aus dem Dokument wurden verwendet, um die Antwort zu generieren.';
+        this.chunksList.appendChild(explanationDiv);
+        
         chunks.forEach((chunk, index) => {
             const chunkDiv = document.createElement('div');
             chunkDiv.className = 'chunk-item';
@@ -308,7 +600,7 @@ class ChatApp {
             
             chunkDiv.innerHTML = `
                 <div class="chunk-header">
-                    <span class="chunk-number">Passage ${index + 1}</span>
+                    <span class="chunk-number">Textabschnitt ${index + 1}</span>
                     ${lineInfo}
                 </div>
                 <div class="chunk-text">${this.escapeHtml(chunk.text)}</div>
@@ -331,63 +623,71 @@ class ChatApp {
         return div.innerHTML;
     }
 
-    // PDF mit PDF.js laden
+    // PDF mit PDF.js laden - alle Seiten rendern für Scroll-Funktion
     async loadPdf(filename) {
         const url = `/api/download?file=${encodeURIComponent(filename)}`;
+        
+        // Container leeren
+        this.pdfContainer.innerHTML = '<div class="pdf-loading">Dokument wird geladen...</div>';
         
         try {
             this.pdfDoc = await pdfjsLib.getDocument(url).promise;
             this.totalPages = this.pdfDoc.numPages;
-            this.currentPage = 1;
             
-            this.updatePageInfo();
-            await this.renderPage(this.currentPage);
+            // Container für alle Seiten vorbereiten
+            this.pdfContainer.innerHTML = '';
+            
+            // Seiten-Info aktualisieren
+            this.pageInfo.textContent = `${this.totalPages} Seite${this.totalPages !== 1 ? 'n' : ''}`;
+            
+            // Alle Seiten rendern
+            for (let pageNum = 1; pageNum <= this.totalPages; pageNum++) {
+                await this.renderPage(pageNum);
+            }
         } catch (error) {
             console.error('PDF load error:', error);
-            this.pdfCanvas.getContext('2d').clearRect(0, 0, this.pdfCanvas.width, this.pdfCanvas.height);
+            this.pdfContainer.innerHTML = '<div class="pdf-error">Fehler beim Laden des PDFs</div>';
         }
     }
 
-    // Seite rendern
+    // Einzelne Seite rendern und zum Container hinzufügen
     async renderPage(pageNum) {
         if (!this.pdfDoc) return;
         
         const page = await this.pdfDoc.getPage(pageNum);
-        const container = document.getElementById('pdfContainer');
-        const containerWidth = container.clientWidth - 40;
+        const containerWidth = this.pdfContainer.clientWidth - 60;
         
         // Skalierung berechnen
         const viewport = page.getViewport({ scale: 1 });
         const scale = containerWidth / viewport.width;
         const scaledViewport = page.getViewport({ scale });
         
-        // Canvas Größe setzen
-        this.pdfCanvas.width = scaledViewport.width;
-        this.pdfCanvas.height = scaledViewport.height;
+        // Wrapper für die Seite erstellen
+        const pageWrapper = document.createElement('div');
+        pageWrapper.className = 'pdf-page-wrapper';
         
-        // Rendern
-        const context = this.pdfCanvas.getContext('2d');
+        // Seitennummer Label
+        const pageLabel = document.createElement('div');
+        pageLabel.className = 'pdf-page-label';
+        pageLabel.textContent = `Seite ${pageNum}`;
+        pageWrapper.appendChild(pageLabel);
+        
+        // Canvas erstellen
+        const canvas = document.createElement('canvas');
+        canvas.className = 'pdf-page-canvas';
+        canvas.width = scaledViewport.width;
+        canvas.height = scaledViewport.height;
+        pageWrapper.appendChild(canvas);
+        
+        // Zum Container hinzufügen
+        this.pdfContainer.appendChild(pageWrapper);
+        
+        // Seite rendern
+        const context = canvas.getContext('2d');
         await page.render({
             canvasContext: context,
             viewport: scaledViewport
         }).promise;
-    }
-
-    // Seite wechseln
-    changePage(delta) {
-        const newPage = this.currentPage + delta;
-        if (newPage >= 1 && newPage <= this.totalPages) {
-            this.currentPage = newPage;
-            this.updatePageInfo();
-            this.renderPage(this.currentPage);
-        }
-    }
-
-    // Seiten-Info aktualisieren
-    updatePageInfo() {
-        this.pageInfo.textContent = `Seite ${this.currentPage} / ${this.totalPages}`;
-        this.prevPageBtn.disabled = this.currentPage <= 1;
-        this.nextPageBtn.disabled = this.currentPage >= this.totalPages;
     }
 
     // Modal schließen
@@ -438,6 +738,12 @@ class ChatApp {
 
 // App starten
 document.addEventListener('DOMContentLoaded', () => {
+    // Marked.js konfigurieren
+    marked.setOptions({
+        breaks: true,  // Einzelne Zeilenumbrüche als <br> rendern
+        gfm: true      // GitHub Flavored Markdown aktivieren
+    });
+    
     const navigator = new PageNavigator();
     // Initialisiere ChatApp beim Start
     window.chatApp = new ChatApp();

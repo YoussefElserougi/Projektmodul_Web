@@ -1,0 +1,84 @@
+graph LR
+    %% --- STYLING (Dark Mode Minimalist) ---
+    
+    %% Inputs (Weiß/Grau)
+    classDef input fill:#ffffff,stroke:#94a3b8,stroke-width:1px,stroke-dasharray: 5 5,rx:4,ry:4,color:#64748b,font-size:10px;
+    
+    %% Logic Nodes (Helles Blau)
+    classDef logic fill:#eff6ff,stroke:#3b82f6,stroke-width:2px,rx:4,ry:4,color:#1e3a8a,font-size:11px,font-weight:bold;
+    
+    %% Storage (Helles Grün)
+    classDef storage fill:#ecfdf5,stroke:#10b981,stroke-width:2px,rx:5,ry:5,color:#064e3b,font-size:11px;
+    
+    %% Output (Helles Violett)
+    classDef output fill:#f3e8ff,stroke:#7e22ce,stroke-width:2px,rx:4,ry:4,color:#4c1d95,font-size:11px;
+    
+    %% Trigger (Orange)
+    classDef trigger fill:#fff7ed,stroke:#f97316,stroke-width:1px,rx:10,ry:10,color:#c2410c,font-size:9px;
+
+
+    %% --- BLOCK 1: BACKEND (Links) ---
+    subgraph Backend [" "]
+        direction TB
+        
+        %% A. DATA SOURCES
+        subgraph Sources [" "]
+            direction LR
+            In1("Public Web / Media"):::input
+            In2("Market Data / KPIs"):::input
+        end
+
+        %% Spacer für Abstand
+        Sources ~~~ n8n
+
+        %% B. LOGIC MODULES
+        subgraph n8n [" "]
+            direction TB
+            T1(⏱️ Adaptive Refresh):::trigger
+            
+            subgraph Modules [" "]
+                direction LR
+                M1["Share of Voice"]:::logic
+                M2["SEO vs GEO"]:::logic
+                M3["AI News"]:::logic
+            end
+            
+            subgraph Modules2 [" "]
+                direction LR
+                M4["YouTube AI"]:::logic
+                M5["KPI Tracker"]:::logic
+                M6["Brand Mission"]:::logic
+            end
+        end
+    end
+
+    %% --- BLOCK 2: OUTPUT (Rechts) ---
+    subgraph Result [" "]
+        direction TB
+        RAG[("Supabase Vector<br>(RAG Memory)")]:::storage
+        Webflow["Webflow CMS<br>(Live View)"]:::output
+        Chatbot(("AI Chatbot")):::output
+    end
+
+    %% --- STYLING DER SCHWARZEN BOXEN ---
+    style Backend fill:#000000,stroke:#333333,stroke-width:1px,color:#000000;
+    style Result fill:#000000,stroke:#333333,stroke-width:1px,color:#000000;
+    
+    %% Unsichtbare innere Container
+    style Sources fill:none,stroke:none;
+    style n8n fill:none,stroke:none;
+    style Modules fill:none,stroke:none;
+    style Modules2 fill:none,stroke:none;
+
+
+    %% --- CONNECTIONS ---
+    In1 & In2 -.-> Modules & Modules2
+    Modules & Modules2 --> Webflow
+    Modules & Modules2 ==> RAG
+    RAG <==> Chatbot
+    Chatbot -.-> Webflow
+    T1 -.- Modules & Modules2
+
+    %% Link Styling (Hellgrau für Kontrast auf Schwarz)
+    linkStyle default stroke:#9ca3af,stroke-width:1px,fill:none;
+    linkStyle 0,1,2,3 stroke-dasharray: 2 2;
