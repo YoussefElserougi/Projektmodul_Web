@@ -1,0 +1,1825 @@
+{
+  "name": "Coumbas Update Version mit Webhook",
+  "nodes": [
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "1242c178-3a77-43e6-b21f-1987f96b5eb6",
+              "leftValue": "={{ $json.Sentiment }}",
+              "rightValue": "Positive",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.filter",
+      "typeVersion": 2.2,
+      "position": [
+        3232,
+        -144
+      ],
+      "id": "e6a4039d-4747-4ee7-bdff-92afdcaa0b30",
+      "name": "Positive"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "1242c178-3a77-43e6-b21f-1987f96b5eb6",
+              "leftValue": "={{ $json.Sentiment }}",
+              "rightValue": "Neutral",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.filter",
+      "typeVersion": 2.2,
+      "position": [
+        3232,
+        16
+      ],
+      "id": "acb79910-e5ad-4519-8073-27b121b7dba7",
+      "name": "Neutral"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "1242c178-3a77-43e6-b21f-1987f96b5eb6",
+              "leftValue": "={{ $json.Sentiment }}",
+              "rightValue": "Negative",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.filter",
+      "typeVersion": 2.2,
+      "position": [
+        3232,
+        -272
+      ],
+      "id": "3d547c9b-a685-4829-b364-5d20e1ed758b",
+      "name": "Negative"
+    },
+    {
+      "parameters": {
+        "select": "channel",
+        "channelId": {
+          "__rl": true,
+          "value": "C0A2Q03UAPN",
+          "mode": "list",
+          "cachedResultName": "negative-reviews"
+        },
+        "text": "=User-Name: {{ $json.name }}\nSentiment: {{ $json.Sentiment }} \nReview: {{ $json.Review }}  \nResponse: {{ $json.Response }}",
+        "otherOptions": {}
+      },
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2.3,
+      "position": [
+        3440,
+        -272
+      ],
+      "id": "1ebc0fb1-1f81-489b-aba8-8e00e4a0c9c9",
+      "name": "Send Negative Review",
+      "webhookId": "c3136a9f-f4b6-4ba9-83b3-3d09a894b061",
+      "credentials": {
+        "slackApi": {
+          "id": "9PYt6OxVUjueo9Rb",
+          "name": "Slack account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "select": "channel",
+        "channelId": {
+          "__rl": true,
+          "value": "C0A3EMKDU2U",
+          "mode": "list",
+          "cachedResultName": "positive-reviews"
+        },
+        "text": "=User-Name: {{ $json.name }}\nSentiment: {{ $json.Sentiment }} \nReview: {{ $json.Review }}  \nResponse: {{ $json.Response }}",
+        "otherOptions": {}
+      },
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2.3,
+      "position": [
+        3440,
+        -144
+      ],
+      "id": "4db2fdcf-36ec-42e9-9b64-dd273886231e",
+      "name": "Send Positive Review",
+      "webhookId": "c3136a9f-f4b6-4ba9-83b3-3d09a894b061",
+      "credentials": {
+        "slackApi": {
+          "id": "9PYt6OxVUjueo9Rb",
+          "name": "Slack account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "select": "channel",
+        "channelId": {
+          "__rl": true,
+          "value": "C0A2LCDDUSW",
+          "mode": "list",
+          "cachedResultName": "neutral-reviews"
+        },
+        "text": "=User-Name: {{ $json.name }} \nSentiment: {{ $json.Sentiment }} \nReview: {{ $json.Review }}  \nResponse: {{ $json.Response }}",
+        "otherOptions": {}
+      },
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2.3,
+      "position": [
+        3440,
+        16
+      ],
+      "id": "19c8f1be-4fb9-4bab-acd9-28970b260fb2",
+      "name": "Send Neutral Review",
+      "webhookId": "c3136a9f-f4b6-4ba9-83b3-3d09a894b061",
+      "credentials": {
+        "slackApi": {
+          "id": "9PYt6OxVUjueo9Rb",
+          "name": "Slack account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "publish-review",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [
+        1664,
+        2144
+      ],
+      "id": "321d7121-7d3b-4c69-9c1a-72cdbe62643c",
+      "name": "POST /webhook/publish-review",
+      "webhookId": "37342e34-0efd-47fb-aa00-955fc9d8b18b"
+    },
+    {
+      "parameters": {
+        "path": "get-analytics",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [
+        1664,
+        1360
+      ],
+      "id": "f2a27865-0fe7-4a4d-8469-d91d15ded7cd",
+      "name": "GET /webhook/get-analytics",
+      "webhookId": "c36b2e46-1bca-4613-8664-3b8cfbd88948"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "timestamp",
+              "name": "timestamp",
+              "value": "={{ $now.toISO() }}",
+              "type": "string"
+            },
+            {
+              "id": "name",
+              "name": "name",
+              "value": "={{ $('On form submission1').item.json['Full Name '] }}",
+              "type": "string"
+            },
+            {
+              "id": "review",
+              "name": "review",
+              "value": "={{ $('On form submission1').item.json['Please share your experience '] }}",
+              "type": "string"
+            },
+            {
+              "id": "sentiment",
+              "name": "sentiment",
+              "value": "={{ $('Sentiment Analysis1').item.json.sentimentAnalysis.category }}",
+              "type": "string"
+            },
+            {
+              "id": "issues",
+              "name": "extracted_issues",
+              "value": "={{ $json.output }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        2400,
+        -448
+      ],
+      "id": "ec1fa3cc-f007-468c-b6f5-e3d5fbdfbc47",
+      "name": "Format HR Data1"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Review: {{ $('On form submission1').item.json['Please share your experience '] }}\n\nExtract the main negative topics or issues mentioned in this review.",
+        "options": {
+          "systemMessage": "Du bist ein HR-Analyst, der negative Themen aus Mitarbeiter-Reviews extrahiert.\n\nDeine Aufgabe:\n1. Identifiziere die Haupt-Kritikpunkte im Review\n2. Kategorisiere sie in klare Themen-Cluster\n3. Gib eine komma-separierte Liste zurück\n\n**THEMEN-KATEGORIEN (verwende diese):**\n\nLeadership & Management:\n- management, leadership, boss, supervisor, micromanagement, favoritism\n\nCompensation & Benefits:\n- salary, pay, low-pay, benefits, bonus, compensation, unfair-pay\n\nWork-Life Balance:\n- overtime, work-life-balance, burnout, stress, overwork, hours\n\nCommunication:\n- communication, transparency, feedback, information, clarity\n\nCareer Development:\n- career-growth, promotion, training, development, learning, stagnation\n\nCompany Culture:\n- culture, toxic-culture, values, inclusivity, diversity, respect\n\nWork Environment:\n- office, equipment, tools, resources, workspace\n\nTeam & Collaboration:\n- teamwork, collaboration, colleagues, team-dynamics\n\nOrganization & Processes:\n- bureaucracy, processes, inefficiency, organization, structure\n\nJob Security:\n- layoffs, instability, insecurity, restructuring\n\n**WICHTIG:**\n- Verwende IMMER englische Begriffe (auch wenn das Review deutsch ist)\n- Verwende NUR die vordefinierten Kategorien\n- Gib maximal 3-5 Themen zurück\n- Format: \"management, salary, work-life-balance\"\n- Falls KEINE negativen Themen: gib \"none\" zurück\n- Keine Erklärungen, nur die komma-separierte Liste"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.2,
+      "position": [
+        2144,
+        -448
+      ],
+      "id": "1b3a40ac-7ae0-457e-b749-539e093409e5",
+      "name": "Extract Key Issues1"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json['Please share your experience '] }}",
+        "options": {
+          "systemMessage": "=Du bist der \"Atolls Employer Branding Agent\". Deine einzige Aufgabe ist es, Glassdoor-Reviews basierend auf der authentischen Atolls-Identität zu verarbeiten.\n\n### TONE OF VOICE (Extrahiert aus Atolls Best-Practices)\n- Wertschätzung: Beginne jede Antwort zwingend mit einem Dank (z. B. \"Thank you for sharing your experience\" oder \"We appreciate your honest feedback\").\n- Professionalität & Nahbarkeit: Schreibe professionell, aber menschlich (\"human-centric\"). Vermeide roboterhafte Standard-Sätze.\n- Transparenz & Ehrlichkeit: Gehe offen auf Kritik ein. Wenn jemand \"hohen Druck\" erwähnt, antworte empathisch (z. B. \"We are sorry to hear you perceived our culture as high-pressure...\"). Streite Gefühle nicht ab.\n- Spezifität: Beziehe dich auf Details aus der Review (z. B. \"I’m glad the onboarding went well\").\n- Sprache: Immer auf Englisch.\n- Abschluss: Beende jede Antwort mit der Einladung, das Talent-Team für einen persönlichen Austausch zu kontaktieren.\n"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.2,
+      "position": [
+        2336,
+        32
+      ],
+      "id": "28584932-e6c3-414d-ab38-319867301ff2",
+      "name": "AI Agent1"
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combineBy": "combineByPosition",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        2688,
+        -144
+      ],
+      "id": "41d09241-f452-471b-a2e8-f3cc3bd5016c",
+      "name": "Merge Data1"
+    },
+    {
+      "parameters": {
+        "inputText": "={{ $json['Please share your experience '] }}",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.sentimentAnalysis",
+      "typeVersion": 1.1,
+      "position": [
+        1760,
+        16
+      ],
+      "id": "a7fa3741-a576-466a-8af5-1cbe6d912afe",
+      "name": "Sentiment Analysis1"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-4o-mini"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        2144,
+        320
+      ],
+      "id": "9ad1304d-f3d1-46a6-ada6-21a165fe0f56",
+      "name": "OpenAI Chat Model1",
+      "credentials": {
+        "openAiApi": {
+          "id": "WTv3zoe8Sb0P8ctA",
+          "name": "MUC.DAI OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "formTitle": "Guest Review Portal",
+        "formDescription": "Please share your experience with us ",
+        "formFields": {
+          "values": [
+            {
+              "fieldLabel": "Full Name ",
+              "placeholder": "Please type your full name ",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "Please share your experience ",
+              "fieldType": "textarea",
+              "placeholder": "Share your experience with us",
+              "requiredField": true
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.formTrigger",
+      "typeVersion": 2.3,
+      "position": [
+        1536,
+        -160
+      ],
+      "id": "2bf794a1-03a5-42a8-aa3f-6d3761347e48",
+      "name": "On form submission1",
+      "webhookId": "acfbc631-ae34-471c-b6f1-d1c7ff1a6e2c"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1rKVQBB1XnZVat3eTYNO56f4R8IDsNLEtnwUBLNCY1hg",
+          "mode": "list",
+          "cachedResultName": "HR_Analytics",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1rKVQBB1XnZVat3eTYNO56f4R8IDsNLEtnwUBLNCY1hg/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Tabellenblatt1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1rKVQBB1XnZVat3eTYNO56f4R8IDsNLEtnwUBLNCY1hg/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "name": "={{ $json.name }}",
+            "timestamp": "={{ $json.timestamp }}",
+            "review": "={{ $json.review }}",
+            "extracted_issues": "={{ $json.extracted_issues }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "timestamp",
+              "displayName": "timestamp",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "name",
+              "displayName": "name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "review",
+              "displayName": "review",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "extracted_issues",
+              "displayName": "extracted_issues",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        2688,
+        -448
+      ],
+      "id": "5c41b377-89b3-4d1a-9478-b3b10cbf9206",
+      "name": "HR_Analytics1",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "0HQShtoSMnQe3nef",
+          "name": "Google Sheets account 10"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1TPDblNINkqjeGUd8HgoHfEOxRl5dRBABWHLTMwhq8G4",
+          "mode": "list",
+          "cachedResultName": "Sentiment Sheet",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1TPDblNINkqjeGUd8HgoHfEOxRl5dRBABWHLTMwhq8G4/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Tabellenblatt1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1TPDblNINkqjeGUd8HgoHfEOxRl5dRBABWHLTMwhq8G4/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Review": "={{ $json['Please share your experience '] }}",
+            "Response": "={{ $json.output }}",
+            "Sentiment": "={{ $('Sentiment Analysis1').item.json.sentimentAnalysis.category }}",
+            "timestamp": "={{ $json.submittedAt }}",
+            "status": "pending",
+            "review_id": "={{ 'r_' + $now.toMillis() }}",
+            "name": "={{ $('On form submission1').item.json['Full Name '] }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "timestamp",
+              "displayName": "timestamp",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "name",
+              "displayName": "name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Review",
+              "displayName": "Review",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Sentiment",
+              "displayName": "Sentiment",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Response",
+              "displayName": "Response",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "status",
+              "displayName": "status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "review_id",
+              "displayName": "review_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        2976,
+        -144
+      ],
+      "id": "5467f1f9-b838-4190-89cd-7d1ca516481c",
+      "name": "SentimentAnalysis AND ReviewResponse1",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "0HQShtoSMnQe3nef",
+          "name": "Google Sheets account 10"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "path": "get-reviews",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [
+        1632,
+        880
+      ],
+      "id": "376363d9-8788-49cd-bd9e-af093a65205a",
+      "name": "GET /webhook/get-reviews",
+      "webhookId": "58f838db-5980-4311-8ce7-b90eb5445526"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1TPDblNINkqjeGUd8HgoHfEOxRl5dRBABWHLTMwhq8G4",
+          "mode": "list",
+          "cachedResultName": "Sentiment Sheet",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1TPDblNINkqjeGUd8HgoHfEOxRl5dRBABWHLTMwhq8G4/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Tabellenblatt1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1TPDblNINkqjeGUd8HgoHfEOxRl5dRBABWHLTMwhq8G4/edit#gid=0"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1904,
+        880
+      ],
+      "id": "f1cbaea0-adb2-4f22-ab1d-0e0b66721eed",
+      "name": "SentimentAnalysis AND ReviewResponse",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "0HQShtoSMnQe3nef",
+          "name": "Google Sheets account 10"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "allIncomingItems",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        2144,
+        896
+      ],
+      "id": "8d22ede2-b5a0-4c14-93b7-618f142254be",
+      "name": "Respond to Webhook1"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Alle Zeilen aus beiden Sheets\nconst rows = items.map(i => i.json);\n\n// Sheet 1: Sentiment-Daten\nconst reviews = rows.filter(r => r.Sentiment);\n\n// Sheet 2: Keyword-Daten\nconst negativeKeywords = rows.filter(r => r.extracted_issues);\n\n// --- Sentiment Breakdown ---\nconst sentimentBreakdown = {\n  positive: reviews.filter(r => r.Sentiment.toLowerCase() === 'positive').length,\n  neutral: reviews.filter(r => r.Sentiment.toLowerCase() === 'neutral').length,\n  negative: reviews.filter(r => r.Sentiment.toLowerCase() === 'negative').length,\n};\n\n// --- Keywords zählen ---\nconst keywordCounts = {};\n\nnegativeKeywords.forEach(item => {\n  if (item.extracted_issues && item.extracted_issues !== 'none') {\n    item.extracted_issues.split(',').forEach(keyword => {\n      const k = keyword.trim().toLowerCase();\n      keywordCounts[k] = (keywordCounts[k] || 0) + 1;\n    });\n  }\n});\n\n// Top 5 negative Keywords\nconst topNegativeKeywords = Object.entries(keywordCounts)\n  .sort((a, b) => b[1] - a[1])\n  .slice(0, 5)\n  .map(([keyword, count]) => ({\n    keyword,\n    count,\n    change: 0 // Platzhalter\n  }));\n\nreturn [{\n  json: {\n    totalReviews: reviews.length,\n    sentimentBreakdown,\n    topNegativeKeywords\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2544,
+        1360
+      ],
+      "id": "f5088f0d-f0a1-4cac-9924-233304dda2bb",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1rKVQBB1XnZVat3eTYNO56f4R8IDsNLEtnwUBLNCY1hg",
+          "mode": "list",
+          "cachedResultName": "HR_Analytics",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1rKVQBB1XnZVat3eTYNO56f4R8IDsNLEtnwUBLNCY1hg/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Tabellenblatt1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1rKVQBB1XnZVat3eTYNO56f4R8IDsNLEtnwUBLNCY1hg/edit#gid=0"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1984,
+        1472
+      ],
+      "id": "abd5d0f2-6e19-4ef5-9c3c-c4ed0cf5c22d",
+      "name": "HR_Analytics",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "0HQShtoSMnQe3nef",
+          "name": "Google Sheets account 10"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1TPDblNINkqjeGUd8HgoHfEOxRl5dRBABWHLTMwhq8G4",
+          "mode": "list",
+          "cachedResultName": "Sentiment Sheet",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1TPDblNINkqjeGUd8HgoHfEOxRl5dRBABWHLTMwhq8G4/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Tabellenblatt1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1TPDblNINkqjeGUd8HgoHfEOxRl5dRBABWHLTMwhq8G4/edit#gid=0"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1984,
+        1248
+      ],
+      "id": "6e12947b-43b7-4877-af0d-c83d84747293",
+      "name": "SentimentAnalysis AND ReviewResponse2",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "0HQShtoSMnQe3nef",
+          "name": "Google Sheets account 10"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "allIncomingItems",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        2832,
+        1360
+      ],
+      "id": "787f236d-b4a9-474f-ba85-4832f2840b06",
+      "name": "Respond to Webhook"
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combineBy": "combineByPosition",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        2256,
+        1360
+      ],
+      "id": "9d8075f7-917e-43dc-9c7b-3c9d172b9aaf",
+      "name": "Merge"
+    },
+    {
+      "parameters": {
+        "content": "## Reviews für Inbox senden",
+        "height": 288,
+        "width": 832
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        1552,
+        784
+      ],
+      "typeVersion": 1,
+      "id": "f4f5bd65-165d-4714-85a2-41b76503df7f",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "content": "## Webhook Nodes\nVerbindung zum Frontend",
+        "height": 80,
+        "width": 1584,
+        "color": 2
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        1552,
+        640
+      ],
+      "typeVersion": 1,
+      "id": "d6367155-23d0-41e2-a941-2549e2533ced",
+      "name": "Sticky Note2"
+    },
+    {
+      "parameters": {
+        "content": "## Main Workflow\nSentiment Analysis, Keyword extraction etc.",
+        "height": 80,
+        "width": 1584,
+        "color": 2
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        1488,
+        -640
+      ],
+      "typeVersion": 1,
+      "id": "a5c3054c-b302-4b0a-be71-32e0c260348c",
+      "name": "Sticky Note3"
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "update-review",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [
+        1648,
+        1808
+      ],
+      "id": "4889c867-3974-4238-930a-4fe3b8af6b41",
+      "name": "POST /webhook/update-review1",
+      "webhookId": "e8c73d26-175a-415c-881d-0257a0e1c44b"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "1TPDblNINkqjeGUd8HgoHfEOxRl5dRBABWHLTMwhq8G4",
+          "mode": "list",
+          "cachedResultName": "Sentiment Sheet",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1TPDblNINkqjeGUd8HgoHfEOxRl5dRBABWHLTMwhq8G4/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Tabellenblatt1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1TPDblNINkqjeGUd8HgoHfEOxRl5dRBABWHLTMwhq8G4/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "review_id": "={{ $json.body.reviewId }}",
+            "Response": "={{ $json.body.response }}"
+          },
+          "matchingColumns": [
+            "review_id"
+          ],
+          "schema": [
+            {
+              "id": "timestamp",
+              "displayName": "timestamp",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "name",
+              "displayName": "name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Review",
+              "displayName": "Review",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Sentiment",
+              "displayName": "Sentiment",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Response",
+              "displayName": "Response",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "status",
+              "displayName": "status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "review_id",
+              "displayName": "review_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "row_number",
+              "displayName": "row_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "readOnly": true,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1856,
+        1808
+      ],
+      "id": "e7b0403b-d0f4-43ba-963c-84adaefa2cb0",
+      "name": "Update row in sheet1",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "0HQShtoSMnQe3nef",
+          "name": "Google Sheets account 10"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "allIncomingItems",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        2064,
+        1808
+      ],
+      "id": "61bb51ae-6250-4928-8953-0cb141e6b1f8",
+      "name": "Respond to Webhook2"
+    },
+    {
+      "parameters": {
+        "content": "## Generated Responses bearbeitbar machen und Sheet entsprechend updaten.",
+        "height": 304,
+        "width": 1552
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        1568,
+        1712
+      ],
+      "typeVersion": 1,
+      "id": "634bb47a-e286-4745-88e4-7f8137e17b3c",
+      "name": "Sticky Note4"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "1TPDblNINkqjeGUd8HgoHfEOxRl5dRBABWHLTMwhq8G4",
+          "mode": "list",
+          "cachedResultName": "Sentiment Sheet",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1TPDblNINkqjeGUd8HgoHfEOxRl5dRBABWHLTMwhq8G4/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Tabellenblatt1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1TPDblNINkqjeGUd8HgoHfEOxRl5dRBABWHLTMwhq8G4/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "review_id": "={{ $json.body.reviewId }}",
+            "status": "published"
+          },
+          "matchingColumns": [
+            "review_id"
+          ],
+          "schema": [
+            {
+              "id": "timestamp",
+              "displayName": "timestamp",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "name",
+              "displayName": "name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Review",
+              "displayName": "Review",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Sentiment",
+              "displayName": "Sentiment",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Response",
+              "displayName": "Response",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "status",
+              "displayName": "status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "review_id",
+              "displayName": "review_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "row_number",
+              "displayName": "row_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "readOnly": true,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1920,
+        2144
+      ],
+      "id": "38696a27-f0c3-424d-8254-f1210d98e7de",
+      "name": "Update row in sheet2",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "0HQShtoSMnQe3nef",
+          "name": "Google Sheets account 10"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "allIncomingItems",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        2128,
+        2144
+      ],
+      "id": "e57edb28-c8e2-400a-9980-50619ed3705a",
+      "name": "Respond to Webhook3"
+    },
+    {
+      "parameters": {
+        "content": "## Reviews \"Veröffentlichen\"",
+        "height": 304,
+        "width": 1552
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        1552,
+        2064
+      ],
+      "typeVersion": 1,
+      "id": "e1f67c5c-aeb7-42e0-9cb1-6246955a144c",
+      "name": "Sticky Note5"
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combineBy": "combineByPosition",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        4608,
+        1232
+      ],
+      "id": "d0c5841d-a957-46ea-8a3b-c58a2b0f73a5",
+      "name": "Merge3",
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "jsCode": "// Sammelt die Items von beiden Inputs und mergt sie zu EINEM Object\nconst merged = {};\n\nitems.forEach(item => {\n  Object.assign(merged, item.json);\n});\n\nreturn [{\n  json: merged\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        4800,
+        1472
+      ],
+      "id": "4c269e90-c722-40a3-bfe5-aad922b091f3",
+      "name": "Code in JavaScript3",
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "content": "erweiter für summary card, vorerst inactive da es zu lange lädt. Funktioniert aber. ",
+        "height": 608,
+        "width": 1552
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        3264,
+        1184
+      ],
+      "typeVersion": 1,
+      "id": "b2650e35-0ee8-4107-bfa7-c9dce14fd275",
+      "name": "Sticky Note6",
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combineBy": "combineByPosition",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        3840,
+        1376
+      ],
+      "id": "1fa56b5e-1ab6-417f-b638-d7571d56fff3",
+      "name": "Merge2",
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "respondWith": "allIncomingItems",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        4976,
+        1328
+      ],
+      "id": "237dcdbe-09ba-41d1-88fc-793c6b4ac937",
+      "name": "Respond to Webhook4",
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1TPDblNINkqjeGUd8HgoHfEOxRl5dRBABWHLTMwhq8G4",
+          "mode": "list",
+          "cachedResultName": "Sentiment Sheet",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1TPDblNINkqjeGUd8HgoHfEOxRl5dRBABWHLTMwhq8G4/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Tabellenblatt1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1TPDblNINkqjeGUd8HgoHfEOxRl5dRBABWHLTMwhq8G4/edit#gid=0"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        3568,
+        1264
+      ],
+      "id": "784ed511-3313-4970-a0ed-fee24beb3e17",
+      "name": "SentimentAnalysis AND ReviewResponse3",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "ZF93bEVOUMMoQdJR",
+          "name": "Google Sheets account 9"
+        }
+      },
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1rKVQBB1XnZVat3eTYNO56f4R8IDsNLEtnwUBLNCY1hg",
+          "mode": "list",
+          "cachedResultName": "HR_Analytics",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1rKVQBB1XnZVat3eTYNO56f4R8IDsNLEtnwUBLNCY1hg/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Tabellenblatt1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1rKVQBB1XnZVat3eTYNO56f4R8IDsNLEtnwUBLNCY1hg/edit#gid=0"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        3568,
+        1488
+      ],
+      "id": "aa94df73-8c6e-478e-9f30-ad7a6a7b07c8",
+      "name": "HR_Analytics2",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "ZF93bEVOUMMoQdJR",
+          "name": "Google Sheets account 9"
+        }
+      },
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "jsCode": "// Alle Zeilen aus dem vorherigen Merge/Sheet sammeln\nconst rows = items.map(i => i.json);\n\n// Filtern der Daten\nconst reviews = rows.filter(r => r.Sentiment);\nconst negativeKeywordsData = rows.filter(r => r.extracted_issues);\n\n// --- Sentiment Breakdown ---\nconst sentimentBreakdown = {\n  positive: reviews.filter(r => r.Sentiment.toLowerCase() === 'positive').length,\n  neutral: reviews.filter(r => r.Sentiment.toLowerCase() === 'neutral').length,\n  negative: reviews.filter(r => r.Sentiment.toLowerCase() === 'negative').length,\n};\n\n// --- Keywords zählen ---\nconst keywordCounts = {};\nnegativeKeywordsData.forEach(item => {\n  if (item.extracted_issues && item.extracted_issues !== 'none') {\n    item.extracted_issues.split(',').forEach(keyword => {\n      const k = keyword.trim().toLowerCase();\n      keywordCounts[k] = (keywordCounts[k] || 0) + 1;\n    });\n  }\n});\n\n// Top 5 negative Keywords\nconst topNegativeKeywords = Object.entries(keywordCounts)\n  .sort((a, b) => b[1] - a[1])\n  .slice(0, 5)\n  .map(([keyword, count]) => ({\n    keyword,\n    count,\n    change: 0 \n  }));\n\n// Rückgabe ohne merge_id\nreturn [{\n  json: {\n    totalReviews: reviews.length,\n    sentimentBreakdown,\n    topNegativeKeywords\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        4224,
+        1536
+      ],
+      "id": "64d8b7c9-dd95-487e-8867-d53bc173ab8a",
+      "name": "Code in JavaScript2",
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "path": "get-analytics",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [
+        3248,
+        1376
+      ],
+      "id": "1651dbb7-4e97-4611-a928-64492cdab157",
+      "name": "GET /webhook/get-analytics1",
+      "webhookId": "c36b2e46-1bca-4613-8664-3b8cfbd88948",
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "jsCode": "// Holt die Antwort vom AI Agent (output Feld)\nconst aiResponse = items[0].json.output;\n\nlet cleanData;\n\ntry {\n  // Falls die KI einen String geschickt hat, parsen wir ihn zu JSON\n  if (typeof aiResponse === 'string') {\n    const jsonString = aiResponse.replace(/```json/g, '').replace(/```/g, '').trim();\n    cleanData = JSON.parse(jsonString);\n  } else {\n    cleanData = aiResponse;\n  }\n} catch (e) {\n  console.error(\"KI-Parsing-Fehler:\", e);\n  cleanData = {\n    weekly_conclusion: \"Zusammenfassung momentan nicht verfügbar.\",\n    description: \"Es gab ein Problem beim Verarbeiten der KI-Antwort.\",\n    top_praises: [],\n    top_complaints: [],\n    new_issues: []\n  };\n}\n\n// Rückgabe ohne merge_id\nreturn [{\n  json: {\n    aiSummary: cleanData\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        4400,
+        1184
+      ],
+      "id": "2ab08dad-9f15-47da-931f-a561169856b4",
+      "name": "Code in JavaScript1",
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-4.1-mini"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        4096,
+        1344
+      ],
+      "id": "843bb04e-6c19-4ccb-9c66-f1db768e28de",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "WTv3zoe8Sb0P8ctA",
+          "name": "MUC.DAI OpenAi account"
+        }
+      },
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.Review }}",
+        "options": {
+          "systemMessage": "=You are a precise data analyst for customer feedback. Your task is to summarize customer reviews.\n\nCRITICAL RULES:\n\nRespond ONLY with valid JSON.\n\nDo NOT use Markdown, do NOT use backticks (```), and do NOT use the \"json\" prefix.\n\nStrictly adhere to the provided JSON structure.\n\nContent language: English.\n\nTask: Analyze the following customer reviews from the last 7 days: {{ $json.Review }}\n\nRequired JSON Structure: { \"weekly_conclusion\": \"One sentence about the overall sentiment\", \"description\": \"A short paragraph (2-3 sentences) about the main themes (praise & criticism)\", \"top_praises\": [{\"text\": \"Example praise\", \"count\": 10}], \"top_complaints\": [{\"text\": \"Example complaint\", \"count\": 5}], \"new_issues\": [{\"text\": \"Example issue\", \"since\": \"Day of the week\"}] }"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.2,
+      "position": [
+        4128,
+        1184
+      ],
+      "id": "f423b7a4-ba4c-43d6-b532-82d712c787e2",
+      "name": "AI Agent",
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "content": "## Google Sheets in Insights verarbeiten und senden",
+        "height": 480,
+        "width": 1552
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        1568,
+        1168
+      ],
+      "typeVersion": 1,
+      "id": "aaed3944-3ca1-4b77-88d7-ad1b02e975b4",
+      "name": "Sticky Note1"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Positive": {
+      "main": [
+        [
+          {
+            "node": "Send Positive Review",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Neutral": {
+      "main": [
+        [
+          {
+            "node": "Send Neutral Review",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Negative": {
+      "main": [
+        [
+          {
+            "node": "Send Negative Review",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format HR Data1": {
+      "main": [
+        [
+          {
+            "node": "HR_Analytics1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract Key Issues1": {
+      "main": [
+        [
+          {
+            "node": "Format HR Data1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent1": {
+      "main": [
+        [
+          {
+            "node": "Merge Data1",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Merge Data1": {
+      "main": [
+        [
+          {
+            "node": "SentimentAnalysis AND ReviewResponse1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Sentiment Analysis1": {
+      "main": [
+        [
+          {
+            "node": "AI Agent1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "AI Agent1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "AI Agent1",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Extract Key Issues1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Extract Key Issues1",
+            "type": "ai_languageModel",
+            "index": 0
+          },
+          {
+            "node": "AI Agent1",
+            "type": "ai_languageModel",
+            "index": 0
+          },
+          {
+            "node": "Sentiment Analysis1",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "On form submission1": {
+      "main": [
+        [
+          {
+            "node": "Sentiment Analysis1",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Merge Data1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "SentimentAnalysis AND ReviewResponse1": {
+      "main": [
+        [
+          {
+            "node": "Positive",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Neutral",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Negative",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HR_Analytics1": {
+      "main": [
+        []
+      ]
+    },
+    "GET /webhook/get-reviews": {
+      "main": [
+        [
+          {
+            "node": "SentimentAnalysis AND ReviewResponse",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "GET /webhook/get-analytics": {
+      "main": [
+        [
+          {
+            "node": "SentimentAnalysis AND ReviewResponse2",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "HR_Analytics",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "SentimentAnalysis AND ReviewResponse": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "SentimentAnalysis AND ReviewResponse2": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HR_Analytics": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "POST /webhook/update-review1": {
+      "main": [
+        [
+          {
+            "node": "Update row in sheet1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update row in sheet1": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "POST /webhook/publish-review": {
+      "main": [
+        [
+          {
+            "node": "Update row in sheet2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update row in sheet2": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge3": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge2": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript2",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript3": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "SentimentAnalysis AND ReviewResponse3": {
+      "main": [
+        [
+          {
+            "node": "Merge2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HR_Analytics2": {
+      "main": [
+        [
+          {
+            "node": "Merge2",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript2": {
+      "main": [
+        [
+          {
+            "node": "Merge3",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "GET /webhook/get-analytics1": {
+      "main": [
+        [
+          {
+            "node": "HR_Analytics2",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "SentimentAnalysis AND ReviewResponse3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript1": {
+      "main": [
+        [
+          {
+            "node": "Merge3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "8c8037d5-db12-4465-b559-b27421329f6a",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "4cae90058c506d3984e25bac297b0ad9788f2820880f9b64676ed15ee10620f4"
+  },
+  "id": "wBVTthdzsvCq9Dvz",
+  "tags": []
+}
