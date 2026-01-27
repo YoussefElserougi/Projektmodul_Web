@@ -1,0 +1,90 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  /* Light mode */
+  --bg: #ffffff;
+  --surface: #f6f7f7;
+  --surface2: #ecefef;
+  --fg: #101214;
+  --muted: #5b6166;
+  --border: rgba(16, 18, 20, 0.12);
+
+  /* CTAs (kept subtle in light mode) */
+  --cta-primary: #d9e600; /* softer yellow */
+  --cta-primary-hover: #c0cc00;
+  --cta-secondary: #4fb7ff; /* slightly deeper blue */
+  --cta-secondary-hover: #339fe7;
+
+  /* Legacy brand colors */
+  --atolls-yellow: #F4FF48;
+  --atolls-blue: #6FCDFF;
+}
+
+.dark {
+  /* Dark mode */
+  --bg: #0b0b0b;
+  --surface: #161616;
+  --surface2: #252525;
+  --fg: #ECF0EF;
+  --muted: rgba(236, 240, 239, 0.72);
+  --border: rgba(236, 240, 239, 0.14);
+
+  /* CTAs (brand-leaning but controlled) */
+  --cta-primary: #F4FF48;
+  --cta-primary-hover: #d9e600;
+  --cta-secondary: #6FCDFF;
+  --cta-secondary-hover: #4fb7ff;
+}
+
+body {
+  @apply bg-bg text-fg;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  @apply bg-surface;
+}
+
+::-webkit-scrollbar-thumb {
+  @apply bg-surface2 rounded-full;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  @apply bg-border;
+}
+
+/* Animations */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.3s ease-out;
+}
+
+/* Glassmorphism Effect */
+.glass {
+  background: color-mix(in srgb, var(--surface) 70%, transparent);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid var(--border);
+}
+
+/* Button base (keeps hover hue consistent) */
+.btn {
+  @apply inline-flex items-center justify-center gap-2 rounded-lg font-medium transition-colors;
+}
