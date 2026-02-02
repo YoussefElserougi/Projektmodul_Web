@@ -7,7 +7,7 @@ Team Members: Alisa Vranic, Coumba Bathily, Katharina Vaan den Bergh, Nuria Kurr
   <img src="./Screenshot%202025-12-23%20191016.png" width="800">
 </p>
 
-An **automated system for smartly responding to Glassdoor reviews**, developed for **atolls**, using **n8n**, **React**, and **Next.js**.
+An **automated system for smartly responding to Glassdoor reviews**, developed for atolls, using **n8n**, **React**, and **Next.js**.
 
 <br/>
 
@@ -24,10 +24,10 @@ The system combines **workflow automation (n8n)** with a **modern web interface 
 
 <br/>
 
-## About Atolls
+## About XXXX
 
-Atolls is a company that operates several online platforms in the areas of **social commerce** and **affiliate marketing**.  
-Part of atolls are well-known services such as **mydealz**, **Shoop**, and **Cuponation**, which provides coupon and discount platforms for publishers.
+XXXX is a company that operates several online platforms in the areas of **social commerce** and **affiliate marketing**.  
+Part of XXXX are well-known services such as **mydealz**, **Shoop**, and **Cuponation**, which provides coupon and discount platforms for publishers.
 
 <br/>
 
