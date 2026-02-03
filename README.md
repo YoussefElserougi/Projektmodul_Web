@@ -44,7 +44,7 @@ git push origin TeamX
 
 1. Go to your forked repository on GitHub
 2. Click **"Contribute"** → **"Open pull request"**
-3. Ensure the base repository is `YoussefElserougi/Projektmodul_Web` and base branch is `main`
+3. Ensure the base repository is `XXXX/XXXX` and base branch is `main`
 4. Fill in the pull request template with:
    - Your name / group members
    - Project title
