@@ -59,10 +59,6 @@ git push origin TeamX
 
 ---
 
-## Contact
-
-For questions or issues: youssef.elserougi@hm.edu
-
 ---
 
 <p align="center">
